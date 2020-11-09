@@ -45,10 +45,7 @@ The UFED parser has been developed and tested relying on a huge collection of mo
 
 ## CASE representation: JSON-LD files
 All the XML reports have been processed to generate the corresponding CASE representation of the following Cyber items:
-<<<<<<< HEAD
 
-=======
->>>>>>> cba29e23de8ab2806d89900408e7f38c06e5e8fd
 * Call
 * Chat (Whatsapp, Skype, etc.)
 * Contact
