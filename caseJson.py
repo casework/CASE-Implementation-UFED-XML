@@ -552,13 +552,15 @@ class CaseJson:
 		line += items + '],\n'
 
 		body = EMAILbody.replace('"', "")
-		body = body.replace('\n', ' ')
+		body = body.replace('\n', ' ')		
+		#--- backslash and tab chars are not accepted in JSON value
 		body = body.replace('\t', ' ')
+		body = body.replace('\\', ' _BS_ ')
+		line += CaseJson.C_TAB*2 + '"uco-observable:body":"' + body + '",\n'		
 		subject = EMAILsubject.replace('"', "")
 		subject = subject.replace('\n', ' ')
-		subject = subject.replace('\t', ' ')
-		subject = subject.replace("\\", "_BACKSLASH_")
-		line += CaseJson.C_TAB*2 + '"uco-observable:body":"' + body + '",\n'		
+		#subject = subject.replace('\t', ' ')
+		subject = subject.replace('\\', ' _BS_ ')
 		line += CaseJson.C_TAB*2 + '"uco-observable:subject":"' + subject + '",\n'		
 		line += CaseJson.C_TAB*2 + '"uco-observable:__status":"' + EMAILstatus + '"\n'				
 		line += CaseJson.C_TAB*2 + '} \n'

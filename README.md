@@ -62,4 +62,4 @@ All the XML reports have been processed to generate the corresponding CASE repre
   * Investigative Acquisition
   * Investigative Extraction
 
-Some simple examples are provided in the **json** folder, a report of an Android image is also available in the **XMLreports** folder.
+Some simple examples are provided in the **json** folder, two XML reports of an Android and an iOS image are also available in the **XMLreports** folder.
