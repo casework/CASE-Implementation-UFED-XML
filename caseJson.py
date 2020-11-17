@@ -616,8 +616,10 @@ class CaseJson:
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:File",\n'
 		head, tail = os.path.split(FILEpath)
 		tail = tail.replace("\\", "/")
+		tail = tail.replace('"', "'")
 		line += CaseJson.C_TAB*2 + '"uco-observable:fileName":"' + tail + '",\n'
 		path = FILEpath.replace('\\', '/')
+		path = path.replace('"', "'")
 		line += CaseJson.C_TAB*2 + '"uco-observable:filePath":"' + path + '",\n'
 		localPath = FILElocalPath.replace("\\", "/")
 		line += CaseJson.C_TAB*2 + '"uco-observable:__fileLocalPath":"' + localPath + '",\n' 		
