@@ -2,6 +2,7 @@
 
 import uuid
 import os
+import re
 
 class CaseJson:
 	'''
@@ -208,7 +209,7 @@ class CaseJson:
 		line += CaseJson.C_TAB*2 + '}, \n'
 		line += CaseJson.C_TAB*2 + '{ \n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:ApplicationAccount", \n' 
-		line += CaseJson.C_TAB*2 + '"uco-observable:application":"' + idApp + '" \n' 
+		line += CaseJson.C_TAB*2 + '"uco-observable:application":":' + idApp + '" \n' 
 		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '{ \n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:DigitalAccount", \n'
@@ -339,9 +340,9 @@ class CaseJson:
 		for item in idToList:
 			if item in self.CHATparticipantsIdList:
 				idx = self.CHATparticipantsIdList.index(item)
-				TOlist = self.CHATaccountIdList[idx] + ','
+				TOlist = ":" + self.CHATaccountIdList[idx] + ','
 			else:
-				TOlist = self.phoneOwnerUuid + ','
+				TOlist = ":" + self.phoneOwnerUuid + ','
 
 
 		TOlist = TOlist[0:-1] 
@@ -362,6 +363,8 @@ class CaseJson:
 		body = body.replace('"', "'")
 		body = body.replace('\n', ' ')
 		body = body.replace('\t', ' ')
+		body = body.replace("\\'", "'")
+		body = body.replace("\\", "")
 		line += CaseJson.C_TAB*2 + '"uco-observable:messageText":"' + body + '",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:application":"' + idApplication + '",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:sentTime":\n'
@@ -369,7 +372,7 @@ class CaseJson:
 		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
 		line += CaseJson.C_TAB*3 + '"@value":"' + timeStamp + '"\n'
 		line += CaseJson.C_TAB*3 + '},\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:from":"' + FROMitem + '",\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:from":":' + FROMitem + '",\n'
 		TOlist = TOlist.replace('\t', ' ')
 		line += CaseJson.C_TAB*2 + '"uco-observable:to":["' + TOlist + '"],\n' 
 		line += CaseJson.C_TAB*2 + '"uco-observable:__status":"' + status + '",\n'		
@@ -490,7 +493,7 @@ class CaseJson:
 			self.EMAILaccountIdList.append(uuidEmail)
 			idFROM = uuidEmail
 		
-		line += CaseJson.C_TAB*2 + '"uco-observable:fromRef":"' + idFROM + '",\n'		
+		line += CaseJson.C_TAB*2 + '"uco-observable:fromRef":":' + idFROM + '",\n'		
 		line += CaseJson.C_TAB*2 + '"uco-observable:toRef":['		
 		items = ''
 		for i in range(len(EMAILidentifiersTO)):
@@ -499,12 +502,12 @@ class CaseJson:
 			else:
 				if EMAILidentifiersTO[i].strip() in self.EMAILaddressList:
 					idx = self.EMAILaddressList.index(EMAILidentifiersTO[i].strip())
-					idTO = self.EMAILaccountIdList[idx]
+					idTO = ":" + self.EMAILaccountIdList[idx]
 				else:
 					self.EMAILaddressList.append(EMAILidentifiersTO[i].strip())
 					uuidEmail = self.__generateTraceEmailAccount(EMAILidentifiersTO[i].strip())
 					self.EMAILaccountIdList.append(uuidEmail)
-					idTO = uuidEmail
+					idTO = ":" + uuidEmail
 				items += items + '"' + idTO + '",'
 		
 		# get rid of the last comma
@@ -519,12 +522,12 @@ class CaseJson:
 			else:
 				if EMAILidentifiersCC[i].strip() in self.EMAILaddressList:
 					idx = self.EMAILaddressList.index(EMAILidentifiersCC[i].strip())
-					idCC = self.EMAILaccountIdList[idx]
+					idCC = ":" + self.EMAILaccountIdList[idx]
 				else:
 					self.EMAILaddressList.append(EMAILidentifiersCC[i].strip())
 					uuidEmail = self.__generateTraceEmailAccount(EMAILidentifiersCC[i].strip())
 					self.EMAILaccountIdList.append(uuidEmail)
-					idCC = uuidEmail
+					idCC = ":" + uuidEmail
 				items += items + '"' + idCC + '",'
 
 		# get rid of the last comma
@@ -539,12 +542,12 @@ class CaseJson:
 			else:
 				if EMAILidentifiersBCC[i].strip() in self.EMAILaddressList:
 					idx = self.EMAILaddressList.index(EMAILidentifiersBCC[i].strip())
-					idBCC = self.EMAILaccountIdList[idx]
+					idBCC = ":" + self.EMAILaccountIdList[idx]
 				else:
 					self.EMAILaddressList.append(EMAILidentifiersBCC[i].strip())
 					uuidEmail = self.__generateTraceEmailAccount(EMAILidentifiersBCC[i].strip())
 					self.EMAILaccountIdList.append(uuidEmail)
-					idBCC = uuidEmail
+					idBCC = ":" + uuidEmail
 				items += items + '"' + idBCC + '",'
 
 		# get rid of the last comma
@@ -726,20 +729,20 @@ class CaseJson:
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-action:ActionReferences",\n' 
-		line += CaseJson.C_TAB*2 + '"uco-action:instrument":"' + idInstrument + '",\n'
-		line += CaseJson.C_TAB*2 + '"uco-action:location":"' + location + '",\n'
-		line += CaseJson.C_TAB*2 + '"uco-action:performer":"' + idPerformer + '",\n'
+		line += CaseJson.C_TAB*2 + '"uco-action:instrument":":' + idInstrument + '",\n'
+		line += CaseJson.C_TAB*2 + '"uco-action:location":":' + location + '",\n'
+		line += CaseJson.C_TAB*2 + '"uco-action:performer":":' + idPerformer + '",\n'
 		line += CaseJson.C_TAB*2 + '"uco-action:object":[\n'
-		line += CaseJson.C_TAB*2 + '"' + idObject + '"\n'
+		line += CaseJson.C_TAB*2 + '":' + idObject + '"\n'
 		line += CaseJson.C_TAB*2 + '],\n'
 		line += CaseJson.C_TAB*2 + '"uco-action:result":[\n'
 
 		n = len(listResult)
 		for i in range(n - 1):
-			line += CaseJson.C_TAB*2 + '"' + listResult[i] + '",';
+			line += CaseJson.C_TAB*2 + '":' + listResult[i] + '",';
 
 		if n > 0:
-			line += '"' + listResult[n - 1]  + '"\n'
+			line += '":' + listResult[n - 1]  + '"\n'
 			line += CaseJson.C_TAB*2 + ']\n'
 			line += CaseJson.C_TAB*2 + '}';
 
@@ -759,8 +762,8 @@ class CaseJson:
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:PhoneCall", \n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:callType":"' + direction + '",\n '
 		line += CaseJson.C_TAB*2 + '"uco-observable:startTime":"' + startTime + '", \n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:from":"' + idFROM + '",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:to":"' + idTO + '",\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:from":":' + idFROM + '",\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:to":":' + idTO + '",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:duration":"' + duration + '", \n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:allocationStatus":"allocated", \n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:__outcome":"' + outcome + '", \n'
@@ -807,10 +810,10 @@ class CaseJson:
 		idx = 0
 		n = len(idTracesList) - 1
 		for idx in range(n):
-			line += CaseJson.C_TAB*2  + '"' + idTracesList[idx] + '",'
+			line += CaseJson.C_TAB*2  + '":' + idTracesList[idx] + '",'
 
 		if n > 0:
-			line += CaseJson.C_TAB*2  + '"' + idTracesList[n - 1] + '"\n'
+			line += CaseJson.C_TAB*2  + '":' + idTracesList[n - 1] + '"\n'
 		
 		line += CaseJson.C_TAB + ']\n'
 		line += '},\n'
@@ -823,8 +826,8 @@ class CaseJson:
 		line = '{ \n'
 		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:Relationship",\n'
-		line += CaseJson.C_TAB + '"uco-observable:source":"' + source + '",\n'
-		line += CaseJson.C_TAB + '"uco-observable:target":"' + target + '",\n'
+		line += CaseJson.C_TAB + '"uco-observable:source":":' + source + '",\n'
+		line += CaseJson.C_TAB + '"uco-observable:target":":' + target + '",\n'
 		line += CaseJson.C_TAB + '"uco-observable:kindOfRelationship":"' + relation + '",\n'
 		if not table == '':
 			line += CaseJson.C_TAB + '"uco-observable:isDirectional":"True",\n'
@@ -904,6 +907,8 @@ class CaseJson:
 			body = SMSbody[i].replace('\n', ' ')
 			body = body.replace('"', "'")
 			body = body.replace('\t', ' ')
+			body = body.replace("\\'", "'")
+			body = body.replace("\\", "")
 			line += CaseJson.C_TAB*2 + '"uco-observable:messageText":"' + body + '", \n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:_status_":"' + SMSstatus[i] + '", \n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:from":"' + phoneUuidFrom + '", \n'
@@ -932,9 +937,9 @@ class CaseJson:
 		line += CaseJson.C_TAB*2 + '"uco-observable:slot":[\n'
 		n = len(chatThread)
 		for i in range(n - 1):
-			line += CaseJson.C_TAB*2 + '"' + chatThread[i] + '",\n'
+			line += CaseJson.C_TAB*2 + '":' + chatThread[i] + '",\n'
 
-		line += CaseJson.C_TAB*2 + '"' + chatThread[n - 1] + '"]\n'
+		line += CaseJson.C_TAB*2 + '":' + chatThread[n - 1] + '"]\n'
 		line += CaseJson.C_TAB*2 + '}\n'
 		line += CaseJson.C_TAB + '],\n'
 		line += CaseJson.C_TAB + '"uco-observable:participants":[\n'
@@ -942,7 +947,7 @@ class CaseJson:
 		n = len(chatIdAccountList)
 		
 		for i in range(n - 1):
-			line += CaseJson.C_TAB*2 + '"' + chatIdAccountList[i] + '",\n'
+			line += CaseJson.C_TAB*2 + '":' + chatIdAccountList[i] + '",\n'
 
 		if n > 0:
 			line += CaseJson.C_TAB*2  + '"' + chatIdAccountList[n - 1] + '"]\n' 
