@@ -434,7 +434,11 @@ class CaseJson:
 		line += CaseJson.C_TAB*2 + '"uco-observable:IMEI":"' + deviceIMEI + '",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:bluetoothDeviceName":"NOT_PROVIDED",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:mockLocationsAllowed":"NOT_PROVIDED",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:deviceActivationTime":"NOT_PROVIDED",\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:deviceActivationTime":\n'
+		line += CaseJson.C_TAB*3 + '{\n'
+		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
+		line += CaseJson.C_TAB*3 + '"@value":"__NOT_PROVIDED"\n'
+		line += CaseJson.C_TAB*3 + '},\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:storageCapacity":"NOT_PROVIDED",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:clockSetting":"NOT_PROVIDED"},\n'
 		line += CaseJson.C_TAB*2 + '{\n'
@@ -483,7 +487,12 @@ class CaseJson:
 		line += CaseJson.C_TAB*2 + '{\n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:EmailMessage",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:application":"' + EMAILsource + '",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:sentTime":"' + EMAILtimeStamp + '",\n'		
+		line += CaseJson.C_TAB*2 + '"uco-observable:sentTime":\n'
+		line += CaseJson.C_TAB*3 + '{\n'
+		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
+		line += CaseJson.C_TAB*3 + '"@value":"' + EMAILtimeStamp + '"\n'
+		line += CaseJson.C_TAB*3 + '},\n'
+
 		if EMAILidentifierFROM.strip() in self.EMAILaddressList:
 			idx = self.EMAILaddressList.index(EMAILidentifierFROM.strip())
 			idFROM = self.EMAILaccountIdList[idx]
@@ -636,9 +645,21 @@ class CaseJson:
 		line += CaseJson.C_TAB*2 + '"@type":"xsd:long", \n'
 		line += CaseJson.C_TAB*2 + '"@value":"' + FILEsize + '"\n'
 		line += CaseJson.C_TAB*2 + '},\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:createdTime":"' + FILEtimeC + '",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:modifiedTime":"' + FILEtimeM + '",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:accessedTime":"' + FILEtimeA + '"\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:createdTime":\n'
+		line += CaseJson.C_TAB*3 + '{\n'
+		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
+		line += CaseJson.C_TAB*3 + '"@value":"' + FILEtimeC + '"\n'
+		line += CaseJson.C_TAB*3 + '},\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:modifiedTime":\n'
+		line += CaseJson.C_TAB*3 + '{\n'
+		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
+		line += CaseJson.C_TAB*3 + '"@value":"' + FILEtimeM + '"\n'
+		line += CaseJson.C_TAB*3 + '},\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:accessedTime":\n'
+		line += CaseJson.C_TAB*3 + '{\n'
+		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
+		line += CaseJson.C_TAB*3 + '"@value":"' + FILEtimeA + '"\n'
+		line += CaseJson.C_TAB*3 + '}\n'
 		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '{\n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:ExtInode",\n'
@@ -722,10 +743,18 @@ class CaseJson:
 		line = '{ \n'
 		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
 		line += CaseJson.C_TAB +  '"@type":"uco-action:Action",\n'
-		line += CaseJson.C_TAB +  '"uco-core:name":"' + name + '",\n'
-		line += CaseJson.C_TAB + '"uco-core:description":"' + description + '",\n'
-		line += CaseJson.C_TAB + '"uco-action:startTime":"' + startTime + '",\n'
-		line += CaseJson.C_TAB + '"uco-action:endTime":"' + endTime + '",\n'
+		line += CaseJson.C_TAB +  '"uco-action:name":"' + name + '",\n'
+		line += CaseJson.C_TAB + '"uco-action:description":"' + description + '",\n'
+		line += CaseJson.C_TAB*2 + '"uco-action:startTime":\n'
+		line += CaseJson.C_TAB*3 + '{\n'
+		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
+		line += CaseJson.C_TAB*3 + '"@value":"' + startTime + '"\n'
+		line += CaseJson.C_TAB*3 + '},\n'
+		line += CaseJson.C_TAB*2 + '"uco-action:endTime":\n'
+		line += CaseJson.C_TAB*3 + '{\n'
+		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
+		line += CaseJson.C_TAB*3 + '"@value":"' + endTime + '"\n'
+		line += CaseJson.C_TAB*3 + '},\n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-action:ActionReferences",\n' 
@@ -761,7 +790,11 @@ class CaseJson:
 		line += CaseJson.C_TAB*2 + '{ \n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:PhoneCall", \n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:callType":"' + direction + '",\n '
-		line += CaseJson.C_TAB*2 + '"uco-observable:startTime":"' + startTime + '", \n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:startTime":\n'
+		line += CaseJson.C_TAB*3 + '{\n'
+		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
+		line += CaseJson.C_TAB*3 + '"@value":"' + startTime + '"\n'
+		line += CaseJson.C_TAB*3 + '},\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:from":":' + idFROM + '",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:to":":' + idTO + '",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:duration":"' + duration + '", \n'
@@ -803,10 +836,14 @@ class CaseJson:
 		line = '{ \n'
 		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-investigation:ProvenanceRecord", \n'
-		line += CaseJson.C_TAB + '"uco-observable:createdTime":"' + creationTime + '",\n'
-		line += CaseJson.C_TAB + '"uco-observable:description":"' + description + '",\n'
-		line += CaseJson.C_TAB + '"uco-observable:exhibitNumber":"' + exhibitNumber + '",\n' 
-		line += CaseJson.C_TAB + '"uco-observable:object":[\n'
+		line += CaseJson.C_TAB*2 + '"uco-investigation:createdTime":\n'
+		line += CaseJson.C_TAB*3 + '{\n'
+		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
+		line += CaseJson.C_TAB*3 + '"@value":"' + creationTime + '"\n'
+		line += CaseJson.C_TAB*3 + '},\n'
+		line += CaseJson.C_TAB + '"uco-investigation:description":"' + description + '",\n'
+		line += CaseJson.C_TAB + '"uco-investigation:exhibitNumber":"' + exhibitNumber + '",\n' 
+		line += CaseJson.C_TAB + '"uco-investigation:object":[\n'
 		idx = 0
 		n = len(idTracesList) - 1
 		for idx in range(n):
@@ -853,8 +890,8 @@ class CaseJson:
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
 		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
-		line += CaseJson.C_TAB + '"@type":"case-core:Role",\n'
-		line += CaseJson.C_TAB + '"uco-observable:name":"' + role + '"\n'
+		line += CaseJson.C_TAB + '"@type":"uco-role:Role",\n'
+		line += CaseJson.C_TAB + '"uco-role:name":"' + role + '"\n'
 		line += '},\n'
 		self.FileOut.write(line)
 		return uuid
@@ -881,13 +918,13 @@ class CaseJson:
 	        		# Party with Role=TO can be more than one
 					if SMSpartyRoles[i][j] == 'To':
 						phoneUuidFrom = self.phoneOwnerUuid
-						phoneUuidTo += '"' + phonePartyUuid + '"' + ','
+						phoneUuidTo += '":' + phonePartyUuid + '"' + ','
 					else:
 						phoneUuidFrom = phonePartyUuid
-						phoneUuidTo = self.phoneOwnerUuid
+						phoneUuidTo = '":' + self.phoneOwnerUuid + '"'
 
 			if phoneUuidTo == self.phoneOwnerUuid:
-				phoneUuidTo = '"' + self.phoneOwnerUuid + '"'	
+				phoneUuidTo = '":' + self.phoneOwnerUuid + '"'	
 			else:
 			# get rid of the last comma if the field is not empty
 				if phoneUuidTo == '':
@@ -910,8 +947,8 @@ class CaseJson:
 			body = body.replace("\\'", "'")
 			body = body.replace("\\", "")
 			line += CaseJson.C_TAB*2 + '"uco-observable:messageText":"' + body + '", \n'
-			line += CaseJson.C_TAB*2 + '"uco-observable:_status_":"' + SMSstatus[i] + '", \n'
-			line += CaseJson.C_TAB*2 + '"uco-observable:from":"' + phoneUuidFrom + '", \n'
+			line += CaseJson.C_TAB*2 + '"uco-observable:__status":"' + SMSstatus[i] + '", \n'
+			line += CaseJson.C_TAB*2 + '"uco-observable:from":":' + phoneUuidFrom + '", \n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:to":[' + phoneUuidTo + '], \n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:sentTime":{\n'
 			line += CaseJson.C_TAB*3 + '"@type": "xsd:dateTime", \n' 
@@ -963,10 +1000,10 @@ class CaseJson:
 		line = '{ \n'
 		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-tool:Tool", \n'
-		line += CaseJson.C_TAB + '"uco-observable:name":"' + name + '",\n' 
-		line += CaseJson.C_TAB + '"uco-observable:toolType":"' + type + '",\n'
-		line += CaseJson.C_TAB + '"uco-observable:creator":"' + vendor + '",\n'
-		line += CaseJson.C_TAB + '"uco-observable:version":"' + version + '"\n';
+		line += CaseJson.C_TAB + '"uco-tool:name":"' + name + '",\n' 
+		line += CaseJson.C_TAB + '"uco-tool:toolType":"' + type + '",\n'
+		line += CaseJson.C_TAB + '"uco-tool:creator":"' + vendor + '",\n'
+		line += CaseJson.C_TAB + '"uco-tool:version":"' + version + '"\n';
 
 		if len(confList) > 0:  
 			line += line + ',\n'
@@ -980,8 +1017,8 @@ class CaseJson:
 				listItems = confList[i].split('@');
 				line += CaseJson.C_TAB*3 + '{\n'
 				line += CaseJson.C_TAB*3 + '"@type":"uco-tool:ConfigurationSettingType",\n'
-				line += CaseJson.C_TAB*3 + '"uco-observable:itemName":"' + listItems[0] + '",\n'
-				line += CaseJson.C_TAB*3 + '"uco-observable:itemValue":"' + listItems[1] + '"\n'
+				line += CaseJson.C_TAB*3 + '"uco-tool:itemName":"' + listItems[0] + '",\n'
+				line += CaseJson.C_TAB*3 + '"uco-tool:itemValue":"' + listItems[1] + '"\n'
 				line += CaseJson.C_TAB*3 + '},\n' 
     
 			listItems.clear()
@@ -1020,13 +1057,20 @@ class CaseJson:
 			line += title + '",\n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:visitCount":"' 
 			line += WEB_PAGEvisitCount[i] + '",\n' 
-			line += CaseJson.C_TAB*2 + '"uco-observable:visitTime":"NOT_PROVIDED",\n'
+			line += CaseJson.C_TAB*2 + '"uco-observable:visitTime":\n'
+			line += CaseJson.C_TAB*3 + '{\n'
+			line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
+			line += CaseJson.C_TAB*3 + '"@value":"__NOT_PROVIDED"\n'
+			line += CaseJson.C_TAB*3 + '},\n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:typedCount":"0",\n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:duration":"NOT_PROVIDED",\n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:transitiontype":"NOT_PROVIDED",\n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:searchterm":"NOT_PROVIDED",\n'
-			line += CaseJson.C_TAB*2 + '"uco-observable:lastVisited":"' 
-			line += WEB_PAGElastVisited[i] + '", \n'
+			line += CaseJson.C_TAB*2 + '"uco-observable:lastVisited":\n'
+			line += CaseJson.C_TAB*3 + '{\n'
+			line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
+			line += CaseJson.C_TAB*3 + '"@value":"' + WEB_PAGElastVisited[i] + '"\n'
+			line += CaseJson.C_TAB*3 + '},\n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:__status":"' 
 			line += WEB_PAGEstatus[i] + '", \n' 
 			line += CaseJson.C_TAB*2 + '"uco-observable:allocationStatus":"' 
