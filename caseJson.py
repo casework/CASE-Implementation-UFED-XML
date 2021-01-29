@@ -209,7 +209,9 @@ class CaseJson:
 		line += CaseJson.C_TAB*2 + '}, \n'
 		line += CaseJson.C_TAB*2 + '{ \n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:ApplicationAccount", \n' 
-		line += CaseJson.C_TAB*2 + '"uco-observable:application":":' + idApp + '" \n' 
+		line += CaseJson.C_TAB*3 + '"uco-observable:application":{\n'
+		line += CaseJson.C_TAB*4 + '"@id": "' + idApp + '"\n'
+		line += CaseJson.C_TAB*3  + '}\n'
 		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '{ \n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:DigitalAccount", \n'
@@ -313,16 +315,18 @@ class CaseJson:
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
-		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:Account", \n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:accountIssuer": "' + issuer + '",\n'
+		line += CaseJson.C_TAB*3 + '"@type":"uco-observable:Account", \n'
+		line += CaseJson.C_TAB*3 + '"uco-observable:accountIssuer": "' + issuer + '",\n'
 		partyId = partyId.replace('"', '')
-		line += CaseJson.C_TAB*2 + '"uco-observable:applicationIdentifier": "' + partyId + '",\n' 
-		line += CaseJson.C_TAB*2 + '"uco-observable:isActive":"true"\n'
+		line += CaseJson.C_TAB*3 + '"uco-observable:applicationIdentifier": "' + partyId + '",\n' 
+		line += CaseJson.C_TAB*3 + '"uco-observable:isActive":"true"\n'
 		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '{\n'
-		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:ApplicationAccount",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:application":"' + idApp + '"\n'
-		line += CaseJson.C_TAB*2  + '},\n'
+		line += CaseJson.C_TAB*3 + '"@type":"uco-observable:ApplicationAccount",\n'
+		line += CaseJson.C_TAB*3 + '"uco-observable:application":{\n'
+		line += CaseJson.C_TAB*4 + '"@id": "' + idApp + '"\n'
+		line += CaseJson.C_TAB*3  + '}\n'
+		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '{\n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:DigitalAccount",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:displayName":"' + partyName + '"\n'
@@ -340,10 +344,9 @@ class CaseJson:
 		for item in idToList:
 			if item in self.CHATparticipantsIdList:
 				idx = self.CHATparticipantsIdList.index(item)
-				TOlist = ":" + self.CHATaccountIdList[idx] + ','
+				TOlist = '{"@id":":' + self.CHATaccountIdList[idx] + '"},'
 			else:
-				TOlist = ":" + self.phoneOwnerUuid + ','
-
+				TOlist = '{"@id":":' + self.phoneOwnerUuid + '"},'
 
 		TOlist = TOlist[0:-1] 
 
@@ -372,9 +375,12 @@ class CaseJson:
 		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
 		line += CaseJson.C_TAB*3 + '"@value":"' + timeStamp + '"\n'
 		line += CaseJson.C_TAB*3 + '},\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:from":":' + FROMitem + '",\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:from":{\n'
+		line += CaseJson.C_TAB*3 + '"@id":":' + FROMitem + '"\n'
+		line += CaseJson.C_TAB*2 + '},\n'  
 		TOlist = TOlist.replace('\t', ' ')
-		line += CaseJson.C_TAB*2 + '"uco-observable:to":["' + TOlist + '"],\n' 
+		line += CaseJson.C_TAB*2 + '"uco-observable:to":[\n'
+		line += CaseJson.C_TAB*3 + TOlist + '],\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:__status":"' + status + '",\n'		
 		line += CaseJson.C_TAB*2 + '"uco-observable:__outcome":"' + outcome + '",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:messageType":"' + direction + '"\n'
@@ -424,13 +430,12 @@ class CaseJson:
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem",\n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
-		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:Device",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:manufacturer":"' + deviceManufacturer + '",\n'
+		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:Device",\n'		
 		line += CaseJson.C_TAB*2 + '"uco-observable:model":"' + deviceModel + '",\n' 
 		line += CaseJson.C_TAB*2 + '"uco-observable:serialNumber":"' + deviceSN + '"\n'
 		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '{\n'
-		line += CaseJson.C_TAB*2 + '"@type":"MobileDevice",\n'
+		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:MobileDevice",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:IMEI":"' + deviceIMEI + '",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:bluetoothDeviceName":"NOT_PROVIDED",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:mockLocationsAllowed":"NOT_PROVIDED",\n'
@@ -439,17 +444,22 @@ class CaseJson:
 		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
 		line += CaseJson.C_TAB*3 + '"@value":"__NOT_PROVIDED"\n'
 		line += CaseJson.C_TAB*3 + '},\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:storageCapacity":"NOT_PROVIDED",\n'
+		
+		line += CaseJson.C_TAB*2 + '"uco-observable:storageCapacityInBytes":{\n'
+		line += CaseJson.C_TAB*3 + '"@type": "xsd:long",\n'
+		line += CaseJson.C_TAB*3 + '"@value": "NOT_PROVIDED"\n'
+		line += CaseJson.C_TAB*2 + '},\n'
+
 		line += CaseJson.C_TAB*2 + '"uco-observable:clockSetting":"NOT_PROVIDED"},\n'
 		line += CaseJson.C_TAB*2 + '{\n'
-		line += CaseJson.C_TAB*2 + '"@type":"OperatingSystem",\n'
+		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:OperatingSystem",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:name": "' + deviceOS + '",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:manufacturer":"NOT_PROVIDED",\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:manufacturer":"' + deviceManufacturer + '",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:version":"' + deviceOSVersion + '"\n'
 		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '{\n'
 		if deviceOS.lower() == 'android':
-			line += CaseJson.C_TAB*2 + '"@type":"AndroidDevice",\n'
+			line += CaseJson.C_TAB*2 + '"@type":"uco-observable:AndroidDevice",\n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:androidID": "NOT_PROVIDED",\n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:androidSerialNumber": "' + deviceSN + '",\n'
 		else:
@@ -460,14 +470,14 @@ class CaseJson:
 		line += CaseJson.C_TAB*2 + '"uco-observable:screenUnlockPattern":"NOT_PROVIDED"\n'
 		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '{\n'
-		line += CaseJson.C_TAB*2 + '"@type":"BluetoothAddress",\n'
+		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:BluetoothAddress",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:address":"' + deviceBluetoothAddress + '"\n' 
 		line += CaseJson.C_TAB*2 + '},\n '
 		line += CaseJson.C_TAB*2 + '{\n'
-		line += CaseJson.C_TAB*2 + '"@type":"WiFiAddress",\n'
+		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:WiFiAddress",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:address":"' + deviceWiFi + '"},\n'
 		line += CaseJson.C_TAB*2 + '{\n'
-		line += CaseJson.C_TAB*2 + '"@type":"MobileAccount",\n '
+		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:MobileAccount",\n '
 		line += CaseJson.C_TAB*2 + '"uco-observable:MSISDN":"NOT_PROVIDED"\n'
 		line += CaseJson.C_TAB*2 + '}\n'
 		line += CaseJson.C_TAB + ']\n';
@@ -501,9 +511,12 @@ class CaseJson:
 			uuidEmail = self.__generateTraceEmailAccount(EMAILidentifierFROM.strip())
 			self.EMAILaccountIdList.append(uuidEmail)
 			idFROM = uuidEmail
-		
-		line += CaseJson.C_TAB*2 + '"uco-observable:fromRef":":' + idFROM + '",\n'		
+	
+		line += CaseJson.C_TAB*2 + '"uco-observable:fromRef":{\n'
+		line += CaseJson.C_TAB*3 + '"@id":":' + idFROM + '"\n'		
+		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:toRef":['		
+
 		items = ''
 		for i in range(len(EMAILidentifiersTO)):
 			if EMAILidentifiersTO[i].strip() == '':
@@ -511,13 +524,13 @@ class CaseJson:
 			else:
 				if EMAILidentifiersTO[i].strip() in self.EMAILaddressList:
 					idx = self.EMAILaddressList.index(EMAILidentifiersTO[i].strip())
-					idTO = ":" + self.EMAILaccountIdList[idx]
+					idTO = '{"@id":":' + self.EMAILaccountIdList[idx] + '"}'
 				else:
 					self.EMAILaddressList.append(EMAILidentifiersTO[i].strip())
 					uuidEmail = self.__generateTraceEmailAccount(EMAILidentifiersTO[i].strip())
 					self.EMAILaccountIdList.append(uuidEmail)
-					idTO = ":" + uuidEmail
-				items += items + '"' + idTO + '",'
+					idTO = '{"@id":":' + uuidEmail + '"}'
+				items += items + idTO + ','
 		
 		# get rid of the last comma
 		items = items[0:-1]
@@ -531,13 +544,13 @@ class CaseJson:
 			else:
 				if EMAILidentifiersCC[i].strip() in self.EMAILaddressList:
 					idx = self.EMAILaddressList.index(EMAILidentifiersCC[i].strip())
-					idCC = ":" + self.EMAILaccountIdList[idx]
+					idCC = '{"@id":":' + self.EMAILaccountIdList[idx] + '"}'
 				else:
 					self.EMAILaddressList.append(EMAILidentifiersCC[i].strip())
 					uuidEmail = self.__generateTraceEmailAccount(EMAILidentifiersCC[i].strip())
 					self.EMAILaccountIdList.append(uuidEmail)
-					idCC = ":" + uuidEmail
-				items += items + '"' + idCC + '",'
+					idCC = '{"@id":":' + uuidEmail + '"}'
+				items += items + idCC + ','
 
 		# get rid of the last comma
 		items = items[0:-1]
@@ -551,13 +564,13 @@ class CaseJson:
 			else:
 				if EMAILidentifiersBCC[i].strip() in self.EMAILaddressList:
 					idx = self.EMAILaddressList.index(EMAILidentifiersBCC[i].strip())
-					idBCC = ":" + self.EMAILaccountIdList[idx]
+					idBCC = '{"@id":":' + self.EMAILaccountIdList[idx] + '"}'
 				else:
 					self.EMAILaddressList.append(EMAILidentifiersBCC[i].strip())
 					uuidEmail = self.__generateTraceEmailAccount(EMAILidentifiersBCC[i].strip())
 					self.EMAILaccountIdList.append(uuidEmail)
-					idBCC = ":" + uuidEmail
-				items += items + '"' + idBCC + '",'
+					idBCC = '{"@id":":' + uuidEmail + '"}'
+				items += items + idBCC + ','
 
 		# get rid of the last comma
 		items = items[0:-1]
@@ -622,7 +635,7 @@ class CaseJson:
 		line = '{ \n'
 		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem",\n'
-		line += CaseJson.C_TAB + '"tag":["' + FILETag + '"],\n'
+		#line += CaseJson.C_TAB + '"tag":["' + FILETag + '"],\n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:File",\n'
@@ -640,7 +653,7 @@ class CaseJson:
 		line += CaseJson.C_TAB*2 + '"uco-observable:extension":"' + sExt + '",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:fileSystemType":"userdata (ExtX)",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:isDirectory":"false",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:allocationStatus":"allocated",\n'
+		#line += CaseJson.C_TAB*2 + '"uco-observable:allocationStatus":"allocated",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:sizeInBytes": {\n'
 		line += CaseJson.C_TAB*2 + '"@type":"xsd:long", \n'
 		line += CaseJson.C_TAB*2 + '"@value":"' + FILEsize + '"\n'
@@ -673,12 +686,12 @@ class CaseJson:
 			line += CaseJson.C_TAB*2 + '},\n'
 			line += CaseJson.C_TAB*2 + '{\n'
 			line += CaseJson.C_TAB*2 + '"type":"uco-observable:ContentData",\n'
-			line += CaseJson.C_TAB*2 + '"hash":[\n'
+			line += CaseJson.C_TAB*2 + '"uco-observable:hash":[\n'
 			line += CaseJson.C_TAB*3 + '{\n'
 			line += CaseJson.C_TAB*3 + '"@type":"uco-types:Hash",\n'
 			line += CaseJson.C_TAB*3 + '"uco-types:hashMethod":\n'
 			line += CaseJson.C_TAB*4 + '{\n'
-			line += CaseJson.C_TAB*4 + '"@type": "uco-core:HashNameEnum",\n'
+			line += CaseJson.C_TAB*4 + '"@type": "uco-vocabulary:HashNameVocab",\n'
 			line += CaseJson.C_TAB*4 + '"@value": "' + FILEhashType + '"\n'
 			line += CaseJson.C_TAB*4 + '},\n'
 			line += CaseJson.C_TAB*3 + '"uco-types:hashValue":\n'
@@ -687,8 +700,8 @@ class CaseJson:
 			line += CaseJson.C_TAB*4 + '"@value":"' + FILEHashValue  + '"\n'
 			line += CaseJson.C_TAB*4 + '}\n'
 			line += CaseJson.C_TAB*3 + '}\n'
-			line += CaseJson.C_TAB*2 + '], \n'
-			line += CaseJson.C_TAB*2 +  '"uco-observable:SizeInBytes":"256"\n'
+			line += CaseJson.C_TAB*2 + '] \n'
+			#line += CaseJson.C_TAB*2 +  '"uco-observable:SizeInBytes":"256"\n'
 			line += CaseJson.C_TAB*2 + '}\n'
 		line += CaseJson.C_TAB + ']\n';
 		line += '},\n';
@@ -704,13 +717,16 @@ class CaseJson:
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-identity:SimpleName",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:givenName":"' + name + '",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:familyName":"' + familyName + '"\n'
+		line += CaseJson.C_TAB*2 + '"uco-identity:givenName":"' + name + '",\n'
+		line += CaseJson.C_TAB*2 + '"uco-identity:familyName":"' + familyName + '"\n'
 		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '{\n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-identity:BirthInformation",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:birthDate":"' + birthDate + '"\n'
+		line += CaseJson.C_TAB*2 + '"uco-identity:birthDate":{\n'
+		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
+		line += CaseJson.C_TAB*3 + '"@value":"' + birthDate + '"\n'
 		line += CaseJson.C_TAB*2 + '}\n'
+		line += CaseJson.C_TAB + '}\n'
 		line += CaseJson.C_TAB + ']\n'
 		line += '},\n';
 		self.FileOut.write(line);
@@ -795,8 +811,13 @@ class CaseJson:
 		line += CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n'
 		line += CaseJson.C_TAB*3 + '"@value":"' + startTime + '"\n'
 		line += CaseJson.C_TAB*3 + '},\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:from":":' + idFROM + '",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:to":":' + idTO + '",\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:from":{\n'
+		line += CaseJson.C_TAB*3 + '"@id":":' + idFROM + '"\n'
+		line += CaseJson.C_TAB*2 + '},\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:to":{\n'
+		line += CaseJson.C_TAB*3 + '"@id":":' + idTO + '"\n'
+		line += CaseJson.C_TAB*2 + '},\n'
+
 		line += CaseJson.C_TAB*2 + '"uco-observable:duration":"' + duration + '", \n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:allocationStatus":"allocated", \n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:__outcome":"' + outcome + '", \n'
@@ -922,9 +943,8 @@ class CaseJson:
 					else:
 						phoneUuidFrom = phonePartyUuid
 						phoneUuidTo = '":' + self.phoneOwnerUuid + '"'
-
 			if phoneUuidTo == self.phoneOwnerUuid:
-				phoneUuidTo = '":' + self.phoneOwnerUuid + '"'	
+				phoneUuidTo = '{"@id":":' + self.phoneOwnerUuid + '"}'	
 			else:
 			# get rid of the last comma if the field is not empty
 				if phoneUuidTo == '':
@@ -948,7 +968,9 @@ class CaseJson:
 			body = body.replace("\\", "")
 			line += CaseJson.C_TAB*2 + '"uco-observable:messageText":"' + body + '", \n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:__status":"' + SMSstatus[i] + '", \n'
-			line += CaseJson.C_TAB*2 + '"uco-observable:from":":' + phoneUuidFrom + '", \n'
+			line += CaseJson.C_TAB*2 + '"uco-observable:from":{\n'
+			line += CaseJson.C_TAB*3 + '"@id":":' + phoneUuidFrom + '"\n'
+			line += CaseJson.C_TAB*2 + '},\n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:to":[' + phoneUuidTo + '], \n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:sentTime":{\n'
 			line += CaseJson.C_TAB*3 + '"@type": "xsd:dateTime", \n' 
@@ -967,27 +989,40 @@ class CaseJson:
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
-		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:messageThread",\n'
+		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:MessageThread",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:displayName":"NOT_PROVIDED",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:messages":[{\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:length":"' + str(len(chatThread)) + '",\n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:slot":[\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:messages":{\n'
+		line += CaseJson.C_TAB*2 + '"olo:length":"' + str(len(chatThread)) + '",\n'
+		line += CaseJson.C_TAB*2 + '"olo:slot":[\n'
+
 		n = len(chatThread)
 		for i in range(n - 1):
-			line += CaseJson.C_TAB*2 + '":' + chatThread[i] + '",\n'
+			line += CaseJson.C_TAB*3 + '{\n'
+			line += CaseJson.C_TAB*4 + '"olo:index":"' + str(i + 1) + '",\n'
+			line += CaseJson.C_TAB*4 + '"olo:item": {\n'
+			line += CaseJson.C_TAB*5 + '"@id":":' + chatThread[i] + '"\n'
+			line += CaseJson.C_TAB*4 + '}\n'
+			line += CaseJson.C_TAB*3 + '},\n'
+		
+		line += CaseJson.C_TAB*3 + '{\n'
+		line += CaseJson.C_TAB*4 + '"olo:index":"' + str(n) + '",\n'
+		line += CaseJson.C_TAB*4 + '"olo:item": {\n'
+		line += CaseJson.C_TAB*5 + '"@id":":' + chatThread[n - 1] + '"\n'
+		line += CaseJson.C_TAB*4 + '}\n'
+		line += CaseJson.C_TAB*3 + '}\n'
 
-		line += CaseJson.C_TAB*2 + '":' + chatThread[n - 1] + '"]\n'
-		line += CaseJson.C_TAB*2 + '}\n'
-		line += CaseJson.C_TAB + '],\n'
-		line += CaseJson.C_TAB + '"uco-observable:participants":[\n'
+		line += CaseJson.C_TAB*3 + ']\n'
+		line += CaseJson.C_TAB*2 + '},\n'
+		line += CaseJson.C_TAB*2 + '"uco-observable:participants":[\n'
 
 		n = len(chatIdAccountList)
 		
 		for i in range(n - 1):
-			line += CaseJson.C_TAB*2 + '":' + chatIdAccountList[i] + '",\n'
+			line += CaseJson.C_TAB*3 + '{"@id":":' + chatIdAccountList[i] + '"},\n'
 
 		if n > 0:
-			line += CaseJson.C_TAB*2  + '"' + chatIdAccountList[n - 1] + '"]\n' 
+			line += CaseJson.C_TAB*3  + '{"@id":":' + chatIdAccountList[n - 1] + '"}]\n' 
+		
 		line += CaseJson.C_TAB*2 + '}\n'
 		line += CaseJson.C_TAB + ']\n'
 		line += '},\n'
