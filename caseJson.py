@@ -198,7 +198,7 @@ class CaseJson:
 	def __generateTraceAppAccount(self, source, name, identifier, idApp, idIdentity):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[ \n'
 		line += CaseJson.C_TAB*2 + '{ \n'
@@ -225,12 +225,12 @@ class CaseJson:
 	def __generateTraceAppName(self, appName):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
+		line += CaseJson.C_TAB + '"uco-core:name":"' + appName + '"\n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[ \n'
 		line += CaseJson.C_TAB*2 + '{ \n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:Application", \n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:appName":"' + appName + '" \n'
 		line += CaseJson.C_TAB*2 + '}\n'
 		line += CaseJson.C_TAB + ']\n';
 		line += '},\n';
@@ -240,7 +240,7 @@ class CaseJson:
 	def __generateTraceAppIdentity(self, appName):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:Identity", \n' 
 		line += CaseJson.C_TAB + '"uco-core:facets":[ \n' 
 		line += CaseJson.C_TAB*2 + '{ \n' 
@@ -311,7 +311,7 @@ class CaseJson:
 	def __generateTraceChatAccount(self, issuer, partyId, partyName, idApp):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
@@ -344,9 +344,9 @@ class CaseJson:
 		for item in idToList:
 			if item in self.CHATparticipantsIdList:
 				idx = self.CHATparticipantsIdList.index(item)
-				TOlist = '{"@id":":' + self.CHATaccountIdList[idx] + '"},'
+				TOlist = '{"@id":"kb:' + self.CHATaccountIdList[idx] + '"},'
 			else:
-				TOlist = '{"@id":":' + self.phoneOwnerUuid + '"},'
+				TOlist = '{"@id":"kb:' + self.phoneOwnerUuid + '"},'
 
 		TOlist = TOlist[0:-1] 
 
@@ -358,7 +358,7 @@ class CaseJson:
 		
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
@@ -376,7 +376,7 @@ class CaseJson:
 		line += CaseJson.C_TAB*3 + '"@value":"' + timeStamp + '"\n'
 		line += CaseJson.C_TAB*3 + '},\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:from":{\n'
-		line += CaseJson.C_TAB*3 + '"@id":":' + FROMitem + '"\n'
+		line += CaseJson.C_TAB*3 + '"@id":"kb:' + FROMitem + '"\n'
 		line += CaseJson.C_TAB*2 + '},\n'  
 		TOlist = TOlist.replace('\t', ' ')
 		line += CaseJson.C_TAB*2 + '"uco-observable:to":[\n'
@@ -426,7 +426,7 @@ class CaseJson:
 		deviceIMSI, deviceIMEI, deviceBluetoothAddress):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem",\n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
@@ -491,7 +491,7 @@ class CaseJson:
 		EMAILattachmentsFilename):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem",\n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
@@ -513,7 +513,7 @@ class CaseJson:
 			idFROM = uuidEmail
 	
 		line += CaseJson.C_TAB*2 + '"uco-observable:fromRef":{\n'
-		line += CaseJson.C_TAB*3 + '"@id":":' + idFROM + '"\n'		
+		line += CaseJson.C_TAB*3 + '"@id":"kb:' + idFROM + '"\n'		
 		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:toRef":['		
 
@@ -524,12 +524,12 @@ class CaseJson:
 			else:
 				if EMAILidentifiersTO[i].strip() in self.EMAILaddressList:
 					idx = self.EMAILaddressList.index(EMAILidentifiersTO[i].strip())
-					idTO = '{"@id":":' + self.EMAILaccountIdList[idx] + '"}'
+					idTO = '{"@id":"kb:' + self.EMAILaccountIdList[idx] + '"}'
 				else:
 					self.EMAILaddressList.append(EMAILidentifiersTO[i].strip())
 					uuidEmail = self.__generateTraceEmailAccount(EMAILidentifiersTO[i].strip())
 					self.EMAILaccountIdList.append(uuidEmail)
-					idTO = '{"@id":":' + uuidEmail + '"}'
+					idTO = '{"@id":"kb:' + uuidEmail + '"}'
 				items += items + idTO + ','
 		
 		# get rid of the last comma
@@ -544,12 +544,12 @@ class CaseJson:
 			else:
 				if EMAILidentifiersCC[i].strip() in self.EMAILaddressList:
 					idx = self.EMAILaddressList.index(EMAILidentifiersCC[i].strip())
-					idCC = '{"@id":":' + self.EMAILaccountIdList[idx] + '"}'
+					idCC = '{"@id":"kb:' + self.EMAILaccountIdList[idx] + '"}'
 				else:
 					self.EMAILaddressList.append(EMAILidentifiersCC[i].strip())
 					uuidEmail = self.__generateTraceEmailAccount(EMAILidentifiersCC[i].strip())
 					self.EMAILaccountIdList.append(uuidEmail)
-					idCC = '{"@id":":' + uuidEmail + '"}'
+					idCC = '{"@id":"kb:' + uuidEmail + '"}'
 				items += items + idCC + ','
 
 		# get rid of the last comma
@@ -564,12 +564,12 @@ class CaseJson:
 			else:
 				if EMAILidentifiersBCC[i].strip() in self.EMAILaddressList:
 					idx = self.EMAILaddressList.index(EMAILidentifiersBCC[i].strip())
-					idBCC = '{"@id":":' + self.EMAILaccountIdList[idx] + '"}'
+					idBCC = '{"@id":"kb:' + self.EMAILaccountIdList[idx] + '"}'
 				else:
 					self.EMAILaddressList.append(EMAILidentifiersBCC[i].strip())
 					uuidEmail = self.__generateTraceEmailAccount(EMAILidentifiersBCC[i].strip())
 					self.EMAILaccountIdList.append(uuidEmail)
-					idBCC = '{"@id":":' + uuidEmail + '"}'
+					idBCC = '{"@id":"kb:' + uuidEmail + '"}'
 				items += items + idBCC + ','
 
 		# get rid of the last comma
@@ -609,7 +609,7 @@ class CaseJson:
 	def __generateTraceEmailAccount(self, address):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[{\n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:Account", \n'
@@ -633,7 +633,7 @@ class CaseJson:
 		
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem",\n'
 		#line += CaseJson.C_TAB + '"tag":["' + FILETag + '"],\n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
@@ -712,7 +712,7 @@ class CaseJson:
 	def __generateTraceIdentity(self, name, familyName, birthDate):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-identity:Identity",\n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
@@ -735,7 +735,7 @@ class CaseJson:
 	def __generateTracePhoneAccount(self, Source, Name, PhoneNum):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[ \n'
 		line += CaseJson.C_TAB*2 + '{ \n'
@@ -757,7 +757,7 @@ class CaseJson:
 		idInstrument, location, idPerformer, idObject, listResult, endChar):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB +  '"@type":"uco-action:Action",\n'
 		line += CaseJson.C_TAB +  '"uco-action:name":"' + name + '",\n'
 		line += CaseJson.C_TAB + '"uco-action:description":"' + description + '",\n'
@@ -800,7 +800,7 @@ class CaseJson:
 								duration, status, outcome):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[ \n'
 		line += CaseJson.C_TAB*2 + '{ \n'
@@ -812,10 +812,10 @@ class CaseJson:
 		line += CaseJson.C_TAB*3 + '"@value":"' + startTime + '"\n'
 		line += CaseJson.C_TAB*3 + '},\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:from":{\n'
-		line += CaseJson.C_TAB*3 + '"@id":":' + idFROM + '"\n'
+		line += CaseJson.C_TAB*3 + '"@id":"kb:' + idFROM + '"\n'
 		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:to":{\n'
-		line += CaseJson.C_TAB*3 + '"@id":":' + idTO + '"\n'
+		line += CaseJson.C_TAB*3 + '"@id":"kb:' + idTO + '"\n'
 		line += CaseJson.C_TAB*2 + '},\n'
 
 		line += CaseJson.C_TAB*2 + '"uco-observable:duration":"' + duration + '", \n'
@@ -832,7 +832,7 @@ class CaseJson:
 	def __generateTracePhoneOwner(self, Source, Name, PhoneNum):
 		self.phoneOwnerUuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' + self.phoneOwnerUuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' + self.phoneOwnerUuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[ \n'
 		line += CaseJson.C_TAB*2 + '{ \n'
@@ -855,7 +855,7 @@ class CaseJson:
 		exhibitNumber, creationTime):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-investigation:ProvenanceRecord", \n'
 		line += CaseJson.C_TAB*2 + '"uco-investigation:createdTime":\n'
 		line += CaseJson.C_TAB*3 + '{\n'
@@ -882,7 +882,7 @@ class CaseJson:
 	def __generateTraceRelation(self, source, target, relation, table, offset):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:Relationship",\n'
 		line += CaseJson.C_TAB + '"uco-observable:source":":' + source + '",\n'
 		line += CaseJson.C_TAB + '"uco-observable:target":":' + target + '",\n'
@@ -910,7 +910,7 @@ class CaseJson:
 	def __generateTraceRole(self, role):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-role:Role",\n'
 		line += CaseJson.C_TAB + '"uco-role:name":"' + role + '"\n'
 		line += '},\n'
@@ -944,7 +944,7 @@ class CaseJson:
 						phoneUuidFrom = phonePartyUuid
 						phoneUuidTo = '":' + self.phoneOwnerUuid + '"'
 			if phoneUuidTo == self.phoneOwnerUuid:
-				phoneUuidTo = '{"@id":":' + self.phoneOwnerUuid + '"}'	
+				phoneUuidTo = '{"@id":"kb:' + self.phoneOwnerUuid + '"}'	
 			else:
 			# get rid of the last comma if the field is not empty
 				if phoneUuidTo == '':
@@ -955,7 +955,7 @@ class CaseJson:
 
 			uuid = CaseJson.__createUUID()
 			line = '{\n'
-			line += CaseJson.C_TAB + '"@id":":' + uuid + '", \n'
+			line += CaseJson.C_TAB + '"@id":"kb:' + uuid + '", \n'
 			line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 			line += CaseJson.C_TAB + '"uco-core:facets":[ \n'
 			line += CaseJson.C_TAB*2 + '{ \n'
@@ -966,10 +966,11 @@ class CaseJson:
 			body = body.replace('\t', ' ')
 			body = body.replace("\\'", "'")
 			body = body.replace("\\", "")
+			line += CaseJson.C_TAB*2 + '"uco-observable:SMSmessage":"true", \n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:messageText":"' + body + '", \n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:__status":"' + SMSstatus[i] + '", \n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:from":{\n'
-			line += CaseJson.C_TAB*3 + '"@id":":' + phoneUuidFrom + '"\n'
+			line += CaseJson.C_TAB*3 + '"@id":"kb:' + phoneUuidFrom + '"\n'
 			line += CaseJson.C_TAB*2 + '},\n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:to":[' + phoneUuidTo + '], \n'
 			line += CaseJson.C_TAB*2 + '"uco-observable:sentTime":{\n'
@@ -985,7 +986,7 @@ class CaseJson:
 	def __generateThreadMessages(self, chatTraceId, chatThread, chatIdAccountList):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 		line += CaseJson.C_TAB*2 + '{\n'
@@ -1000,14 +1001,14 @@ class CaseJson:
 			line += CaseJson.C_TAB*3 + '{\n'
 			line += CaseJson.C_TAB*4 + '"olo:index":"' + str(i + 1) + '",\n'
 			line += CaseJson.C_TAB*4 + '"olo:item": {\n'
-			line += CaseJson.C_TAB*5 + '"@id":":' + chatThread[i] + '"\n'
+			line += CaseJson.C_TAB*5 + '"@id":"kb:' + chatThread[i] + '"\n'
 			line += CaseJson.C_TAB*4 + '}\n'
 			line += CaseJson.C_TAB*3 + '},\n'
 		
 		line += CaseJson.C_TAB*3 + '{\n'
 		line += CaseJson.C_TAB*4 + '"olo:index":"' + str(n) + '",\n'
 		line += CaseJson.C_TAB*4 + '"olo:item": {\n'
-		line += CaseJson.C_TAB*5 + '"@id":":' + chatThread[n - 1] + '"\n'
+		line += CaseJson.C_TAB*5 + '"@id":"kb:' + chatThread[n - 1] + '"\n'
 		line += CaseJson.C_TAB*4 + '}\n'
 		line += CaseJson.C_TAB*3 + '}\n'
 
@@ -1018,10 +1019,10 @@ class CaseJson:
 		n = len(chatIdAccountList)
 		
 		for i in range(n - 1):
-			line += CaseJson.C_TAB*3 + '{"@id":":' + chatIdAccountList[i] + '"},\n'
+			line += CaseJson.C_TAB*3 + '{"@id":"kb:' + chatIdAccountList[i] + '"},\n'
 
 		if n > 0:
-			line += CaseJson.C_TAB*3  + '{"@id":":' + chatIdAccountList[n - 1] + '"}]\n' 
+			line += CaseJson.C_TAB*3  + '{"@id":"kb:' + chatIdAccountList[n - 1] + '"}]\n' 
 		
 		line += CaseJson.C_TAB*2 + '}\n'
 		line += CaseJson.C_TAB + ']\n'
@@ -1033,7 +1034,7 @@ class CaseJson:
 	def __generateTraceTool(self, name, type, vendor, version, confList):
 		uuid = CaseJson.__createUUID()
 		line = '{ \n'
-		line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+		line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-tool:Tool", \n'
 		line += CaseJson.C_TAB + '"uco-tool:name":"' + name + '",\n' 
 		line += CaseJson.C_TAB + '"uco-tool:toolType":"' + type + '",\n'
@@ -1078,7 +1079,7 @@ class CaseJson:
 		for i in range(len(WEB_PAGEid)):
 			uuid = CaseJson.__createUUID()
 			line = '\n{ \n'
-			line += CaseJson.C_TAB + '"@id":":' +  uuid + '", \n'
+			line += CaseJson.C_TAB + '"@id":"kb:' +  uuid + '", \n'
 			line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 			line += CaseJson.C_TAB + '"uco-core:facets":[\n'
 			line += CaseJson.C_TAB*2 + '{\n'
