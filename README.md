@@ -35,7 +35,7 @@ where:
 ```js
 * -h, --help (show the help message and exit)
 * -r | --report INFILEXML (the UFED XML report to be converted into CASE, compulsary)
-* -t | --trace {all,call,contact,chat,sms,web_page,email} (Traces to be extracted, optional, default all)
+* -t | --trace {all,call,contact,chat,sms,url,email} (Traces to be extracted, optional, default all)
 * -o | --output OUTPUT_CASE_JSON (CASE-JSON-LD file to be generated, compulsory)
 * -d | --debug OUTPUT_DEBUG (output file for debug)
 ```
@@ -52,7 +52,7 @@ All the XML reports have been processed to generate the corresponding CASE repre
 * File
 * Email
 * SMS
-* Web History
+* URL History
 * Chain of Evidence
 * Context
   * Device
@@ -63,3 +63,11 @@ All the XML reports have been processed to generate the corresponding CASE repre
   * Investigative Extraction
 
 Some simple examples are provided in the **json** folder, two XML reports of an Android and an iOS image are also available in the **XMLreports** folder.
+
+## Development status
+
+This repository follows [CASE community guidance on describing development status](https://caseontology.org/resources/github_policies.html#development-statuses), by adherence to noted support requirements.
+
+The status of this repository is:
+
+4 - Beta

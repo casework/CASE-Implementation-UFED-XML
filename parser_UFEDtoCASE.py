@@ -357,7 +357,7 @@ class ExtractTraces(xml.sax.ContentHandler):
 
 
         # WEB HISTORY section
-        self.WEB_PAGEtrace = 'web_page'
+        self.WEB_PAGEtrace = 'url'
         self.WEB_PAGEin = False
         self.WEB_PAGEinSource = False
         self.WEB_PAGEinSourceValue = False
@@ -2138,7 +2138,7 @@ parser.add_argument('-r', '--report', dest='inFileXML', required=True,
 
 # Cast input to integer, with a default value
 parser.add_argument('-t', '--trace', type=str, dest='kindTrace', 
-	               choices=['all', 'call', 'contact', 'chat', 'sms', 'web_page', 'email'], 
+	               choices=['all', 'call', 'contact', 'chat', 'sms', 'url', 'email'], 
 	               help="Traces to be extracted, default all", default='all')
 
 parser.add_argument('-o', '--output', dest='output_CASE_JSON', required=True, help='File CASE-JSON-LD of output')
@@ -2156,7 +2156,7 @@ kindTraces = []
 if args.kindTrace == 'all':
     kindTraces=['call', 'contact', 'chat', 'email', 'file', 'sms', 'visitedpage', 'email']
 else:
-    if args.kindTrace == 'web_page':
+    if args.kindTrace == 'url':
         kindTraces.append('visitedpage')
     else:
         kindTraces.append(args.kindTrace)
