@@ -624,8 +624,9 @@ class CaseJson:
 		line += CaseJson.C_TAB + '"@type":"uco-observable:CyberItem", \n'
 		line += CaseJson.C_TAB + '"uco-core:facets":[{\n'
 		line += CaseJson.C_TAB*2 + '"@type":"uco-observable:Account", \n'
-		line += CaseJson.C_TAB*2 + '"uco-observable:accountIssuer": "' + \
-			CaseJson.C_NP + '",\n'
+		# aligned to CASE 0.4
+		#line += CaseJson.C_TAB*2 + '"uco-observable:accountIssuer": "' + \
+		#	CaseJson.C_NP + '",\n'
 		line += CaseJson.C_TAB*2 + '"uco-observable:isActive":"true"\n'
 		line += CaseJson.C_TAB*2 + '},\n'
 		line += CaseJson.C_TAB*2 + '{\n'
@@ -924,8 +925,12 @@ class CaseJson:
 		line = '{ \n'
 		line += CaseJson.C_TAB + '"@id":"' +  uuid + '", \n'
 		line += CaseJson.C_TAB + '"@type":"uco-observable:Relationship",\n'
-		line += CaseJson.C_TAB + '"uco-observable:source":"' + source + '",\n'
-		line += CaseJson.C_TAB + '"uco-observable:target":"' + target + '",\n'
+		line += CaseJson.C_TAB + '"uco-observable:source":{\n'
+		line += CaseJson.C_TAB*2 + '"@id":"' + source + '"\n'
+		line += CaseJson.C_TAB + '},\n'
+		line += CaseJson.C_TAB + '"uco-observable:target":{\n' 
+		line += CaseJson.C_TAB*2 + '"@id":"' + target + '"\n'
+		line += CaseJson.C_TAB + '},\n'
 		line += CaseJson.C_TAB + '"uco-observable:kindOfRelationship":"' + relation + '",\n'
 		if not table == '':
 			line += CaseJson.C_TAB + '"uco-observable:isDirectional":"True",\n'
@@ -1185,9 +1190,13 @@ class CaseJson:
 			line += '},\n'  						
 			self.FileOut.write(line);
 			
+			#print("WEB_PAGEid" + WEB_PAGEid[i] + "\n")
+			endChar = ','
 			#last web page item, endChar is not "," (default) but " "
 			if i == len(WEB_PAGEid) - 1:
-				self.__generateChainOfEvidence(WEB_PAGEid[i], uuid, ' ')
+				endChar	= ' '
+
+			self.__generateChainOfEvidence(WEB_PAGEid[i], uuid, endChar)
 
 	#not used anymore, every time the field Source is extracted
 	# an uco-observable:Application item is created
