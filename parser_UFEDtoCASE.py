@@ -1120,7 +1120,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                 # in some cases there are more than one single nodeInfo
                 # contained in the extraInfo element, so a dictionary with
                 # key = extraInfoID is necessary to store the whole info                
-                if attrs.get('id') == None:                    
+                if attrs.get('id') is None:                    
                     self.EXTRA_INFOdictNodeInfoId[i] = ''
                     charSep = ''
                 else:
