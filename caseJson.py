@@ -275,7 +275,8 @@ class CaseJson:
 			# those indicated below
 			if (CALLsource[i].strip() == '' or 
 				CALLsource[i].strip().lower() == 'call' or
-				CALLsource[i].strip().lower() == 'native call log'): 
+				CALLsource[i].strip().lower() == 'native call log' or
+				CALLsource[i].strip().lower() == 'logs table'): 
 				if CALLdirection[i].lower() == 'incoming':
 					if (len(CALLnamesFROM[i]) > 0): 
 						nameParty = CALLnamesFROM[i][0]
@@ -317,11 +318,11 @@ class CaseJson:
 				
 				if CALLdirection[i].lower() == 'incoming':
 					uuid = self.__generateTracePhoneCall(CALLdirection[i].lower(), 
-						CALLtimeStamp[i], self.phoneOwnerUuid, uuid, CALLduration[i],
+						CALLtimeStamp[i], uuid, self.phoneOwnerUuid, CALLduration[i],
 	                           CALLstatus[i], CALLoutcome[i])
 				else:
 					uuid = self.__generateTracePhoneCall(CALLdirection[i].lower(), 
-						CALLtimeStamp[i], uuid, self.phoneOwnerUuid, CALLduration[i],
+						CALLtimeStamp[i], self.phoneOwnerUuid, uuid, CALLduration[i],
 	                           CALLstatus[i], CALLoutcome[i])
 				self.__generateChainOfEvidence(CALLid[i], uuid)
 
@@ -1075,19 +1076,24 @@ class CaseJson:
 		for i in range(len(SMSid)):
 			phoneUuidTo = ''
 			phoneUuidFrom = ''
-			for j in range(len(SMSpartyIdentifiers[i])):
+			for j in range(len(SMSpartyIdentifiers[i])):				
 				if SMSpartyIdentifiers[i][j].strip() == '':
 					pass
 				else:
-					if SMSpartyIdentifiers[i][j] in self.phoneNumberList:
-						idx = self.phoneNumberList.index(SMSpartyIdentifiers[i][j])
+					#print('SMSpartyIdentifiers:' + SMSpartyIdentifiers[i][j])
+					#print(self.phoneNumberList)
+					if SMSpartyIdentifiers[i][j] in self.phoneNumberList:						
+						idx = self.phoneNumberList.index(SMSpartyIdentifiers[i][j])						
 						userId = self.phoneNumberList[idx]
 						phonePartyUuid = self.phoneUuidList[idx]
 					else:
 # see previous comment of the use of the mobileOperator variable
+						self.phoneNumberList.append(SMSpartyIdentifiers[i][j])
+						self.phoneNameList.append(SMSpartyNames[i][j])
 						mobileOperator = ""
 						phonePartyUuid = self.__generateTracePhoneAccount(mobileOperator, 
 							SMSpartyNames[i][j], SMSpartyIdentifiers[i][j])	
+						self.phoneUuidList.append(phonePartyUuid)
 				
 					phoneUuidTo = ''
 	        		# Party with Role=TO can be more than one

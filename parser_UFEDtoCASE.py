@@ -686,7 +686,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             if attrValue == 'TimeStamp':
                 self.CALLinTimeStamp = True
             
-            if attrValue == 'Direction':
+            if attrValue == 'Direction' or attrValue == 'Type':
                 self.CALLinDirection = True
             
             if attrValue == 'Duration':
@@ -2210,7 +2210,7 @@ else:
 print('\n\n\nCASE is being generated ...')
 
 phoneNumber = Handler.findOwnerPhone(Handler.U_ACCOUNTusername)
-#print("owner's phone number: " + phoneNumber + '\n')
+print("owner's phone number: " + phoneNumber + '\n')
 
 caseTrace = CJ.CaseJson(Handler.fOut, Handler.U_ACCOUNTsource, 
         Handler.U_ACCOUNTname, Handler.U_ACCOUNTusername)
