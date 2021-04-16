@@ -2134,14 +2134,14 @@ parser = argparse.ArgumentParser(description='Parser to convert XML Report from 
 
 # report XML exported by UFED PA, to be converted/parsed into CASE
 parser.add_argument('-r', '--report', dest='inFileXML', required=True, 
-                    help='UFED XML report to be converted into CASE')
+                    help='The UFED XML report from which to extract digital traces and convert them into CASE; it supports UFED PA version from 7.24 to 7.37')
 
 # Cast input to integer, with a default value
 parser.add_argument('-t', '--trace', type=str, dest='kindTrace', 
 	               choices=['all', 'call', 'contact', 'chat', 'sms', 'url', 'email'], 
 	               help="Traces to be extracted, default all", default='all')
 
-parser.add_argument('-o', '--output', dest='output_CASE_JSON', required=True, help='File CASE-JSON-LD of output')
+parser.add_argument('-o', '--output', dest='output_CASE_JSON', required=True, help='File CASE-JSON-LD to be generated')
 
 parser.add_argument('-d', '--debug', dest='output_DEBUG', required=False, help='File for writing debug')
 
