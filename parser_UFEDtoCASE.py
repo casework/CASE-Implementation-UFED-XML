@@ -1147,9 +1147,9 @@ class ExtractTraces(xml.sax.ContentHandler):
                     self.FILEtimeModify.append('')
                     self.FILEtimeAccess.append('')
                     self.FILEiNodeNumber.append('000')
-                    self.FILEiNodeTimeModify.append('_EMPTY_')
-                    self.FILEownerGID.append('_EMPTY_')
-                    self.FILEownerUID.append('_EMPTY_')
+                    self.FILEiNodeTimeModify.append('00-00-0000 00:00:00')
+                    self.FILEownerGID.append('0')
+                    self.FILEownerUID.append('0')
                     self.FILEidx +=1
                     if self.FILEidx == 0:
                         print('\n\nprocessing traces --> FILE no. ' + str(self.FILEidx + 1), end='\r')

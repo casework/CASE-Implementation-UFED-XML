@@ -211,7 +211,7 @@ class CaseJson:
 		# CASE 0.4 indicates a id reference to an Object that contains only the name of the App!
 		#line += CaseJson.C_TAB*2 + '"uco-observable:accountIssuer":"' + idIdentity + '", \n'
 			CaseJson.C_TAB*3 + '"uco-observable:accountIdentifier":"' + identifier + '", \n' , \
-			CaseJson.C_TAB*3 + '"uco-observable:isActive":"true" \n', \
+			CaseJson.C_TAB*3 + '"uco-observable:isActive":true \n', \
 			CaseJson.C_TAB*2 + '}, \n', \
 			CaseJson.C_TAB*2 + '{ \n', \
 			CaseJson.C_TAB*3 + '"@type":"uco-observable:ApplicationAccountFacet", \n' , \
@@ -342,7 +342,7 @@ class CaseJson:
 		# in CASE 0.4 applicationIdentifier --> accountIdentifier
 		#line += CaseJson.C_TAB*3 + '"uco-observable:applicationIdentifier": "' + partyId + '",\n' 
 			CaseJson.C_TAB*3 + '"uco-observable:accountIdentifier": "' + partyId + '",\n', \
-			CaseJson.C_TAB*3 + '"uco-observable:isActive":"true"\n', \
+			CaseJson.C_TAB*3 + '"uco-observable:isActive":true\n', \
 			CaseJson.C_TAB*2 + '},\n', \
 			CaseJson.C_TAB*2 + '{\n', \
 			CaseJson.C_TAB*3 + '"@type":"uco-observable:ApplicationAccountFacet",\n', \
@@ -678,12 +678,13 @@ class CaseJson:
 #		
 		#line += CaseJson.C_TAB*2 + '"uco-observable:accountIssuer": "' + \
 		#	CaseJson.C_NP + '",\n'
-			CaseJson.C_TAB*2 + '"uco-observable:isActive":"true",\n', \
+			CaseJson.C_TAB*2 + '"uco-observable:isActive":true,\n', \
 			CaseJson.C_TAB*2 + '"uco-observable:accountIdentifier":" "\n', \
 			CaseJson.C_TAB*2 + '},\n', \
 			CaseJson.C_TAB*2 + '{\n', \
-			CaseJson.C_TAB*2 + '"@type":"uco-observable:EmailAccountFacet", \n', \
-			CaseJson.C_TAB*2 + '"uco-observable:emailAddress":"' + uuidAddress + '"\n', \
+			CaseJson.C_TAB*2 + '"@type":"uco-observable:EmailAccountFacet",\n', \
+			CaseJson.C_TAB*2 + '"uco-observable:emailAddress":\n', \
+			CaseJson.C_TAB*3 + '{"@id":"' + uuidAddress + '"}\n', \
 			CaseJson.C_TAB*2 + '}\n', \
 			CaseJson.C_TAB + '] \n', \
 			'}, \n'])
@@ -719,9 +720,16 @@ class CaseJson:
 		path = path.replace('"', "'")
 		dotPos = tail.find('.')
 		sExt = tail[dotPos:]
+		
+		if FILEHashValue.upper() == 'N/A':
+			FILEHashValue = '0';
+
+		if FILEhashType.upper() == '_NOT_PROVIDED_':
+			FILEhashType = 'MD5';
+
 
 		if  FILEsize.strip == '0':
-			 sizeFile = CaseJson.C_TAB*2 + '}\n'
+			sizeFile = CaseJson.C_TAB*2 + '}\n'
 		else:
 			sizeFile = "".join([CaseJson.C_TAB*2 + '},\n' ,\
 				CaseJson.C_TAB*2 + '{\n',\
@@ -744,6 +752,13 @@ class CaseJson:
 			#line += CaseJson.C_TAB*2 +  '"uco-observable:SizeInBytes":"256"\n'
 				CaseJson.C_TAB*2 + '}\n'])
 
+		if FILEuid[0:2] == "0x":
+			FILEuid = FILEuid[2:]
+
+		if FILEgid[0:2] == "0x":
+			FILEgid = FILEgid[2:]
+			
+
 		uuid = "kb:" + CaseJson.__createUUID()
 		line = "".join(['{ \n', \
 			CaseJson.C_TAB + '"@id":"' +  uuid + '", \n', \
@@ -762,9 +777,9 @@ class CaseJson:
 		
 			CaseJson.C_TAB*2 + '"uco-observable:extension":"' + sExt + '",\n', \
 			CaseJson.C_TAB*2 + '"uco-observable:fileSystemType":"userdata (ExtX)",\n', \
-			CaseJson.C_TAB*2 + '"uco-observable:isDirectory":"false",\n', \
+			CaseJson.C_TAB*2 + '"uco-observable:isDirectory":false,\n', \
 			CaseJson.C_TAB*2 + '"uco-observable:sizeInBytes": {\n',\
-			CaseJson.C_TAB*2 + '"@type":"xsd:long", \n',\
+			CaseJson.C_TAB*2 + '"@type":"xsd:integer", \n',\
 			CaseJson.C_TAB*2 + '"@value":"' + FILEsize + '"\n',\
 			CaseJson.C_TAB*2 + '},\n',\
 			CaseJson.C_TAB*2 + '"uco-observable:createdTime":\n',\
@@ -786,8 +801,16 @@ class CaseJson:
 			CaseJson.C_TAB*2 + '{\n',\
 			CaseJson.C_TAB*2 + '"@type":"uco-observable:ExtInodeFacet",\n',\
 			CaseJson.C_TAB*2 + '"uco-observable:extInode":"' + FILEiNode + '",\n' ,\
-			CaseJson.C_TAB*2 + '"uco-observable:extSGID":"' + FILEgid + '",\n',\
-			CaseJson.C_TAB*2 + '"uco-observable:extSUID":"' + FILEuid + '",\n',\
+			CaseJson.C_TAB*2 + '"uco-observable:extSGID":\n',\
+			CaseJson.C_TAB*3 + '{\n',\
+			CaseJson.C_TAB*3 + '"@type":"xsd:integer",\n',\
+			CaseJson.C_TAB*3 + '"@value":"' + FILEgid + '"\n',\
+			CaseJson.C_TAB*3 + '},\n',\
+			CaseJson.C_TAB*2 + '"uco-observable:extSUID":\n',\
+			CaseJson.C_TAB*3 + '{\n',\
+			CaseJson.C_TAB*3 + '"@type":"xsd:integer",\n',\
+			CaseJson.C_TAB*3 + '"@value":"' + FILEuid + '"\n',\
+			CaseJson.C_TAB*3 + '},\n',\
 			CaseJson.C_TAB*2 + '"uco-observable:extInodeChangeTime":\n',\
 			CaseJson.C_TAB*3 + '{\n',\
 			CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n',\
@@ -813,7 +836,7 @@ class CaseJson:
 			CaseJson.C_TAB*2 + '},\n',\
 			CaseJson.C_TAB*2 + '{\n',\
 			CaseJson.C_TAB*2 + '"@type":"uco-identity:BirthInformation",\n',\
-			CaseJson.C_TAB*2 + '"uco-identity:birthDate":{\n',\
+			CaseJson.C_TAB*2 + '"uco-identity:birthdate":{\n',\
 			CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n',\
 			CaseJson.C_TAB*3 + '"@value":"' + birthDate + '"\n',\
 			CaseJson.C_TAB*2 + '}\n',\
@@ -839,7 +862,7 @@ class CaseJson:
 			CaseJson.C_TAB*2 + '{ \n',\
 			CaseJson.C_TAB*2 + '"@type":"uco-observable:AccountFacet", \n',\
 			sourceLine,\
-			CaseJson.C_TAB*2 + '"uco-observable:isActive":"true",\n' ,\
+			CaseJson.C_TAB*2 + '"uco-observable:isActive":true,\n' ,\
 			CaseJson.C_TAB*2 + '"uco-observable:accountIdentifier":" "\n' ,\
 			CaseJson.C_TAB*2 + '}, \n',\
 			CaseJson.C_TAB*2 + '{ \n',\
@@ -925,6 +948,15 @@ class CaseJson:
 		if duration == "":
 			duration = "0"
 
+		if "Native" in self.appNameList: 
+			idx = self.appNameList.index("Native")
+			idAppName = self.appNameList[idx]
+			idAppIdentity = self.appIDList[idx]
+		else:
+			idAppIdentity = self.__generateTraceAppName("Native")
+			self.appNameList.append("Native")
+			self.appIDList.append(idAppIdentity)
+
 		uuid = "kb:" + CaseJson.__createUUID()
 		line = "".join(['{ \n', \
 			CaseJson.C_TAB + '"@id":"' +  uuid + '", \n',\
@@ -939,7 +971,9 @@ class CaseJson:
 			CaseJson.C_TAB*3 + '"@type":"xsd:dateTime",\n',\
 			CaseJson.C_TAB*3 + '"@value":"' + startTime + '"\n',\
 			CaseJson.C_TAB*3 + '},\n',\
-			CaseJson.C_TAB*2 + '"uco-observable:application":"Native", \n',\
+			CaseJson.C_TAB*2 + '"uco-observable:application":{ \n', \
+			CaseJson.C_TAB*3 + '"@id":"' + idAppIdentity + '" \n', \
+			CaseJson.C_TAB*2 + '}, \n', \
 			CaseJson.C_TAB*2 + '"uco-observable:from":{\n',\
 			CaseJson.C_TAB*3 + '"@id":"' + idFROM + '"\n',\
 			CaseJson.C_TAB*2 + '},\n',\
@@ -976,7 +1010,7 @@ class CaseJson:
 			CaseJson.C_TAB + '"uco-core:hasFacet":[ \n',\
 			CaseJson.C_TAB*2 + '{ \n',\
 			CaseJson.C_TAB*2 + '"@type":"uco-observable:AccountFacet", \n',\
-			CaseJson.C_TAB*2 + '"uco-observable:isActive":"true",\n',\
+			CaseJson.C_TAB*2 + '"uco-observable:isActive":true,\n',\
 			CaseJson.C_TAB*2 + '"uco-observable:accountIdentifier":" "\n' ,\
 			CaseJson.C_TAB*2 + '}, \n',\
 			CaseJson.C_TAB*2 + '{ \n',\
@@ -1028,18 +1062,24 @@ class CaseJson:
 	def __generateTraceRelation(self, source, target, relation, table, offset):
 		
 		if not table == '':
-			lineTable = "".join([CaseJson.C_TAB + '"uco-core:isDirectional":"True",\n',\
+			lineTable = "".join([CaseJson.C_TAB + '"uco-core:isDirectional":true,\n',\
 				CaseJson.C_TAB + '"uco-core:facets": [\n',\
 				CaseJson.C_TAB*2 + '{\n ',\
 				CaseJson.C_TAB*3 + '"@type":"uco-observable:DataRangeFacet",\n',\
-				CaseJson.C_TAB*3 + '"uco-observable:rangeOffset":"' + offset + '",\n',\
-				CaseJson.C_TAB*3 + '"uco-observable:rangeSize":"" \n',\
+				CaseJson.C_TAB*2 + '"uco-observable:rangeOffset": {\n',\
+				CaseJson.C_TAB*3 + '"@type":"xsd:integer", \n',\
+				CaseJson.C_TAB*3 + '"@value":"' + offset + '"\n',\
+				CaseJson.C_TAB*2 + '},\n',\
+				CaseJson.C_TAB*2 + '"uco-observable:rangeSize": {\n',\
+				CaseJson.C_TAB*3 + '"@type":"xsd:long", \n',\
+				CaseJson.C_TAB*3 + '"@value":"0"\n',\
+				CaseJson.C_TAB*2 + '}\n',\
 				#CaseJson.C_TAB*3 + '"uco-observable:rangeOffsetType":"',\
 				#table + '"\n',\
 				CaseJson.C_TAB*2 + '}\n ',\
 				CaseJson.C_TAB + ']'])
 		else:
-			lineTable = CaseJson.C_TAB + '"uco-core:isDirectional":"True"\n'
+			lineTable = CaseJson.C_TAB + '"uco-core:isDirectional":true\n'
 
 		uuid = "kb:" + CaseJson.__createUUID()
 		line = "".join(['{ \n', \
