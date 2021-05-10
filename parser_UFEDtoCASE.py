@@ -7,7 +7,7 @@ import string
 import argparse
 import os
 import codecs
-import caseJson as CJ
+import UFEDtoJSON as CJ
 import re
 import timeit
 
@@ -18,6 +18,13 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.lineXML = 0
         self.skipLine = False
         self.kindTraces = kindTraces
+        self.Observable = False
+
+        self.C_green  = '\033[32m'
+        self.C_grey  = '\033[37m'
+        self.C_red = '\033[31m'
+        self.C_cyan = '\033[36m'
+        self.C_end = '\033[0m'
 
         # FILE section for the Chain of Evidence
         self.TAGGED_FILESin = False
@@ -139,11 +146,12 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CHATin = False
         self.CHATinSource = False
         self.CHATinSourceValue = False
+        self.CHATinModel = False
         self.CHATinParty = False
         self.CHATinPartyIdentifier = False
         self.CHATinPartyIdentifierValue = False
         self.CHATinPartyName = False        
-        self.CHATinPartyNameValue = False        
+        self.CHATinPartyNameValue = False 
         self.CHATinMsg = False
         self.CHATinMsgParty = False
         self.CHATinMsgFrom = False
@@ -295,6 +303,13 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SMSinTimeStampValue = False
         self.SMSinBody = False
         self.SMSinBodyValue = False
+        self.SMSinFolder = False
+        self.SMSinFolderValue = False
+#---    Short Message Service Center
+#        
+        self.SMSinSmsc = False
+        self.SMSinSmscValue = False
+
         self.SMSinParty = False
         self.SMSinPartyIdentifier = False
         self.SMSinPartyIdentifierValue = False
@@ -308,6 +323,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SMStimeStampText = ''
         self.SMSsourceText = ''
         self.SMSbodyText = ''
+        self.SMSfolderText = ''
+        self.SMSsmscText = ''
         self.SMSpartyRoleText = ''        
         self.SMSpartyIdentifierText = ''        
         self.SMSpartyNameText = ''
@@ -318,6 +335,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SMSsource = []
         self.SMStimeStamp =[]
         self.SMSbody = []
+        self.SMSfolder = []
+        self.SMSsmsc = []
         self.SMSpartyIdentifier = []
         self.SMSpartyName = []        
         self.SMSpartyRole = []
@@ -344,15 +363,17 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CONTACTid = []
         self.CONTACTstatus = []
         self.CONTACTname = []
-        # the CONTACTphoneNum list contains the phone numbers of a CONTACT. 
-        # At the end opf CHAT elements processing, this list is appended to 
-        # the below  CONTACTphoneNums list
+#---    the CONTACTphoneNum list contains the phone numbers of a CONTACT. 
+#       At the end of CONTACT elements processing, this list is appended to 
+#       the below  CONTACTphoneNums list
+#        
         self.CONTACTphoneNum = []
-        # list of list: the first list contains all contacts, each item of this list, 
-        # that is, each contact may contain more than one phone number.
-        # so CONTACTphoneNums[i] is the list of phone numbers of the contact i,
-        # all the phone numbers of the CONTACT i is contained in the list
-        # CONTACTphoneNums[i][j]
+#---    list of list: the first list contains all contacts, each item of this list, 
+#       that is, each contact may contain more than one phone number.
+#       so CONTACTphoneNums[i] is the list of phone numbers of the contact i,
+#       all the phone numbers of the CONTACT i is contained in the list
+#       CONTACTphoneNums[i][j]
+#
         self.CONTACTphoneNums = []
 
 
@@ -448,6 +469,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CONTEXTdeviceMacAddressText = ''
         self.CONTEXTinDeviceIccidValue = False
         self.CONTEXTdeviceIccidText = ''
+        self.CONTEXTinDeviceMsisdnValue = False
+        self.CONTEXTdeviceMsisdnText = ''
         self.CONTEXTinDeviceImsiValue = False
         self.CONTEXTdeviceImsiText = ''
         self.CONTEXTinDeviceImeiValue = False
@@ -491,34 +514,35 @@ class ExtractTraces(xml.sax.ContentHandler):
             listTrace.append('Intact')
                         
 
+    def printObservable(self, oName, oCount):        
+        line =  'processing traces --> ' + oName +  ' n. ' +  \
+            str(oCount) + self.C_end
+        if oCount == 1:
+            print(self.C_green + '\n' + line, end='\r') 
+        else:
+            print(self.C_green + line, end='\r') 
 
     def __startElementModelCALL(self, attrValue, CALLid, CALLstate):
         if attrValue == 'Call':
                 if attrValue.lower() in self.kindTraces:
                     self.CALLin = True
                     self.CALLtotal += 1
-                    
-                    if self.CALLtotal == 1:
-                        print('\n\nprocessing traces --> CALL no. ' + str(self.CALLtotal), end='\r')                
-                    else:
-                        print('processing traces --> CALL no. ' + str(self.CALLtotal), end='\r')   
-                    
+                    self.printObservable('CALL', self.CALLtotal)
                     self.CALLid.append(CALLid)
-                    self.storeTraceStatus(self.CALLstatus, CALLstate, self.CALLdeleted)  
+                    self.storeTraceStatus(self.CALLstatus, CALLstate, self.CALLdeleted)
+                    self.skipLine = True 
+                    self.Observable = True 
 
     def __startElementModelCHAT(self, attrValue, CHATid, CHATstate):
         if attrValue == 'Chat':                
                 if attrValue.lower() in self.kindTraces:
                     self.CHATin = True
                     self.CHATtotal += 1
-                    
-                    if self.CHATtotal == 1:
-                        print('\n\nprocessing traces --> CHAT n. ' + str(self.CHATtotal), end='\r')
-                    else:
-                        print('processing traces --> CHAT n. ' + str(self.CHATtotal),  end='\r')
-                    
+                    self.printObservable('CHAT', self.CHATtotal)
                     self.CHATid.append(CHATid)
-                    self.storeTraceStatus(self.CHATstatus, CHATstate, self.CHATdeleted)            
+                    self.storeTraceStatus(self.CHATstatus, CHATstate, self.CHATdeleted)
+                    self.skipLine = True 
+                    self.Observable = True             
 
         if attrValue == 'InstantMessage': 
             if self.CHATin:
@@ -559,13 +583,9 @@ class ExtractTraces(xml.sax.ContentHandler):
                 if attrValue.lower() in self.kindTraces:
                     self.CONTACTin = True
                     self.CONTACTtotal += 1
-                    
-                    if self.CONTACTtotal == 1:
-                        print('\n\nprocessing traces --> CONTACT no. ' + str(self.CONTACTtotal), end='\r')
-                    else:
-                        print('processing traces --> CONTACT no. ' + str(self.CONTACTtotal), end='\r')
-
-
+                    self.printObservable('CONTACT', self.CONTACTtotal)
+                    self.skipLine = True  
+                    self.Observable = True 
 
                 self.CONTACTid.append(CONTACTid)
                 self.storeTraceStatus(self.CONTACTstatus, CONTACTstate, self.CONTACTdeleted)        
@@ -583,14 +603,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             if attrValue.lower() in self.kindTraces:
                 self.EMAILin = True
                 self.EMAILtotal += 1
-                
-                if self.EMAILtotal == 1:
-                    print('\n\nprocessing traces --> EMAIL n. ' + str(self.EMAILtotal), end='\r')
-                else:
-                    print('processing traces --> EMAIL n. ' + str(self.EMAILtotal),  end = '\r')
-                
+                self.printObservable('EMAIL', self.EMAILtotal)
                 self.EMAILid.append(EMAILid)
                 self.storeTraceStatus(self.EMAILstatus, EMAILstate, self.EMAILdeleted) 
+                self.skipLine = True  
+                self.Observable = True 
 
 
     def __startElementModelSMS(self, attrValue, SMSid, SMSstate):
@@ -598,23 +615,20 @@ class ExtractTraces(xml.sax.ContentHandler):
             if attrValue.lower() in self.kindTraces:
                 self.SMSin = True
                 self.SMStotal += 1
-                
-                if self.SMStotal == 1:
-                    print('\n\nprocessing traces --> SMS n. ' + str(self.SMStotal), end='\r')
-                else:
-                    print('processing traces --> SMS n. ' + str(self.SMStotal),  end = ' \r')
-                
+                self.printObservable('SMS', self.SMStotal)
                 self.SMSid.append(SMSid)
                 self.storeTraceStatus(self.SMSstatus, SMSstate, self.SMSdeleted) 
+                self.skipLine = True 
+                self.Observable = True  
 
     def __startElementModelU_ACCOUNT(self, attrValue):
         if attrValue == 'UserAccount':
             self.U_ACCOUNTin = True
             self.U_ACCOUNTtotal+=1
-            if self.U_ACCOUNTtotal == 1:
-                print('\n\nprocessing traces --> U_ACCOUNT n. ' + str(self.U_ACCOUNTtotal), end='\r')
-            else:
-                print('processing traces --> U_ACCOUNT n. ' + str(self.U_ACCOUNTtotal),  end = ' \r')
+            self.printObservable('U_ACCOUNT', self.U_ACCOUNTtotal)
+            self.skipLine = True  
+            self.Observable = True 
+
         if attrValue == "ContactPhoto":
             if self.U_ACCOUNTin:
                 self.U_ACCOUNTinContactPhoto = True
@@ -634,16 +648,14 @@ class ExtractTraces(xml.sax.ContentHandler):
             if attrValue.lower() in self.kindTraces:
                 self.WEB_PAGEin = True
                 self.WEB_PAGEtotal += 1
-                
-                if self.WEB_PAGEtotal == 1:
-                    print('\n\nprocessing traces --> WEB_PAGE no. ' + str(self.WEB_PAGEtotal), end='\r')
-                else:
-                    print('processing traces --> WEB_PAGE no. ' + str(self.WEB_PAGEtotal),  end = ' \r')
-                
+                self.printObservable('WEB_HISTORY', self.WEB_PAGEtotal)
                 self.WEB_PAGEid.append(WEB_PAGEid)
                 self.storeTraceStatus(self.WEB_PAGEstatus, WEB_PAGEstate, self.WEB_PAGEdeleted) 
+                self.skipLine = True 
+                self.Observable = True  
 
     def __startElementModelFieldCHAT(self, attrValue):
+        self.CHATinModel = True
         if self.CHATinMsg:
             if attrValue == 'From':
                 self.CHATinMsgFrom = True
@@ -686,7 +698,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             if attrValue == 'TimeStamp':
                 self.CALLinTimeStamp = True
             
-            if attrValue == 'Direction' or attrValue == 'Type':
+            #if attrValue == 'Direction' or attrValue == 'Type':
+            if attrValue == 'Direction':
                 self.CALLinDirection = True
             
             if attrValue == 'Duration':
@@ -704,6 +717,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                 if attrValue == 'Name':
                     self.CALLinName = True
                 if attrValue == 'Identifier':
+                    #print('CALLinIdentifier')
                     self.CALLinIdentifier = True
 
     def __startElementFieldCHAT(self, attrValue):
@@ -737,9 +751,10 @@ class ExtractTraces(xml.sax.ContentHandler):
                 if attrValue == 'Identifier': 
                     self.CHATinPartyIdentifier = True
             else:
-                if self.CHATin:
+                if self.CHATin :
                         if attrValue == 'Source':
-                            self.CHATinSource = True
+                            if not self.CHATinModel:
+                                self.CHATinSource = True
 
     def __startElementFieldCONTACT(self, attrValue):
         if self.CONTACTin:
@@ -806,6 +821,10 @@ class ExtractTraces(xml.sax.ContentHandler):
                     self.SMSinTimeStamp = True
                 if attrValue == 'Body':
                     self.SMSinBody = True
+                if attrValue == 'Folder':
+                    self.SMSinFolder = True
+                if attrValue == 'SMSC':
+                    self.SMSinSmsc = True
              
 
     def __startElementFieldU_ACCOUNT(self, attrValue):
@@ -864,6 +883,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CONTEXTinDeviceMacAddressValue = True
             if attrValue == 'ICCID':
                 self.CONTEXTinDeviceIccidValue = True
+            if attrValue == 'MSISDN':
+                self.CONTEXTinDeviceMsisdnValue = True
             if (attrValue == 'Indirizzo MAC Bluetooth') or \
                 (attrValue == 'Bluetooth MAC Address'):
                 self.CONTEXTinDeviceBluetoothAddressValue = True
@@ -921,6 +942,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.CALLinName:
             self.CALLinNameValue = True
         if self.CALLinIdentifier:
+            #print('CALLinIdentifierValue')
             self.CALLinIdentifierValue = True
 
     def __startElementValueCONTACT(self):
@@ -984,6 +1006,10 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SMSinTimeStampValue = True
         if self.SMSinBody:
             self.SMSinBodyValue = True
+        if self.SMSinFolder:
+            self.SMSinFolderValue = True
+        if self.SMSinSmsc:
+            self.SMSinSmscValue = True
         
         if self.SMSinPartyRole:
             self.SMSinPartyRoleValue = True            
@@ -1209,26 +1235,17 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CONTEXTimageSize.append(attrs.get('size'))
 
         if name == 'caseInformation':
-            self.CONTEXTinCaseInfo = True
-            
-        if (self.CALLin) or (self.CHATin) or \
-            (self.CONTACTin) or (self.TAGGED_FILESin ) or \
-            (self.SMSin) or (self.U_ACCOUNTin) or \
-            (self.WEB_PAGEin) or (self.EMAILin):
-            self.skipLine = 0
+            self.CONTEXTinCaseInfo = True            
+                         
 
-        else:
-            self.skipLine += 1
-
-        if self.skipLine == 0:
-            pass
-        else:
-            if self.skipLine == 1:
-                print ('\n* \tProcessing Element <' + name + '> at line ' + \
-                    str(self.lineXML) + ' ...', end='\r')
+        if (not self.Observable):
+            line = self.C_grey + '*\tProcessing Element <' + name + '> at line '
+            line += str(self.lineXML) + ' ...'  + self.C_end
+            if self.skipLine:
+                print ('\n' + line , end='\r')
+                self.skipLine = False                  
             else:
-                print ('* \tProcessing Element <' + name + '> at line ' + \
-                    str(self.lineXML) + ' ...', end='\r')
+                print (line , end='\r') 
 
 #    it captures the value/character inside the Text Elements
     def characters(self, ch):
@@ -1238,7 +1255,11 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.SMSinTimeStampValue:
             self.SMStimeStampText += ch
         if self.SMSinBodyValue:
-            self.SMSbodyText += ch   
+            self.SMSbodyText += ch 
+        if self.SMSinFolderValue:
+            self.SMSfolderText += ch 
+        if self.SMSinSmscValue:
+            self.SMSsmscText += ch   
         
         if self.SMSinPartyIdentifierValue:
             self.SMSpartyIdentifierText += ch
@@ -1302,6 +1323,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALLnameText += ch
         if self.CALLinIdentifierValue:
             self.CALLidentifierText += ch
+            #print('CALLidentifierText: ' + self.CALLidentifierText + '        ')
 
         #   CONTACT processing
         if self.CONTACTinNameValue:
@@ -1398,6 +1420,9 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTEXTdeviceMacAddressText  += ch
         if self.CONTEXTinDeviceIccidValue:
             self.CONTEXTdeviceIccidText  += ch
+        if self.CONTEXTinDeviceMsisdnValue:
+            if self.CONTEXTdeviceMsisdnText.strip() == '':
+                self.CONTEXTdeviceMsisdnText  += ch
         if self.CONTEXTinDeviceBluetoothAddressValue:
             self.CONTEXTdeviceBluetoothAddressText  += ch
         if self.CONTEXTinDeviceImsiValue:
@@ -1427,6 +1452,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.SMStimeStamp.append(self.SMStimeStampText)
                 self.SMSbodyText = self.__cleanText(self.SMSbodyText)
                 self.SMSbody.append(self.SMSbodyText)
+                self.SMSfolder.append(self.SMSfolderText)
+                self.SMSsmsc.append(self.SMSsmscText)
                 
                 self.SMSpartyIdentifiers.append(self.SMSpartyIdentifier[:])
                 self.SMSpartyRoles.append(self.SMSpartyRole[:])                  
@@ -1436,6 +1463,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.SMSsourceText = ''
                 self.SMStimeStampText = ''
                 self.SMSbodyText = ''
+                self.SMSfolderText = ''
+                self.SMSsmscText = ''
                 
                 
                 self.SMSpartyIdentifier.clear()
@@ -1445,7 +1474,28 @@ class ExtractTraces(xml.sax.ContentHandler):
     
     def __endElementModelCALL(self):
         if self.CALLinParty:
-                self.CALLinParty = False
+            self.CALLinParty = False
+            if self.CALLroleText.upper() == 'TO':
+                #print('Role TO, identifier: ' + self.CALLidentifierText)
+                self.CALLroleTO.append(self.CALLroleText)
+                self.CALLroleFROM.append('')
+                self.CALLidentifierTO.append(self.CALLidentifierText)
+                self.CALLidentifierFROM.append('')
+                self.CALLnameTO.append(self.CALLnameText)
+                self.CALLnameFROM.append('')
+            else:
+                #print('Role FROM, identifier: ' + self.CALLidentifierText)
+                self.CALLroleFROM.append(self.CALLroleText)
+                self.CALLroleTO.append('')
+                self.CALLidentifierFROM.append(self.CALLidentifierText)
+                self.CALLidentifierTO.append('')
+                self.CALLnameFROM.append(self.CALLnameText)
+                self.CALLnameTO.append('')
+
+            self.CALLidentifierText = ''
+            self.CALLroleText = ''
+            self.CALLnameText = ''
+        
         else:
             if self.CALLin:                                   
                 self.CALLsource.append(self.CALLsourceText)
@@ -1494,7 +1544,8 @@ class ExtractTraces(xml.sax.ContentHandler):
 
     def __endElementModelCHAT(self):
         # The element Party contains the two (or more?) subjects 
-        # (identifier and name) involved in the Chat.             
+        # (identifier and name) involved in the Chat.   
+        self.CHATinModel = False          
         if self.CHATinParty:
             if self.CHATpartyIdentifierText.strip() == '':
                 pass
@@ -1711,26 +1762,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.CALLinRole:
             self.CALLinRole = False
         if self.CALLinName:
-            if self.CALLroleText.upper() == 'TO':
-                self.CALLroleTO.append(self.CALLroleText)
-                self.CALLroleFROM.append('')
-                self.CALLidentifierTO.append(self.CALLidentifierText)
-                self.CALLidentifierFROM.append('')
-                self.CALLnameTO.append(self.CALLnameText)
-                self.CALLnameFROM.append('')
-            else:
-                self.CALLroleFROM.append(self.CALLroleText)
-                self.CALLroleTO.append('')
-                self.CALLidentifierFROM.append(self.CALLidentifierText)
-                self.CALLidentifierTO.append('')
-                self.CALLnameFROM.append(self.CALLnameText)
-                self.CALLnameTO.append('')
-            
-            self.CALLidentifierText = ''
-            self.CALLroleText = ''
-            self.CALLnameText = ''
-            self.CALLinName = False
-        
+            self.CALLinName = False                                
         if self.CALLinIdentifier:
             self.CALLinIdentifier = False         
 
@@ -1794,6 +1826,10 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SMSinTimeStamp = False
         if self.SMSinBody:
             self.SMSinBody = False
+        if self.SMSinFolder:
+            self.SMSinFolder = False
+        if self.SMSinSmsc:
+            self.SMSinSmsc = False
 
         if self.SMSinPartyRole:
             self.SMSinPartyRole = False
@@ -1919,6 +1955,10 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SMSinTimeStampValue = False
         if self.SMSinBodyValue:
             self.SMSinBodyValue = False
+        if self.SMSinFolderValue:
+            self.SMSinFolderValue = False
+        if self.SMSinSmscValue:
+            self.SMSinSmscValue = False
 
         if self.SMSinPartyIdentifierValue:
             self.SMSinPartyIdentifierValue = False
@@ -2021,6 +2061,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTEXTinDeviceMacAddressValue = False
         if self.CONTEXTinDeviceIccidValue:
             self.CONTEXTinDeviceIccidValue = False
+        if self.CONTEXTinDeviceMsisdnValue:
+            self.CONTEXTinDeviceMsisdnValue = False
         if self.CONTEXTinDeviceImsiValue:
             self.CONTEXTinDeviceImsiValue = False
         if self.CONTEXTinDeviceImeiValue:
@@ -2192,8 +2234,8 @@ parser.parse(args.inFileXML)
 if args.output_DEBUG is None:
     pass
 else: 
-    import parserDebug
-    debug = parserDebug.ParserDebug(args.output_DEBUG)
+    import UFEDdebug
+    debug = UFEDdebug.ParserDebug(args.output_DEBUG)
     debug.writeDebugCALL(Handler)              
     debug.writeDebugCHAT(Handler)     
     debug.writeDebugCONTACT(Handler)  
@@ -2209,10 +2251,14 @@ else:
 
 print('\n\n\nCASE is being generated ...')
 
-phoneNumber = Handler.findOwnerPhone(Handler.U_ACCOUNTusername)
-print("owner's phone number: " + phoneNumber + '\n')
+phoneNumber = Handler.findOwnerPhone(Handler.U_ACCOUNTusername).replace(' ', '')
 
-caseTrace = CJ.CaseJson(Handler.fOut, Handler.U_ACCOUNTsource, 
+if phoneNumber == '':
+    phoneNumber = Handler.CONTEXTdeviceMsisdnText.replace(' ', '')
+
+print(Handler.C_cyan + "owner's phone number: " + phoneNumber + '\n' + Handler.C_end)
+
+caseTrace = CJ.UFEDtoJSON(Handler.fOut, Handler.U_ACCOUNTsource, 
         Handler.U_ACCOUNTname, Handler.U_ACCOUNTusername)
 
 #caseTrace.storeUserAccount(Handler.U_ACCOUNTsource, Handler.U_ACCOUNTname,
@@ -2247,7 +2293,8 @@ caseTrace.writePhoneAccountFromContacts(Handler.CONTACTname, Handler.CONTACTphon
 # all parameters are lists containing data of the extracted SMS
 caseTrace.writeSms(Handler.SMSid, Handler.SMSstatus, Handler.SMStimeStamp, 
                 Handler.SMSpartyRoles, Handler.SMSpartyIdentifiers, 
-                Handler.SMSpartyNames, Handler.SMSbody, Handler.SMSsource)
+                Handler.SMSsmsc, Handler.SMSpartyNames, Handler.SMSfolder, 
+                Handler.SMSbody, Handler.SMSsource)
 
 # all parameters are lists containing data of the extracted CALL_LOG
 caseTrace.writeCall(Handler.CALLid, Handler.CALLstatus, Handler.CALLsource, 
@@ -2301,4 +2348,4 @@ elapsedMm = str(int(ss) // 60)
 elapsedSs = str(int(ss) % 60)
 elapsedMs = str(round(ms, 2))[2:]
 elapsedTime = elapsedMm + ' min. ' +  elapsedSs + ' sec. and ' + elapsedMs + ' hundredths'
-print('\n*** End processing, elapsed time: ' + elapsedTime + '\n\n')
+print(Handler.C_green + '\n*** End processing, elapsed time: ' + elapsedTime + '\n\n' + Handler.C_end)
