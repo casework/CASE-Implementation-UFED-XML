@@ -502,7 +502,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         for account in UserAccounts:
             posAccount = account.find('@s.whatsapp.net')
             if posAccount > -1:
-                ownerPhone = account[0:posAccount - 1]
+                ownerPhone = account[0:posAccount]
                 break
         return ownerPhone
     
@@ -1176,11 +1176,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                     self.FILEiNodeTimeModify.append('00-00-0000 00:00:00')
                     self.FILEownerGID.append('0')
                     self.FILEownerUID.append('0')
-                    self.FILEidx +=1
-                    if self.FILEidx == 0:
-                        print('\n\nprocessing traces --> FILE no. ' + str(self.FILEidx + 1), end='\r')
-                    else:
-                        print('processing traces --> FILE no. ' + str(self.FILEidx + 1),  end = ' \r') 
+                    self.FILEidx += 1                                        
 
         if name == 'accessInfo':
             if self.TAGGED_FILESinFile:
@@ -1589,6 +1585,10 @@ class ExtractTraces(xml.sax.ContentHandler):
                         self.CHATmsgTimeStamp.append(self.CHATmsgTimeStampText)
                         self.CHATmsgAttachmentFilename.append(self.CHATmsgAttachmentFilenameText.strip())
                         self.CHATmsgAttachmentUrl.append(self.CHATmsgAttachmentUrlText.strip())
+                        
+                        #print('CHAT n.:' + str(self.CHATtotal))
+                        #print('\tCHATmsgIdentifierFrom:' + str(self.CHATmsgIdentifierFromText))
+                        #print('\tCHATmsgIdentifierTo:' + str(self.CHATmsgIdentifierToText))
                         self.CHATmsgIdentifierFromText = ''
                         self.CHATmsgIdentifierToText = ''
                         self.CHATmsgNameFromText = ''
@@ -1632,7 +1632,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                             self.CHATmsgAttachmentUrl.clear()
                             self.CHATmsgNum = -1
                             self.CHATin = False
-
+                            
     def __endElementModelEMAIL(self):
         if (self.EMAILinModelFieldFROM or self.EMAILinMultiModelFieldTO or \
             self.EMAILinMultiModelFieldCC or self.EMAILinMultiModelFieldBCC or \

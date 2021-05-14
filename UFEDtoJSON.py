@@ -1598,12 +1598,15 @@ class UFEDtoJSON:
 # be iterated to find the right Party
 				
 				if CHATmsgTo[0].strip() == '':
-					for k in range(len(CHATpartyIdentifiers[i])):
-						if CHATpartyIdentifiers[i][k] == CHATmsgFrom:
-							pass
-						else:
-							CHATmsgTo[0] = CHATpartyIdentifiers[i][k]
-							break
+					# comment 2021-05-11 - start
+					#for k in range(len(CHATpartyIdentifiers[i])):
+					#	if CHATpartyIdentifiers[i][k] == CHATmsgFrom:
+					#		pass
+					#	else:
+					#		CHATmsgTo[0] = CHATpartyIdentifiers[i][k]
+					#		break
+					# comment 2021-05-11 - end				
+					CHATmsgTo[0] = self.phoneOwnerNumber + '@s.whatsapp.net'
 					direction = 'Incoming'
 				else:			
 					direction = 'Outgoing'
@@ -1612,12 +1615,16 @@ class UFEDtoJSON:
 # be iterated to find the right Party
 				
 				if CHATmsgFrom == '':
-					for k in range(len(CHATpartyIdentifiers[i])):
-						if CHATpartyIdentifiers[i][k] in CHATmsgTo:
-							pass
-						else:
-							CHATmsgFrom = CHATpartyIdentifiers[i][k]
-							break
+					CHATmsgFrom = self.phoneOwnerNumber + '@s.whatsapp.net'
+					# comment 2021-05-11 start
+					#for k in range(len(CHATpartyIdentifiers[i])):
+					#	if CHATpartyIdentifiers[i][k] in CHATmsgTo:
+					#		pass
+					#	else:
+					#		CHATmsgFrom = CHATpartyIdentifiers[i][k]
+					#		break
+					# comment 2021-05-11 - end
+
 				
 				chatUuid = self.__generateTraceChat(CHATmsgBodies[i][j], idAppIdentity, 
 					CHATmsgTimeStamps[i][j], CHATmsgFrom, 
