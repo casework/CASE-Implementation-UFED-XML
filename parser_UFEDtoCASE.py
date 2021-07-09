@@ -82,30 +82,49 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.EXTRA_INFOdictOffset = {}
         self.EXTRA_INFOdictNodeInfoId = {}
 
-        #CALL  section
+#--     CALL  section
+#
+#       XML Elements structure
+#        
+#       <model type="Call"...>
+#               <field name="Source"...>
+#               <field name="Direction"...>
+#               <field name="Type"...>
+#               <field name="Status"...>
+#               <field name="TimeStamp"...>
+#               <field name="Duration"...>        
+#               <multiModelField name="Parties"...>
+#                       <model type="Party"...> (more than one)
+#                               <field name="Identifier" ...>
+#                               <field name="Role" ...>
+#                               <field name="Name" ...>        
+#        
         self.CALLtrace = 'call'
         self.CALLin = False
         self.CALLinSource = False
         self.CALLinSourceValue = False
         self.CALLinDirection = False
-        self.CALLinDirectionValue = False
-        self.CALLinDuration = False
-        self.CALLinDurationValue = False
+        self.CALLinDirectionValue = False        
+        self.CALLinType = False
+        self.CALLinTypeValue = False        
         self.CALLinOutcome = False
         self.CALLinOutcomeValue = False
         self.CALLinTimeStamp = False
         self.CALLinTimeStampValue = False
+        self.CALLinDuration = False
+        self.CALLinDurationValue = False
         self.CALLinParty = False
+        self.CALLinIdentifier = False
+        self.CALLinIdentifierValue = False
         self.CALLinRole = False
         self.CALLinRoleValue = False
         self.CALLinName = False
-        self.CALLinNameValue = False
-        self.CALLinIdentifier = False
-        self.CALLinIdentifierValue = False
+        self.CALLinNameValue = False        
 
         self.CALLtotal = 0
         self.CALLsourceText = ''
         self.CALLdirectionText = ''
+        self.CALLtypeText = ''
         self.CALLdurationText = ''
         self.CALLoutcomeText = ''
         self.CALLtimeStampText = ''
@@ -124,6 +143,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CALLsource = []
         self.CALLtimeStamp = []
         self.CALLdirection = []
+        self.CALLtype = []
         self.CALLduration = []
         self.CALLstatus = []
         self.CALLoutcome = []
@@ -524,14 +544,13 @@ class ExtractTraces(xml.sax.ContentHandler):
 
     def __startElementModelCALL(self, attrValue, CALLid, CALLstate):
         if attrValue == 'Call':
-                if attrValue.lower() in self.kindTraces:
-                    self.CALLin = True
-                    self.CALLtotal += 1
-                    self.printObservable('CALL', self.CALLtotal)
-                    self.CALLid.append(CALLid)
-                    self.storeTraceStatus(self.CALLstatus, CALLstate, self.CALLdeleted)
-                    self.skipLine = True 
-                    self.Observable = True 
+            self.CALLin = True
+            self.CALLtotal += 1
+            self.printObservable('CALL', self.CALLtotal)
+            self.CALLid.append(CALLid)
+            self.storeTraceStatus(self.CALLstatus, CALLstate, self.CALLdeleted)
+            self.skipLine = True 
+            self.Observable = True 
 
     def __startElementModelCHAT(self, attrValue, CHATid, CHATstate):
         if attrValue == 'Chat':                
@@ -695,30 +714,34 @@ class ExtractTraces(xml.sax.ContentHandler):
                 else:
                     self.CALLinSource = True
             
-            if attrValue == 'TimeStamp':
-                self.CALLinTimeStamp = True
-            
-            #if attrValue == 'Direction' or attrValue == 'Type':
             if attrValue == 'Direction':
                 self.CALLinDirection = True
-            
-            if attrValue == 'Duration':
-                self.CALLinDuration = True
-            
+
+            if attrValue == 'Type':
+                self.CALLinType = True
+
             if attrValue == 'Status':
                 if self.CALLinParty:
                     pass
                 else:
                     self.CALLinOutcome = True
 
-            if self.CALLinParty:
-                if attrValue == 'Role':
-                    self.CALLinRole = True
-                if attrValue == 'Name':
-                    self.CALLinName = True
-                if attrValue == 'Identifier':
-                    #print('CALLinIdentifier')
-                    self.CALLinIdentifier = True
+            if attrValue == 'TimeStamp':
+                self.CALLinTimeStamp = True                       
+            
+            if attrValue == 'Duration':
+                self.CALLinDuration = True                        
+
+#---    fields inside the Party element
+#            
+            if attrValue == 'Role':
+                self.CALLinRole = True
+            
+            if attrValue == 'Name':
+                self.CALLinName = True
+            
+            if attrValue == 'Identifier':
+                self.CALLinIdentifier = True
 
     def __startElementFieldCHAT(self, attrValue):
         if self.CHATinMsg:                                             
@@ -931,6 +954,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALLinSourceValue = True
         if self.CALLinDirection:
             self.CALLinDirectionValue = True
+        if self.CALLinType:
+            self.CALLinTypeValue = True
         if self.CALLinDuration:
             self.CALLinDurationValue = True
         if self.CALLinOutcome:
@@ -1070,6 +1095,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         attrType = attrs.get('type')
         attrName = attrs.get('name')
         attrSection = attrs.get('section')
+        #print('attrType:' + str(attrType) + ', attrName:' + str(attrName) + 
+        #    ', attrSection:' + str(attrSection))
         
         if name == 'model':                                    
             traceState = attrs.get('deleted_state')
@@ -1083,8 +1110,10 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.__startElementModelWEB_PAGE(attrType, id, traceState)    
 
             if attrType == 'Party':                
+                
                 if self.CALLin:
                     self.CALLinParty = True 
+                
                 if self.CHATin:
                     if self.CHATinMsg: 
                         self.CHATinMsgParty = True 
@@ -1309,6 +1338,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALLtimeStampText += ch
         if self.CALLinDirectionValue:
             self.CALLdirectionText += ch
+        if self.CALLinTypeValue:
+            self.CALLtypeText += ch
         if self.CALLinDurationValue:
             self.CALLdurationText += ch
         if self.CALLinOutcomeValue:
@@ -1319,7 +1350,6 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALLnameText += ch
         if self.CALLinIdentifierValue:
             self.CALLidentifierText += ch
-            #print('CALLidentifierText: ' + self.CALLidentifierText + '        ')
 
         #   CONTACT processing
         if self.CONTACTinNameValue:
@@ -1472,7 +1502,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.CALLinParty:
             self.CALLinParty = False
             if self.CALLroleText.upper() == 'TO':
-                #print('Role TO, identifier: ' + self.CALLidentifierText)
                 self.CALLroleTO.append(self.CALLroleText)
                 self.CALLroleFROM.append('')
                 self.CALLidentifierTO.append(self.CALLidentifierText)
@@ -1480,7 +1509,6 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CALLnameTO.append(self.CALLnameText)
                 self.CALLnameFROM.append('')
             else:
-                #print('Role FROM, identifier: ' + self.CALLidentifierText)
                 self.CALLroleFROM.append(self.CALLroleText)
                 self.CALLroleTO.append('')
                 self.CALLidentifierFROM.append(self.CALLidentifierText)
@@ -1496,6 +1524,10 @@ class ExtractTraces(xml.sax.ContentHandler):
             if self.CALLin:                                   
                 self.CALLsource.append(self.CALLsourceText)
                 self.CALLtimeStamp.append(self.CALLtimeStampText)
+                
+                if self.CALLdirectionText.strip() == '':
+                    self.CALLdirectionText = self.CALLtypeText
+
                 self.CALLdirection.append(self.CALLdirectionText)
                 self.CALLduration.append(self.CALLdurationText)
                 self.CALLoutcome.append(self.CALLoutcomeText)
@@ -1511,6 +1543,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CALLtimeStampText = ''
                 self.CALLdirectionText = ''
                 self.CALLdurationText = ''
+                self.CALLtypeText = ''
                 self.CALLoutcomeText = ''
                 self.CALLroleText = ''
                 self.CALLnameText = ''
@@ -1751,20 +1784,24 @@ class ExtractTraces(xml.sax.ContentHandler):
     def __endElementFieldCALL(self):
         if self.CALLinSource:
             self.CALLinSource = False
-        if self.CALLinTimeStamp:
-            self.CALLinTimeStamp = False
         if self.CALLinDirection:
             self.CALLinDirection = False
-        if self.CALLinDuration:
-            self.CALLinDuration = False
+        if self.CALLinType:
+            self.CALLinType = False
         if self.CALLinOutcome:
             self.CALLinOutcome = False
+        if self.CALLinTimeStamp:
+            self.CALLinTimeStamp = False        
+        if self.CALLinDuration:
+            self.CALLinDuration = False
+        
+        if self.CALLinIdentifier:
+            self.CALLinIdentifier = False         
         if self.CALLinRole:
             self.CALLinRole = False
         if self.CALLinName:
             self.CALLinName = False                                
-        if self.CALLinIdentifier:
-            self.CALLinIdentifier = False         
+        
 
     def __endElementFieldCONTACT(self):
         if self.CONTACTinName:
@@ -1867,21 +1904,23 @@ class ExtractTraces(xml.sax.ContentHandler):
     def __endElementValueCALL(self):
         if self.CALLinSourceValue:
             self.CALLinSourceValue = False
-        if self.CALLinTimeStampValue:
-            self.CALLinTimeStampValue = False
         if self.CALLinDirectionValue:
             self.CALLinDirectionValue = False
-        if self.CALLinDurationValue:
-            self.CALLinDurationValue = False
+        if self.CALLinTypeValue:
+            self.CALLinTypeValue = False
         if self.CALLinOutcomeValue:
             self.CALLinOutcomeValue = False
-        if self.CALLinRoleValue:
-            self.CALLinRoleValue = False
-        if self.CALLinNameValue:            
-            self.CALLinNameValue = False
+        if self.CALLinTimeStampValue:
+            self.CALLinTimeStampValue = False        
+        if self.CALLinDurationValue:
+            self.CALLinDurationValue = False
         
         if self.CALLinIdentifierValue:
             self.CALLinIdentifierValue = False
+        if self.CALLinRoleValue:
+            self.CALLinRoleValue = False
+        if self.CALLinNameValue:            
+            self.CALLinNameValue = False                
 
     def __endElementValueCHAT(self):
         if self.CHATinSourceValue:

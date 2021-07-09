@@ -174,7 +174,7 @@ class UFEDtoJSON:
 		uuid = UFEDtoJSON.__createUUID()
 		line = "".join(['{ \n', \
 				UFEDtoJSON.C_TAB + '"@context": { \n', \
-				UFEDtoJSON.C_TAB*2 + '"@vocab": "http://caseontology.org/core#", \n', \
+				UFEDtoJSON.C_TAB*2 + '"@vocabulary": "http://caseontology.org/core#", \n', \
 				UFEDtoJSON.C_TAB*2 + '"case-investigation": "https://caseontology.org/ontology/case/investigation#", \n', \
 				UFEDtoJSON.C_TAB*2 + '"rdf":"http://www.w3.org/1999/02/22-rdf-syntax-ns#", \n', \
 				UFEDtoJSON.C_TAB*2 + '"rdfs":"http://www.w3.org/2000/01/rdf-schema#", \n', \
@@ -187,6 +187,11 @@ class UFEDtoJSON:
 				UFEDtoJSON.C_TAB*2 + '"uco-tool": "https://unifiedcyberontology.org/ontology/uco/tool#", \n', \
 				UFEDtoJSON.C_TAB*2 + '"uco-types": "https://unifiedcyberontology.org/ontology/uco/types#", \n', \
 				UFEDtoJSON.C_TAB*2 + '"uco-vocabulary": "https://unifiedcyberontology.org/ontology/uco/vocabulary#", \n', \
+#---	OLO is a method for representing lists, CASE didn't really need to 
+#			implement itself, implementing ordered lists in an OWL 2 DL compliant 
+#			syntax.				
+#				
+				UFEDtoJSON.C_TAB*2 + '"olo": "http://purl.org/ontology/olo/core#", \n', \
 				UFEDtoJSON.C_TAB*2 + '"xsd":"http://www.w3.org/2001/XMLSchema#" \n', \
 				UFEDtoJSON.C_TAB*2 + '},\n', \
 				'"@id": ":bundle-' + uuid + '", \n', \
@@ -268,119 +273,123 @@ class UFEDtoJSON:
 		return uuid
 
 
-	def __generateTraceCall(self, CALLid, CALLstatus, CALLsource, CALLtimeStamp, 
+	def writeCall(self, CALLid, CALLstatus, CALLsource, CALLtimeStamp, 
 					CALLdirection, CALLduration, CALLrolesTO, CALLrolesFROM, 
 					CALLnamesTO, CALLnamesFROM, CALLoutcome, CALLidentifiersTO, 
 					CALLidentifiersFROM):
 		
+#---	each kind of phone call, further the traditional ones, are
+#			processed, so the phonePattern is not necessary any more
+#	
 		phonePattern = '^\+?[0-9]+$'	# phone number pattern
 		
 		for i in range(len(CALLid)):
-			# Only traditional, normal phone call are processed: UFED possible values are those
-			# those indicated below
-			toProcess = False
-
-			if (len(CALLidentifiersTO[i]) > 0):
-				#print('[' + str(i) + '] identifiers TO: [' + CALLidentifiersTO[i][0] + ']')
-				resPattern = re.match(phonePattern, CALLidentifiersTO[i][0])
-				if (resPattern):
-					toProcess = True
-
-			if (len(CALLidentifiersFROM[i]) > 0):
-				#print('[' + str(i) + '] identifiers FROM: [' + CALLidentifiersFROM[i][0] + ']')
-				resPattern = re.match(phonePattern, CALLidentifiersFROM[i][0])
-				if (resPattern):
-					toProcess = True
-
-			if (not toProcess):
-				if (CALLsource[i].strip() == '' or 
-						CALLsource[i].strip().lower() == 'call' or
-						CALLsource[i].strip().lower() == 'native call log' or
-						CALLsource[i].strip().lower() == 'logs table'):
-
-					toProcess = True
-
-			if (toProcess): 
-				if CALLdirection[i].lower() == 'incoming':
-					#print('direction incoming')
-					if (len(CALLnamesFROM[i]) > 0): 
-						nameParty = CALLnamesFROM[i][0]
-					else:
-						nameParty = UFEDtoJSON.C_NP
-
-					if (len(CALLidentifiersFROM[i]) > 0): 
-						idParty = CALLidentifiersFROM[i][0]
-					else:
-						idParty = UFEDtoJSON.C_NP											
+			
+#---	there are two Parties, each of them with their own role
+#						
+			idPartyTO = ''
+			idPartyFROM = ''
+			idParty = ''
+			nameParty =''
+			if (len(CALLrolesFROM[i]) > 1):
+				nameParty = ''
+				if CALLrolesFROM[i][0].strip() == '':					
+					idPartyFROM = CALLidentifiersFROM[i][1]
+					nameFROM = CALLnamesFROM[i][1]
+					idPartyTO 	= CALLidentifiersTO[i][0]
+					nameTO = CALLnamesTO[i][0]
+					nameParty = nameTO
 				else:
-					if CALLdirection[i].lower() == 'outgoing': 
-					#print('direction outgoing')
-						if (len(CALLnamesTO[i]) > 0):
-							nameParty = CALLnamesTO[i][0]
-						else:
-							nameParty = UFEDtoJSON.C_NP	
-
-						if (len(CALLidentifiersTO[i]) > 0):
-							idParty = CALLidentifiersTO[i][0]					
-						else:
-							idParty = UFEDtoJSON.C_NP	
-#---	if direction is unknown
-#							
-					else:
-						nameParty = UFEDtoJSON.C_NP
-						idParty = UFEDtoJSON.C_NP
+					idPartyFROM = CALLidentifiersFROM[i][0]
+					nameFROM = CALLnamesFROM[i][0]
+					idPartyTO 	= CALLidentifiersTO[i][1]
+					nameTO = CALLnamesTO[i][1]
+			else:
+					if CALLrolesFROM[i][0].strip() == '':
+						idPartyFROM = self.phoneOwnerNumber
+						nameFROM = 'PHONE OWNER'
+						idPartyTO		= CALLidentifiersTO[i][0]
+						idParty = idPartyTO
+						nameTO = CALLnamesTO[i][0]
+						nameParty = nameTO
+					else:						
+						idPartyFROM		= CALLidentifiersFROM[i][0]
+						idParty = idPartyFROM
+						idPartyTO = self.phoneOwnerNumber
+						nameFROM = CALLnamesFROM[i][0]
+						nameParty = nameFROM
+						nameTO = 'PHONE OWNER'
 						
-						if (len(CALLnamesTO[i]) > 0):
-							if CALLnamesTO[i][0].strip() != '':
-								nameParty = CALLnamesTO[i][0]						
-							else:
-								if (len(CALLnamesFROM[i]) > 0):
-									nameParty = CALLnamesFROM[i][0]
+			resPattern = re.match(phonePattern, idParty.strip())
 
-						if (len(CALLidentifiersTO[i]) > 0):
-							if CALLidentifiersTO[i][0].strip() != '':
-								idParty = CALLidentifiersTO[i][0]					
-							else:							
-								if (len(CALLidentifiersFROM[i]) > 0):
-									idParty = CALLidentifiersFROM[i][0]					
-
-
-#---	print('nameParty: ' + nameParty + ', idParty [' + idParty + ']')
-#			if the identifier of the Call is empty, no CASE object is generated.
-#			Some Calls do not have any info on identifier with role TO/FROM
-#									
-
-				resPattern = re.match(phonePattern, idParty.strip())
-				if idParty.strip() == '' or not resPattern:
-					continue
-				
-				if idParty in self.phoneNumberList:
-					idx = self.phoneNumberList.index(idParty)
-					#userId = self.phoneNumberList[idx]
-					uuid = self.phoneUuidList[idx]
+			if resPattern:
+				if idPartyTO in self.phoneNumberList:
+					idx = self.phoneNumberList.index(idPartyTO)
+					uuidPartyTO = self.phoneUuidList[idx]
 				else:	
-# if the mobile operator will be available in the XML report, it will be possible to 	
-#	define an object uco-identity:Identity related to the organisation. At the moment
-# the varibale is set to empty, so no the property uco-observable:accountIssuer is not 
-# included in the	uco-observable:PhoneAccount				
+	# if the mobile operator will be available in the XML report, it will be possible to 	
+	#	define an object uco-identity:Identity related to the organisation. At the moment
+	# the varibale is set to empty, so no the property uco-observable:accountIssuer is not 
+	# included in the	uco-observable:PhoneAccount				
 					mobileOperator = ""
-					#print('in __generateTraceCall, num: ' + idParty)
-					uuid = self.__generateTracePhoneAccount(mobileOperator, 
-						nameParty, idParty)
-				
-				if CALLdirection[i].lower() == 'incoming':
-					uuid = self.__generateTracePhoneCall(CALLdirection[i].lower(), 
-						CALLtimeStamp[i], uuid, self.phoneOwnerUuid, CALLduration[i],
-	                           CALLstatus[i], CALLoutcome[i])
+					uuidPartyTO = self.__generateTracePhoneAccount(mobileOperator, 
+						nameTO, idPartyTO)
+
+				if idPartyFROM in self.phoneNumberList:
+					idx = self.phoneNumberList.index(idPartyFROM)
+					uuidPartyFROM = self.phoneUuidList[idx]
+				else:	
+	# if the mobile operator will be available in the XML report, it will be possible to 	
+	#	define an object uco-identity:Identity related to the organisation. At the moment
+	# the varibale is set to empty, so no the property uco-observable:accountIssuer is not 
+	# included in the	uco-observable:PhoneAccount				
+					mobileOperator = ""
+					uuidPartyFROM = self.__generateTracePhoneAccount(mobileOperator, 
+						nameFROM, idPartyFROM)
+
+			else:
+				if CALLsource[i].strip() in self.appNameList: 
+					idx = self.appNameList.index(CALLsource[i].strip())
+					idAppName = self.appNameList[idx]
+					idAppIdentity = self.appIDList[idx]
 				else:
-					uuid = self.__generateTracePhoneCall(CALLdirection[i].lower(), 
-						CALLtimeStamp[i], self.phoneOwnerUuid, uuid, CALLduration[i],
-	                           CALLstatus[i], CALLoutcome[i])
-				self.__generateChainOfEvidence(CALLid[i], uuid)
+					idAppIdentity = self.__generateTraceAppName(CALLsource[i].strip())
+					self.appNameList.append(CALLsource[i].strip())
+					self.appIDList.append(idAppIdentity)
+
+				if idPartyFROM.strip() in self.CHATparticipantsIdList: 
+					idx = self.CHATparticipantsIdList.index(idPartyFROM.strip())
+					uuidPartyFROM = self.CHATaccountIdList[idx]
+				else:
+					self.CHATparticipantsNameList.append(nameFROM.strip())
+					uuidPartyFROM = self.__generateTraceChatAccount(CALLsource[i].strip(),
+						idPartyFROM.strip(), nameFROM.strip(), idAppIdentity)
+					self.CHATparticipantsIdList.append(idPartyFROM.strip())
+					self.CHATaccountIdList.append(uuidPartyFROM)
+				
+				if idPartyTO.strip() in self.CHATparticipantsIdList: 
+					idx = self.CHATparticipantsIdList.index(idPartyTO.strip())
+					uuidPartyTO = self.CHATaccountIdList[idx]
+				else:
+					self.CHATparticipantsNameList.append(nameTO.strip())
+					uuidPartyTO = self.__generateTraceChatAccount(CALLsource[i].strip(),
+						idPartyTO.strip(), nameTO.strip(), idAppIdentity)
+					self.CHATparticipantsIdList.append(idPartyTO.strip())
+					self.CHATaccountIdList.append(uuidPartyTO)
+				
+			
+			if CALLdirection[i].lower() == 'incoming':
+				uuid = self.__generateTracePhoneCall(CALLdirection[i].lower(), 
+					CALLtimeStamp[i], uuidPartyFROM, uuidPartyTO, CALLduration[i],
+                           CALLstatus[i], CALLoutcome[i])
+			else:
+				uuid = self.__generateTracePhoneCall(CALLdirection[i].lower(), 
+					CALLtimeStamp[i], uuidPartyTO, uuidPartyFROM, CALLduration[i],
+                           CALLstatus[i], CALLoutcome[i])
+			self.__generateChainOfEvidence(CALLid[i], uuid)
 
 
 	def __generateTraceChatAccount(self, issuer, partyId, partyName, idApp):
-		#print('in __generateTraceChatAccount, identifier: ' + partyId)
 		uuid = "kb:" + UFEDtoJSON.__createUUID()
 		partyId = partyId.replace('"', '')
 		line = "".join(['{ \n', \
@@ -542,7 +551,7 @@ class UFEDtoJSON:
 			UFEDtoJSON.C_TAB*2 + '},\n' , \
 			UFEDtoJSON.C_TAB*2 + '{\n', \
 			UFEDtoJSON.C_TAB*2 + '"@type":"uco-observable:OperatingSystemFacet",\n', \
-			UFEDtoJSON.C_TAB*2 + '"uco-observable:name": "' + deviceOS + '",\n', \
+			UFEDtoJSON.C_TAB*2 + '"uco-core:name": "' + deviceOS + '",\n', \
 			UFEDtoJSON.C_TAB*2 + '"uco-observable:manufacturer":"' + deviceManufacturer + '",\n', \
 			UFEDtoJSON.C_TAB*2 + '"uco-observable:version":"' + deviceOSVersion + '"\n', \
 			UFEDtoJSON.C_TAB*2 + '},\n', \
@@ -855,7 +864,7 @@ class UFEDtoJSON:
 			UFEDtoJSON.C_TAB*2 + '},\n',\
 			UFEDtoJSON.C_TAB*2 + '{\n',\
 			UFEDtoJSON.C_TAB*2 + '"@type":"uco-observable:ExtInodeFacet",\n',\
-			UFEDtoJSON.C_TAB*2 + '"uco-observable:extInode":"' + FILEiNode + '",\n' ,\
+			UFEDtoJSON.C_TAB*2 + '"uco-observable:extInodeID":"' + FILEiNode + '",\n' ,\
 			UFEDtoJSON.C_TAB*2 + '"uco-observable:extSGID":\n',\
 			UFEDtoJSON.C_TAB*3 + '{\n',\
 			UFEDtoJSON.C_TAB*3 + '"@type":"xsd:integer",\n',\
@@ -949,9 +958,9 @@ class UFEDtoJSON:
 		uuid = "kb:" + UFEDtoJSON.__createUUID()
 		line = "".join(['{ \n', \
 			UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n',\
-			UFEDtoJSON.C_TAB +  '"@type":"uco-action:Action",\n',\
-			UFEDtoJSON.C_TAB +  '"uco-action:name":"' + name + '",\n',\
-			UFEDtoJSON.C_TAB + '"uco-action:description":"' + description + '",\n',\
+			UFEDtoJSON.C_TAB +  '"@type":"case-investigation:InvestigativeAction",\n',\
+			UFEDtoJSON.C_TAB +  '"uco-core:name":"' + name + '",\n',\
+			UFEDtoJSON.C_TAB + '"uco-core:description":"' + description + '",\n',\
 			UFEDtoJSON.C_TAB*2 + '"uco-action:startTime":\n',\
 			UFEDtoJSON.C_TAB*3 + '{\n',\
 			UFEDtoJSON.C_TAB*3 + '"@type":"xsd:dateTime",\n',\
@@ -1099,14 +1108,21 @@ class UFEDtoJSON:
 		line = "".join(['{ \n', \
 			UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n',\
 			UFEDtoJSON.C_TAB + '"@type":"case-investigation:ProvenanceRecord", \n',\
-			UFEDtoJSON.C_TAB*2 + '"case-investigation:createdTime":\n',\
-			UFEDtoJSON.C_TAB*3 + '{\n',\
-			UFEDtoJSON.C_TAB*3 + '"@type":"xsd:dateTime",\n',\
-			UFEDtoJSON.C_TAB*3 + '"@value":"' + creationTime + '"\n',\
-			UFEDtoJSON.C_TAB*3 + '},\n',\
-			UFEDtoJSON.C_TAB + '"case-investigation:description":"' + description + '",\n',\
+#---	createdTime is not part of the investigation.ttl ontology
+#			2021-05-20, see 19th May email from Alex Nelson
+#			
+			#UFEDtoJSON.C_TAB*2 + '"case-investigation:createdTime":\n',\
+			#UFEDtoJSON.C_TAB*3 + '{\n',\
+			#UFEDtoJSON.C_TAB*3 + '"@type":"xsd:dateTime",\n',\
+			#UFEDtoJSON.C_TAB*3 + '"@value":"' + creationTime + '"\n',\
+			#UFEDtoJSON.C_TAB*3 + '},\n',\
+
+#---	description is not part of the investigation.ttl ontology
+#			2021-06-09 relying on the new Tool Validator version
+#
+#			UFEDtoJSON.C_TAB + '"case-investigation:description":"' + description + '",\n',\
 			UFEDtoJSON.C_TAB + '"case-investigation:exhibitNumber":"' + exhibitNumber + '",\n',\
-			UFEDtoJSON.C_TAB + '"case-investigation:object":[\n',\
+			UFEDtoJSON.C_TAB + '"uco-core:object":[\n',\
 			lineTraces,\
 			UFEDtoJSON.C_TAB + ']\n',\
 			'},\n'])
@@ -1119,7 +1135,7 @@ class UFEDtoJSON:
 		if not table == '':
 			cleanOffset = offset.replace('@', '')
 			lineTable = "".join([UFEDtoJSON.C_TAB + '"uco-core:isDirectional":true,\n',\
-				UFEDtoJSON.C_TAB + '"uco-core:facets": [\n',\
+				UFEDtoJSON.C_TAB + '"uco-core:hasFacet": [\n',\
 				UFEDtoJSON.C_TAB*2 + '{\n ',\
 				UFEDtoJSON.C_TAB*3 + '"@type":"uco-observable:DataRangeFacet",\n',\
 				UFEDtoJSON.C_TAB*2 + '"uco-observable:rangeOffset": {\n',\
@@ -1127,7 +1143,7 @@ class UFEDtoJSON:
 				UFEDtoJSON.C_TAB*3 + '"@value":"' + cleanOffset + '"\n',\
 				UFEDtoJSON.C_TAB*2 + '},\n',\
 				UFEDtoJSON.C_TAB*2 + '"uco-observable:rangeSize": {\n',\
-				UFEDtoJSON.C_TAB*3 + '"@type":"xsd:long", \n',\
+				UFEDtoJSON.C_TAB*3 + '"@type":"xsd:integer", \n',\
 				UFEDtoJSON.C_TAB*3 + '"@value":"0"\n',\
 				UFEDtoJSON.C_TAB*2 + '}\n',\
 				#UFEDtoJSON.C_TAB*3 + '"uco-observable:rangeOffsetType":"',\
@@ -1161,7 +1177,7 @@ class UFEDtoJSON:
 		line = "".join(['{ \n', \
 			UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n',\
 			UFEDtoJSON.C_TAB + '"@type":"uco-role:Role",\n',\
-			UFEDtoJSON.C_TAB + '"uco-role:name":"' + role + '"\n',\
+			UFEDtoJSON.C_TAB + '"uco-core:name":"' + role + '"\n',\
 			'},\n'])
 		self.FileOut.write(line)
 		return uuid
@@ -1463,15 +1479,6 @@ class UFEDtoJSON:
 			#self.appAccountUsernameList.append(U_ACCOUNTusername[i])
 			self.appIDList.append(idAppName)
 
-
-	def writeCall(self, CALLid, CALLstatus, CALLsource, CALLtimeStamp, 
-				CALLdirection, CALLduration, CALLrolesTO, CALLrolesFROM, 
-				CALLnamesTO, CALLnamesFROM, CALLoutcome, CALLidentifiersTO, 
-				CALLidentifiersFROM):
-		self.__generateTraceCall(CALLid, CALLstatus, CALLsource, CALLtimeStamp, 
-					CALLdirection, CALLduration, CALLrolesTO, CALLrolesFROM, 
-					CALLnamesTO, CALLnamesFROM, CALLoutcome, CALLidentifiersTO, 
-					CALLidentifiersFROM)
 
 	def writeExtraInfo(self, EXTRA_INFOdictPath, EXTRA_INFOdictSize, EXTRA_INFOdictTableName, 
 				EXTRA_INFOdictOffset, EXTRA_INFOdictNodeInfoId):
