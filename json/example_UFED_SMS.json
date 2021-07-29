@@ -154,8 +154,14 @@
 	"uco-core:hasFacet": [
 		{
  		"@type":"uco-observable:DataRangeFacet",
-		"uco-observable:rangeOffset":3728442,
-		"uco-observable:rangeSize":6789
+		"uco-observable:rangeOffset":{
+				"@type":"xsd:integer", 
+				"@value":"3728442"
+			},
+		"uco-observable:rangeSize":{
+				"@type":"xsd:integer", 
+				"@value":"6789"
+			}
 		}	
 	]
 },
@@ -174,8 +180,14 @@
 	"uco-core:hasFacet": [
 		{
  		"@type":"uco-observable:DataRangeFacet",
-		"uco-observable:rangeOffset":3728442,
-		"uco-observable:rangeSize":9110
+		"uco-observable:rangeOffset":{
+				"@type":"xsd:integer", 
+				"@value":"3728442"
+			},
+		"uco-observable:rangeSize":{
+				"@type":"xsd:integer", 
+				"@value":"9110"
+			}
 		}	
 	]
 },
@@ -194,8 +206,14 @@
 	"uco-core:hasFacet": [
 		{
  		"@type":"uco-observable:DataRangeFacet",
-		"uco-observable:rangeOffset":3728442,
-		"uco-observable:rangeSize":89032 
+		"uco-observable:rangeOffset":{
+				"@type":"xsd:integer", 
+				"@value":"3728442"
+			},
+		"uco-observable:rangeSize":{
+				"@type":"xsd:integer", 
+				"@value":"89032"
+			} 
 		}	
 	]
 },

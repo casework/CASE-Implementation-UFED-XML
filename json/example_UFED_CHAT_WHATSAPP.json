@@ -171,45 +171,47 @@
 		"@type":"uco-observable:MessageThreadFacet",
 		"uco-observable:displayName":"Tom Mathias",
 		"uco-observable:message":{
-		"olo:length":"6",
-		"olo:slot":[
-			{
-				"olo:index":"1",
-				"olo:item": {
-					"@id":"kb:6318da0d-14ce-442a-bb32-5d497b5afc58"
+			"@type":"uco-observable:Message",
+			"uco-observable:hasChanged":true,
+			"olo:length":"6",
+			"olo:slot":[
+				{
+					"olo:index":"1",
+					"olo:item": {
+						"@id":"kb:6318da0d-14ce-442a-bb32-5d497b5afc58"
+					}
+				},
+				{
+					"olo:index":"2",
+					"olo:item": {
+						"@id":"kb:62ad5c65-2644-4d11-b648-63ca0c259263"
+					}
+				},
+				{
+					"olo:index":"3",
+					"olo:item": {
+						"@id":"kb:eafca388-f926-4d48-864d-1bfdd3a2ba7f"
+					}
+				},
+				{
+					"olo:index":"4",
+					"olo:item": {
+						"@id":"kb:3d425f10-1a5d-493e-864d-dc6c3a420b29"
+					}
+				},
+				{
+					"olo:index":"5",
+					"olo:item": {
+						"@id":"kb:6dd1ba58-ee59-46ea-a304-94ab743aa00c"
+					}
+				},
+				{
+					"olo:index":"6",
+					"olo:item": {
+						"@id":"kb:8105af5f-86bc-4e4f-8be8-da470513e1d2"
+					}
 				}
-			},
-			{
-				"olo:index":"2",
-				"olo:item": {
-					"@id":"kb:62ad5c65-2644-4d11-b648-63ca0c259263"
-				}
-			},
-			{
-				"olo:index":"3",
-				"olo:item": {
-					"@id":"kb:eafca388-f926-4d48-864d-1bfdd3a2ba7f"
-				}
-			},
-			{
-				"olo:index":"4",
-				"olo:item": {
-					"@id":"kb:3d425f10-1a5d-493e-864d-dc6c3a420b29"
-				}
-			},
-			{
-				"olo:index":"5",
-				"olo:item": {
-					"@id":"kb:6dd1ba58-ee59-46ea-a304-94ab743aa00c"
-				}
-			},
-			{
-				"olo:index":"6",
-				"olo:item": {
-					"@id":"kb:8105af5f-86bc-4e4f-8be8-da470513e1d2"
-				}
-			}
-			]
+				]
 		},
 		"uco-observable:participant":[
 			{"@id":"kb:56c063a2-fe5c-11ea-a9d4-acde48001122"},
@@ -232,10 +234,13 @@
 	"uco-core:hasFacet": [		 	
 		{
 	 		"@type":"uco-observable:DataRangeFacet",
-			"uco-observable:rangeOffset":1046475,
+			"uco-observable:rangeOffset":{
+				"@type":"xsd:integer", 
+				"@value":"1046475"
+			},
 			"uco-observable:rangeSize": {
-			"@type":"xsd:integer", 
-			"@value":"98432"
+				"@type":"xsd:integer", 
+				"@value":"98432"
 			}
 		}
 	]	
@@ -255,10 +260,13 @@
 	"uco-core:hasFacet": [
 		{
 	 		"@type":"uco-observable:DataRangeFacet",
-			"uco-observable:rangeOffset":1926475,
+			"uco-observable:rangeOffset":{
+				"@type":"xsd:integer", 
+				"@value":"1926475"
+			},
 			"uco-observable:rangeSize":{
-			"@type":"xsd:integer", 
-			"@value":"37891"
+				"@type":"xsd:integer", 
+				"@value":"37891"
 			}
 		}		
 	]	
@@ -278,7 +286,10 @@
 	"uco-core:hasFacet": [
 		{
 	 		"@type":"uco-observable:DataRangeFacet",
-			"uco-observable:rangeOffset":1926475,
+			"uco-observable:rangeOffset":{
+			"@type":"xsd:integer", 
+			"@value":"1926475"
+			},
 			"uco-observable:rangeSize":{
 			"@type":"xsd:integer", 
 			"@value":"37891"
@@ -301,7 +312,10 @@
 	"uco-core:hasFacet": [
 		{
 	 		"@type":"uco-observable:DataRangeFacet",
-			"uco-observable:rangeOffset":1926475,
+			"uco-observable:rangeOffset": {
+			"@type":"xsd:integer", 
+			"@value":"1926475"
+			}	,
 			"uco-observable:rangeSize":{
 			"@type":"xsd:integer", 
 			"@value":"37891"
@@ -324,10 +338,13 @@
 	"uco-core:hasFacet": [
 		{
 	 		"@type":"uco-observable:DataRangeFacet",
-			"uco-observable:rangeOffset":1926475,
+			"uco-observable:rangeOffset":{
+				"@type":"xsd:integer", 
+				"@value":"1926475"
+			},
 			"uco-observable:rangeSize":{
-			"@type":"xsd:integer", 
-			"@value":"37891"
+				"@type":"xsd:integer", 
+				"@value":"37891"
 			}
 		}
 	]	
@@ -401,38 +418,17 @@
 	"uco-core:hasFacet": [
 		{
 	 		"@type":"uco-observable:DataRangeFacet",
-			"uco-observable:rangeOffset":967756,
+			"uco-observable:rangeOffset":{
+				"@type":"xsd:integer", 
+				"@value":"967756"
+			},
 			"uco-observable:rangeSize":{
-			"@type":"xsd:integer", 
-			"@value":"0"
+				"@type":"xsd:integer", 
+				"@value":"0"
 			} 
 		}
 	]	
 },
-
-{ 
-	"@id":"kb:f21705c05-3619-4abb-9572-94bfde3c00d6", 
-	"@type":"uco-observable:ObservableRelationship",
-	"uco-core:source":{
-		"@id":"kb:f25c8b6f-a909-4818-9dca-b64095416253"
-	},
-	"uco-core:target":{
-		"@id":"kb:77273a77-f55b-4fa0-b3e1-5bf4b25a1671"
-	},
-	"uco-core:kindOfRelationship": "Contained_Within",
-	"uco-core:isDirectional":true,
-	"uco-core:hasFacet": [
-		{
-	 		"@type":"uco-observable:DataRangeFacet",
-			"uco-observable:rangeOffset":967756,
-			"uco-observable:rangeSize":{
-			"@type":"xsd:integer", 
-			"@value":"81267"
-			}
-		}
-	]	
-},
-
 
 { 
 	"@id":"kb:77273a77-f55b-4fa0-b3e1-5bf4b25a1671", 
@@ -725,7 +721,7 @@
 				}
 			},
 			{
-		"type":"uco-observable:ContentData",
+		"@type":"uco-observable:ContentDataFacet",
 		"uco-observable:hash":[
 			{
 			"@type":"uco-types:Hash",
@@ -803,7 +799,7 @@
 				}
 			},
 			{
-		"type":"uco-observable:ContentData",
+		"@type":"uco-observable:ContentDataFacet",
 		"uco-observable:hash":[
 			{
 			"@type":"uco-types:Hash",
@@ -881,7 +877,7 @@
 				}
 			},
 			{
-		"type":"uco-observable:ContentData",
+		"@type":"uco-observable:ContentDataFacet",
 		"uco-observable:hash":[
 			{
 			"@type":"uco-types:Hash",
@@ -905,20 +901,23 @@
 	"@id":"kb:c5d07dbe-b765-4be2-bb35-8b9e43c637cc", 
 	"@type":"uco-observable:ObservableRelationship",
 	"uco-core:source":{
-		"@id":"kb:9532f349-b9c4-4e19-9577-2d19022c08e9"
+		"@id":"kb:f25c8b6f-a909-4818-9dca-b64095416253"
 	},
 	"uco-core:target":{
-		"@id":"kb:f25c8b6f-a909-4818-9dca-b64095416253"
+		"@id":"kb:9532f349-b9c4-4e19-9577-2d19022c08e9"
 	},
 	"uco-core:kindOfRelationship":"Contained_Within",
 	"uco-core:isDirectional":true,
 	"uco-core:hasFacet": [
 		{
 	 		"@type":"uco-observable:DataRangeFacet",
-			"uco-observable:rangeOffset":477870,
+			"uco-observable:rangeOffset":{
+				"@type":"xsd:integer", 
+				"@value":"477870"
+			},
 			"uco-observable:rangeSize":{
-			"@type":"xsd:integer", 
-			"@value":"75432"
+				"@type":"xsd:integer", 
+				"@value":"75432"
 			}
 		}
 	]	

@@ -1,6 +1,6 @@
 {
 	"@context": { 
-		"@vocab": "http://caseontology.org/core#", 
+		"@vocabulary": "http://caseontology.org/core#", 
 		"case-investigation": "https://caseontology.org/ontology/case/investigation#", 
 		"drafting": "http://example.org/ontology/drafting#",
     "kb": "http://example.org/kb/",
@@ -14,6 +14,7 @@
 		"uco-tool": "https://unifiedcyberontology.org/ontology/uco/tool#", 
 		"uco-types": "https://unifiedcyberontology.org/ontology/uco/types#", 
 		"uco-vocabulary": "https://unifiedcyberontology.org/ontology/uco/vocabulary#", 
+		"olo": "http://purl.org/ontology/olo/core#", 
 		"xsd":"http://www.w3.org/2001/XMLSchema#" 
 		},
 "@id": ":bundle-52b7fa9c-fe64-11ea-aa9e-acde48001122", 
@@ -55,7 +56,7 @@
 			"@id":"kb:22fb6e78-2364-46e1-ab19-cb76f9eba1ff"
 		},
 		"uco-observable:duration":{
-			"@type":"xsd:long",
+			"@type":"xsd:integer",
 			"@value":27
 		},
 		"uco-observable:allocationStatus":"Intact"
@@ -112,29 +113,38 @@
 		"@type":"xsd:integer", 
 		"@value":4227152
 		},
-			"uco-observable:createdTime": {
+			"uco-observable:observableCreatedTime": {
 				"@type":"xsd:dateTime",
 				"@value":"2016-12-16T07:06:46.000+00:00"
 			},
 			"uco-observable:modifiedTime": {
 				"@type":"xsd:dateTime",
-				"@value":"NOT_PROVIDED"
+				"@value":"2016-12-16T07:06:46.000+00:00"
 			},
 			"uco-observable:accessedTime": {
 				"@type":"xsd:dateTime",
-				"@value":"NOT_PROVIDED"
+				"@value":"12016-12-16T07:06:46.000+00:00"
 			}
 		},
 		
 		{
 			"@type":"uco-observable:ExtInodeFacet",
-			"uco-observable:extInode":"_NOT_PROVIDED_",
-			"uco-observable:extSGID":"_NOT_PROVIDED_",
-			"uco-observable:extSUID":"_NOT_PROVIDED_",
+			"uco-observable:extInodeID":{
+				"@type":"xsd:integer",
+				"@value":"0"
+			},
+			"uco-observable:extSGID":{
+				"@type":"xsd:integer",
+				"@value":"0"
+			},
+			"uco-observable:extSUID":{
+				"@type":"xsd:integer",
+				"@value":"0"
+			},
 			"uco-observable:extInodeChangeTime":
 			{
 			"@type":"xsd:dateTime",
-			"@value":"16/12/2016 07:06:46(UTC+0)"
+			"@value":"2016-12-16T07:06:46"
 			}
 		},
 		{
@@ -167,20 +177,21 @@
 	"uco-core:target":{
 		"@id":"kb:23c9b022-23cc-4e3a-b5ba-44efb5129ff6"
 	},
-	"uco-core:kindOfRelationship": {
-    "@type": "uco-vocabulary:ObservableObjectRelationshipVocab",
-    "@value": "Contained_Within"
-	},
+	"uco-core:kindOfRelationship": "Contained_Within",
 	"uco-core:isDirectional":true,
 	"uco-core:hasFacet": [
 	{
  		"@type":"uco-observable:DataRangeFacet",
-		"uco-observable:rangeOffset":638612,
-		"uco-observable:rangeSize":0
-	},
- 	{ 
-		"@type": "drafting:TableRelation", 
-		"drafting:tableName":"calls"
+		"uco-observable:rangeOffset":
+		{
+				"@type": "xsd:integer",
+				"@value":"638612"
+		},
+		"uco-observable:rangeSize":
+		{
+				"@type": "xsd:integer",
+				"@value":"0"
+		}
 	}]	
 }
 

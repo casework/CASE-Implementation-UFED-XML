@@ -27,17 +27,18 @@
 	"@type":"uco-observable:ObservableObject", 
 	"uco-observable:hasChanged":true,
 	"uco-core:hasFacet":[
-		{
-			"@type":"uco-observable:EmailAddressFacet", 
-			"uco-observable:addressValue":"mared.rhys@psw.uk"
-		}
-	] 
+				{
+					"@type":"uco-observable:EmailAddressFacet", 
+					"uco-observable:addressValue":"mared.rhys@psw.uk"
+				}
+			]
 }, 
 { 
 	"@id":"kb:a5f67cdc-3bb0-4bab-88bd-6bd0dfa55bd3", 
 	"@type":"uco-observable:ObservableObject", 
 	"uco-observable:hasChanged":true,
 	"uco-core:hasFacet":[
+		
 		{
 			"@type":"uco-observable:EmailAddressFacet", 
 			"uco-observable:addressValue":"lloyd.ellis@skycraper.com"
@@ -374,12 +375,12 @@
 		{
 	 		"@type":"uco-observable:DataRangeFacet",
 			"uco-observable:rangeOffset":{
-			"@type":"xsd:integer", 
-			"@value":"638612"
+				"@type":"xsd:integer", 
+				"@value":"638612"
 			},
 			"uco-observable:rangeSize":{
-			"@type":"xsd:integer", 
-			"@value":"4789"
+				"@type":"xsd:integer", 
+				"@value":"4789"
 			}
 		}	]	
 },
@@ -399,12 +400,12 @@
 	{
  		"@type":"uco-observable:DataRangeFacet",
 		"uco-observable:rangeOffset":{
-			"@type":"xsd:integer", 
-			"@value":"276913"
+				"@type":"xsd:integer", 
+				"@value":"276913"
 			},
 		"uco-observable:rangeSize":{
-			"@type":"xsd:integer", 
-			"@value":"43280"
+				"@type":"xsd:integer", 
+				"@value":"43280"
 			}
 	}]	
 },
