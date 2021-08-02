@@ -92,8 +92,8 @@ class UFEDtoJSON:
 		'''
 		return str(uuid.uuid4())
 
-	def ___generateContextUfed(self, ufedVersion, deviceExtractionStartTime, 
-		deviceAcquisitionStartTime, deviceAcquisitionEndTime, examinerName, 
+	def ___generateContextUfed(self, ufedVersion, deviceReportCreateTime,
+			deviceExtractionStartTime, deviceExtractionEndTime, examinerName, 
 		deviceBluetoothAddress, deviceId, devicePhoneModel, 
 		deviceOsType, deviceOsVersion, devicePhoneVendor, 
 		deviceMacAddress, deviceIccid, deviceImsi, deviceImei, 
@@ -117,16 +117,23 @@ class UFEDtoJSON:
 			deviceOsType, deviceOsVersion, devicePhoneVendor, '',
 			deviceIccid, deviceImsi, deviceImei, deviceBluetoothAddress)
 		
+#---	the XML report has no info on the Acqusition action start/end Date/Time
+#
+		deviceAcquisitionStartTime = UFEDtoJSON.C_DATE
+		deviceAcquisitionEndTime = UFEDtoJSON.C_DATE
+
 		# generate Trace/Provenance_Record for the mobile device
 		idDeviceList = []
 		idDeviceList.append(idDevice)
 		idProvenanceDevice = self.__generateTraceProvencance(idDeviceList, 'Mobile device', 
 			UFEDtoJSON.C_NP, deviceAcquisitionStartTime) 
 		
-		# generate Trace/File for each file extracted by the Acuisition action
-		# idFileList contains the uuid of these files and it is used for
-		# creating the Provenance_Record of the Result/Output of the Acquisition 
-		# action
+#---	generate Trace/File for each file extracted by the Acuisition action
+#			idFileList contains the uuid of these files and it is used for
+#			creating the Provenance_Record of the Result/Output of the Acquisition 
+# 		action. 
+#			2021-08-02: actually the XML report doesn't include the Acquisition info
+#		
 		idFilesAcquisition = []
 		for i in range(len(imagePath)):
 			if imageMetadataHashSHA[i].strip() == '':
@@ -150,7 +157,7 @@ class UFEDtoJSON:
 
 		idProvenanceAcquisitionFilesList = []
 		idProvenanceAcquisitionFilesList.append(idProvenanceAcquisitionFiles)
-        
+		
 		idProvencanceAcquisitionAction = \
 		self.__generateTraceInvestigativeAction('acquisition', 
 			'Forensic mobile device acquisition', deviceAcquisitionStartTime, 
@@ -169,7 +176,7 @@ class UFEDtoJSON:
 		idProvenanceExtractionFilesList.append(idProvenanceExtractionFiles)
 		self.__generateTraceInvestigativeAction('extraction', 
 			'Forensic mobile device extraction', deviceExtractionStartTime,
-			UFEDtoJSON.C_NP, idTool, UFEDtoJSON.C_NP, idIdentity,
+			deviceExtractionEndTime, idTool, UFEDtoJSON.C_NP, idIdentity,
 			idProvenanceAcquisitionFiles, idProvenanceExtractionFilesList, '');
 
 	def __generateChainOfEvidence(self, IdTrace, uuidTrace, endChar=','):
@@ -801,7 +808,7 @@ class UFEDtoJSON:
 				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, 'Uncategorized',
   				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP,
   				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP)
-				self.__generateTraceRelation(fileUuid, uuid, 'Connected_To', 
+				self.__generateTraceRelation(fileUuid, uuid, 'Attached_To', 
 				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP)
 		return uuid
 
@@ -1939,16 +1946,16 @@ class UFEDtoJSON:
 		self.__generateTraceSms(SMSid, SMSstatus, SMStimeStamp, SMSpartyRoles, 
 					SMSpartyIdentifiers, SMSsmsc, SMSpartyNames, SMSfolder, SMSbody, SMSsource)
 
-	def writeContextUfed(self, ufedVersionText, deviceExtractionStartTime, 
-		deviceAcquisitionStartTime, deviceAcquisitionEndTime, examinerNameText,
+	def writeContextUfed(self, ufedVersionText, deviceReportCreateTime,
+		deviceExtractionStartTime, deviceExtractionEndTime, examinerNameText,
 		deviceBluetoothAddressText, deviceIdText, devicePhoneModelText, 
 		deviceOsTypeText, deviceOsVersionText, devicePhoneVendorText, 
 		deviceMacAddressText, deviceIccidText, deviceImsiText, 
 		deviceImeiText, imagePath, imageSize, 
 		imageMetadataHashSHA, imageMetadataHashMD5):
 
-		self.___generateContextUfed(ufedVersionText, deviceExtractionStartTime, 
-			deviceAcquisitionStartTime, deviceAcquisitionEndTime, examinerNameText, 
+		self.___generateContextUfed(ufedVersionText, deviceReportCreateTime,
+			deviceExtractionStartTime, deviceExtractionEndTime, examinerNameText, 
 			deviceBluetoothAddressText, deviceIdText, devicePhoneModelText, 
 			deviceOsTypeText, deviceOsVersionText, devicePhoneVendorText, 
 			deviceMacAddressText, deviceIccidText, deviceImsiText, 
