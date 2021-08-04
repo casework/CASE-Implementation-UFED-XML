@@ -2361,9 +2361,10 @@ caseTrace.writeWebPages(Handler.WEB_PAGEid, Handler.WEB_PAGEstatus, Handler.WEB_
                 Handler.WEB_PAGEurl, Handler.WEB_PAGEtitle, Handler.WEB_PAGEvisitCount,
                 Handler.WEB_PAGElastVisited)
 
-# write the context info: Device info, Forensic tool info, 
-# Acquisition/Extraction investigative Actions, Peformer info
-# deviceCreationTime is the Extraction start time
+#---    Write the context info: Device info, Forensic tool info, 
+#       Acquisition/Extraction investigative Actions, Peformer info
+#       deviceCreationTime is the Extraction start time
+#
 caseTrace.writeContextUfed(Handler.CONTEXTufedVersionText, 
     Handler.CONTEXTdeviceCreationTimeText, Handler.CONTEXTdeviceExtractionStartText,
     Handler.CONTEXTdeviceExtractionEndText, Handler.CONTEXTexaminerNameText,

@@ -117,16 +117,19 @@ class UFEDtoJSON:
 			deviceOsType, deviceOsVersion, devicePhoneVendor, '',
 			deviceIccid, deviceImsi, deviceImei, deviceBluetoothAddress)
 		
-#---	the XML report has no info on the Acqusition action start/end Date/Time
+#---	the XML report contains the attribute DeviceInfoExtractionStartDateTime 
+#			that is the Acquisition Start Date and similarly for the Acquisition
+#			End Date, The CreationReportDate is the Start and the End of the Extraction 
+#			Forensic Action
 #
-		deviceAcquisitionStartTime = UFEDtoJSON.C_DATE
-		deviceAcquisitionEndTime = UFEDtoJSON.C_DATE
 
-		# generate Trace/Provenance_Record for the mobile device
+
+#---	generate Trace/Provenance_Record for the mobile device
+		#
 		idDeviceList = []
 		idDeviceList.append(idDevice)
 		idProvenanceDevice = self.__generateTraceProvencance(idDeviceList, 'Mobile device', 
-			UFEDtoJSON.C_NP, deviceAcquisitionStartTime) 
+			UFEDtoJSON.C_NP, deviceExtractionStartTime) 
 		
 #---	generate Trace/File for each file extracted by the Acuisition action
 #			idFileList contains the uuid of these files and it is used for
@@ -153,15 +156,15 @@ class UFEDtoJSON:
 
 		idProvenanceAcquisitionFiles = \
 			self.__generateTraceProvencance(idFilesAcquisition, 
-        	'Acquisition files', UFEDtoJSON.C_NP, deviceAcquisitionStartTime)
+        	'Acquisition files', UFEDtoJSON.C_NP, deviceExtractionStartTime)
 
 		idProvenanceAcquisitionFilesList = []
 		idProvenanceAcquisitionFilesList.append(idProvenanceAcquisitionFiles)
 		
 		idProvencanceAcquisitionAction = \
 		self.__generateTraceInvestigativeAction('acquisition', 
-			'Forensic mobile device acquisition', deviceAcquisitionStartTime, 
-			deviceAcquisitionEndTime, idTool, UFEDtoJSON.C_NP, 
+			'Forensic mobile device acquisition', deviceExtractionStartTime, 
+			deviceExtractionEndTime, idTool, UFEDtoJSON.C_NP, 
 			idIdentity, idProvenanceDevice, idProvenanceAcquisitionFilesList, ',');
 
 		idFilesExtraction = []
@@ -170,13 +173,13 @@ class UFEDtoJSON:
 
 		idProvenanceExtractionFiles = \
 		self.__generateTraceProvencance(idFilesExtraction, 'Extraction',
-			UFEDtoJSON.C_NP, deviceExtractionStartTime);
+			UFEDtoJSON.C_NP, deviceReportCreateTime);
         
 		idProvenanceExtractionFilesList = []
 		idProvenanceExtractionFilesList.append(idProvenanceExtractionFiles)
 		self.__generateTraceInvestigativeAction('extraction', 
-			'Forensic mobile device extraction', deviceExtractionStartTime,
-			deviceExtractionEndTime, idTool, UFEDtoJSON.C_NP, idIdentity,
+			'Forensic mobile device extraction', deviceReportCreateTime,
+			deviceReportCreateTime, idTool, UFEDtoJSON.C_NP, idIdentity,
 			idProvenanceAcquisitionFiles, idProvenanceExtractionFilesList, '');
 
 	def __generateChainOfEvidence(self, IdTrace, uuidTrace, endChar=','):
