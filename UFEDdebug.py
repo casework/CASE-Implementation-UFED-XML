@@ -72,7 +72,7 @@ class ParserDebug:
 				line += '\n\t\t[Status] ' + data.CHATmsgStatuses[i][j]
 				line += '\n\t\t[msgTimeStamp] ' + data.CHATmsgTimeStamps[i][j]
 				line += '\n\t\t[Attachment (File/Url)] ' + data.CHATmsgAttachmentFilenames[i][j]
-				line += ' / ' + data.CHATmsgAttachmentUrls[i][j]
+				line += ' @@@ ' + data.CHATmsgAttachmentUrls[i][j]
 			self.dFileHandle.write(line)
 
 	def writeDebugCONTACT(self, data):		    	
@@ -146,7 +146,7 @@ class ParserDebug:
 			self.dFileHandle.write(line)        
 
 	def writeDebugEXTRA_INFO(self, data):
-		line = '\n*---\nTotal EXTRA_INFO ' + str(len(data.EXTRA_INFOid))
+		line = '\n*---\nTotal EXTRA_INFO ' + str(len(data.EXTRA_INFOdictPath))
 		line += '\n*---'
 		self.dFileHandle.write(line)
 		for key in data.EXTRA_INFOdictPath:

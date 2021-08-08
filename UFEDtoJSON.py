@@ -61,6 +61,7 @@ class UFEDtoJSON:
 		self.phoneOwnerNumber = ''
 		self.phoneOwnerUuid = ''
 		self.FILEuuid = {}
+		self.FILEpath = {}
 		self.FILEid = []
 
 		self.EXTRA_INFOdictPath = {}
@@ -183,13 +184,16 @@ class UFEDtoJSON:
 			idProvenanceAcquisitionFiles, idProvenanceExtractionFilesList, '');
 
 	def __generateChainOfEvidence(self, IdTrace, uuidTrace, endChar=','):
-	    # search traceId in EXTRA_INFOdictNodeInfo a dictionary whose keys are the id
-	    # that represents the link between a Trace and its file(s)
+#---	Search traceId in EXTRA_INFOdictNodeInfo a dictionary whose keys are the id
+#			that represents the link between a Trace and its file(s)
+#		
 		table = self.EXTRA_INFOdictTableName.get(IdTrace, '_?TABLE')
 		offset = self.EXTRA_INFOdictOffset.get(IdTrace, '_?OFFSET')
-		# this is the case where the infoNode sub element of extraInfo contains the id 
-	    # reference to the file. More then one infoNode can exist, the value of the key 
-	    # contains the id file separated by @@
+
+#---	This is the case where the infoNode sub element of extraInfo contains the id 
+#			reference to the file. More then one infoNode can exist, the value of the key 
+#			contains the id file separated by @@
+#		
 		if self.EXTRA_INFOdictNodeInfoId.get(IdTrace, '').strip() == '':
 			path = self.EXTRA_INFOdictPath.get(IdTrace, '_?PATH')
 			size = self.EXTRA_INFOdictSize.get(IdTrace, '_?SIZE')
@@ -199,7 +203,7 @@ class UFEDtoJSON:
 					UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP)
 
 			self.FILEuuid[IdTrace] = uuidFile
-			self.__generateTraceRelation(uuidTrace, uuidFile, 'contained_within', 
+			self.__generateTraceRelation(uuidTrace, uuidFile, 'Contained_Within', 
 				table, offset);
 		else:
 			nodeInfoIdList = self.EXTRA_INFOdictNodeInfoId.get(IdTrace, '@@@').split('@@@')
@@ -209,7 +213,7 @@ class UFEDtoJSON:
 						#idFile = self.FILEid.index(node)
 						#uuid = FILEuuid.get(idFile, '_?UUID')
 						uuidFile = self.FILEuuid.get(node, '_?UUID')
-						self.__generateTraceRelation(uuidTrace, uuidFile, 'contained_within', 
+						self.__generateTraceRelation(uuidTrace, uuidFile, 'Contained_Within', 
 							table, offset);
 					else:
 						print ('nodeInfo ' + node + ' not found')
@@ -1606,12 +1610,19 @@ class UFEDtoJSON:
 		return uuid
 
 	def __generateTraceURL (self, URL_Value):
-		if URL_Value.strip() in self.UrlList: 
-					idx = self.UrlList.index(URL_Value.strip())
+		
+		URL_Value = URL_Value.strip()
+		startHttp = URL_Value.strip().find('http')
+		
+		if startHttp > - 1:
+			URL_Value = URL_Value[startHttp:]
+
+		if URL_Value in self.UrlList: 
+					idx = self.UrlList.index(URL_Value)
 					uuid = self.UrlIDList[idx]
 		else:
 			uuid = "kb:" + UFEDtoJSON.__createUUID()							
-			self.UrlList.append(URL_Value.strip())
+			self.UrlList.append(URL_Value)
 			self.UrlIDList.append(uuid)
 		
 			line = "".join(['{ \n', \
@@ -1806,11 +1817,13 @@ class UFEDtoJSON:
 					FILEownerGID[i], FILEownerUID[i])
 
 				self.FILEuuid[FILEid[i]] = uuid
+				self.FILEpath[FILEid[i]] = FILEpath[i]
 
 	def writeChat(self, CHATid, CHATstatus, CHATsource, CHATpartyIdentifiers, CHATpartyNames, 
                 CHATmsgIdentifiersFrom, CHATmsgNamesFrom, CHATmsgIdentifiersTo, 
                 CHATmsgNamesTo, CHATmsgBodies, CHATmsgStatuses, CHATmsgOutcomes,
                 CHATmsgTimeStamps, CHATmsgAttachmentFilenames, CHATmsgAttachmentUrls):		
+		
 		for i in range(len(CHATid)):
 			if CHATsource[i].strip().lower() in self.appNameList: 
 				idx = self.appNameList.index(CHATsource[i].strip().lower())
@@ -1871,17 +1884,23 @@ class UFEDtoJSON:
 					CHATidAccountList.append(chatAccountPhoneOwner)
 			
 			CHATthread = []
-# CHATmsgBodies[i] is the list of the messages of the same thread, the j index
-# iterates over all these messages
+#---	CHATmsgBodies[i] is the list of the messages of the same thread, the j index
+#			iterates over all these messages
+#			
+			#print("Attachments Chat[" + str(i) + "], len(msgBodies): " + str(len(CHATmsgBodies[i])))
 			for j in range(len(CHATmsgBodies[i])):				
-# IdentifiersTo may contain more than one ID, separated by ###. This occurs
-# when a message is sent to a group and more than one recipient is involved
+				#print("chat attachment: " + CHATmsgAttachmentFilenames[i][j])
+#---	IdentifiersTo may contain more than one ID, separated by ###. This occurs
+#			when a message is sent to a group and more than one recipient is involved
+#				
 				CHATmsgTo = CHATmsgIdentifiersTo[i][j].split('###')	
-# if IdentifiersTo is empty, there is only a recipient: the phone owner number								
+#---	If IdentifiersTo is empty, there is only a recipient: the phone owner number								
+#				
 				CHATmsgFrom = CHATmsgIdentifiersFrom[i][j].strip() 
 
-# if Identifiers TO is empty, the array CHATpartyIdentifiers must
-# be iterated to find the right Party
+#---	If Identifiers TO is empty, the array CHATpartyIdentifiers must
+#			be iterated to find the right Party
+#				
 				
 				if CHATmsgTo[0].strip() == '':
 					# comment 2021-05-11 - start
@@ -1897,9 +1916,9 @@ class UFEDtoJSON:
 				else:			
 					direction = 'Outgoing'
 				
-# if Identifiers FROM is empty, the array CHATpartyIdentifiers must
-# be iterated to find the right Party
-				
+#---	If Identifiers FROM is empty, the array CHATpartyIdentifiers must
+#			be iterated to find the right Party
+#									
 				if CHATmsgFrom == '':
 					CHATmsgFrom = self.phoneOwnerNumber + '@s.whatsapp.net'
 					# comment 2021-05-11 start
@@ -1918,10 +1937,22 @@ class UFEDtoJSON:
 					direction, CHATmsgAttachmentFilenames[i][j], 
 					CHATmsgAttachmentUrls[i][j])
 				CHATthread.append(chatUuid)
+				if CHATmsgAttachmentFilenames[i][j].strip() != '':
+					#print("chat n." + str(i) + ', msg n.' + str(j) + ', attachment: ' + 
+					#CHATmsgAttachmentFilenames[i][j])
+					CHATattachmentFiles = CHATmsgAttachmentFilenames[i][j].split('###')
+					for idx in range(len(CHATattachmentFiles)):
+						#print('Attachment: ' + CHATattachmentFiles[idx])
+						for key in self.FILEpath:						
+							if self.FILEpath[key].find(CHATattachmentFiles[idx]) > - 1:
+								#print('FILEuuid:' + self.FILEuuid[key])
+								self.__generateTraceRelation(self.FILEuuid[key], chatUuid, 'Attached_To', '', '');
+								break			
 
-			# if there are not messages for this Chat or no ChatAccount has been
-			# generated, the ThreadMessage is not generated. Moreover the Chain of
-			# evidence is built upon the ThreadUuid
+#---	If there are not messages for this Chat or no ChatAccount has been
+#			generated, the ThreadMessage is not generated. Moreover the Chain of
+#			evidence is built upon the ThreadUuid
+#				
 			if (len(CHATthread) == 0) or (len(CHATidAccountList) == 0):
 				pass
 			else:

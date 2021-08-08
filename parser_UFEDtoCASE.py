@@ -236,13 +236,14 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CHATmsgOutcome = []
 
         
-        # These are list of list: each item contains a list with all the data relating 
-        # to the messages of a single Chat (they are grouped in the same thread). 
-        # Therefore the item i (Chat[i]) contains many message bodies and each of them is
-        # stored in the item CHATmsgBodies[i] that, actually, is a list. For instance, if
-        # the Chat[0] contains three messages whose body are "How are you?", "I',m fine, and you?"
-        # "So far so good", then the  CHATmsgBodies[0] is the the following list
-        # ["How are you?", "I',m fine, and you?", "So far so good"]
+#---    These are list of list: each item contains a list with all the data relating 
+#       to the messages of a single Chat (they are grouped in the same thread). 
+#       Therefore the item i (Chat[i]) contains many message bodies and each of them is
+#       stored in the item CHATmsgBodies[i] that, actually, is a list. For instance, if
+#       the Chat[0] contains three messages whose body are "How are you?", "I',m fine, and you?"
+#       "So far so good", then the  CHATmsgBodies[0] is the the following list
+#       ["How are you?", "I',m fine, and you?", "So far so good"]
+#        
         self.CHATpartyIdentifiers = []
         self.CHATpartyNames = []
         self.CHATmsgIdentifiersFrom = []
@@ -571,7 +572,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CHATmsgNum += 1
 
         if attrValue == 'Attachment':
-            if self.CHATin:
+            if self.CHATin:                
                 self.CHATinMsgAttachment = True
 
         if attrValue == 'ContactPhoto':
@@ -763,7 +764,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CHATinMsgOutcome = True
 
             if self.CHATinMsgAttachment:
-                if attrValue =='Filename':
+                if attrValue =='Filename':                    
                     self.CHATinMsgAttachmentFilename = True
                 if attrValue =='URL':
                     self.CHATinMsgAttachmentUrl = True
@@ -1324,6 +1325,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             if self.CHATmsgAttachmentFilenameText == '':
                 self.CHATmsgAttachmentFilenameText += ch
             else:
+#---    The separator ### is for dividing more than one attachment to the same msg
+#                
                 self.CHATmsgAttachmentFilenameText += '###' + ch
         if self.CHATinMsgAttachmentUrlValue:
             if self.CHATmsgAttachmentUrlText == '':
@@ -1639,6 +1642,28 @@ class ExtractTraces(xml.sax.ContentHandler):
                             # the notation msg[:] creates a copy of the list, otherwise the 
                             # next clear would empty both instances: clearing the CHAT.msgBody
                             # would empty the same item in the container list CHAT.msgBodies
+                            if len(self.CHATmsgBody) == 0:
+                                self.CHATmsgBody.append("")
+                            if len(self.CHATmsgIdentifierTo) == 0:
+                                self.CHATmsgIdentifierTo.append("")
+                            if len(self.CHATmsgIdentifierFrom) == 0:
+                                self.CHATmsgIdentifierFrom.append("")
+                            if len(self.CHATmsgTimeStamp) == 0:
+                                self.CHATmsgTimeStamp.append("")
+                            if len(self.CHATmsgOutcome) == 0:
+                                self.CHATmsgOutcome.append("")
+                            if len(self.CHATmsgStatus) == 0:
+                                self.CHATmsgStatus.append("")
+                            if len(self.CHATmsgAttachmentFilename) == 0:
+                                self.CHATmsgAttachmentFilename.append("")
+                            if len(self.CHATmsgAttachmentUrl) == 0:
+                                self.CHATmsgAttachmentUrl.append("")
+                            if len(self.CHATmsgNameFrom) == 0:
+                                self.CHATmsgNameFrom.append("")
+                            if len(self.CHATmsgNameTo) == 0:
+                                self.CHATmsgNameTo.append("")
+
+
                             self.CHATpartyIdentifiers.append(self.CHATpartyIdentifier[:])
                             self.CHATpartyNames.append(self.CHATpartyName[:])
                             self.CHATmsgIdentifiersFrom.append(self.CHATmsgIdentifierFrom[:])
@@ -2275,12 +2300,12 @@ if args.output_DEBUG is None:
 else: 
     import UFEDdebug
     debug = UFEDdebug.ParserDebug(args.output_DEBUG)
+    debug.writeDebugEXTRA_INFO(Handler)     
     debug.writeDebugCALL(Handler)              
     debug.writeDebugCHAT(Handler)     
     debug.writeDebugCONTACT(Handler)  
     debug.writeDebugCONTEXT(Handler)       
-    debug.writeDebugEMAIL(Handler)     
-    debug.writeDebugEXTRA_INFO(Handler)     
+    debug.writeDebugEMAIL(Handler)         
     debug.writeDebugFILES(Handler)     
     debug.writeDebugSMS(Handler)     
     debug.writeDebugU_ACCOUNT(Handler)     
