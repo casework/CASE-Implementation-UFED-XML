@@ -1,6 +1,7 @@
-#
-#	xml_sax_UFED_to_CASE: UFED  SAX parser from XML report to CASE-JSON-LD 
-#
+###
+#	parser_UFEDtoCASE: SAX parser for extracrtiong the main Artifacts from a 
+#   UFED XML report
+###
 
 import xml.sax 
 import string
@@ -11,13 +12,133 @@ import UFEDtoJSON as CJ
 import re
 import timeit
 
+class UFEDgadget():
+    def __init__(self, xmlReport, jsonCASE):    
+        self.xmlReport = xmlReport
+        self.jsonCASE = jsonCASE
+
+    def processXmlReport(self):
+#---    create the SAX parser
+#    
+        SAXparser = xml.sax.make_parser()
+
+#---    override the default ContextHandler
+#            
+        Handler = ExtractTraces() 
+        Handler.createOutFile(self.jsonCASE)
+
+        SAXparser.setContentHandler(Handler)
+       
+        SAXparser.parse(self.xmlReport)
+        
+        print('\n\n\nCASE is being generated ...')
+
+        phoneNumber = Handler.findOwnerPhone(Handler.U_ACCOUNTusername).replace(' ', '')
+        
+        if phoneNumber == '':
+            phoneNumber = Handler.CONTEXTdeviceMsisdnText.replace(' ', '')
+
+        print(Handler.C_cyan + "owner's phone number: " + phoneNumber + '\n' + Handler.C_end)
+
+        caseTrace = CJ.UFEDtoJSON(Handler.fOut, Handler.U_ACCOUNTsource, 
+        Handler.U_ACCOUNTname, Handler.U_ACCOUNTusername)
+
+#---    caseTrace.storeUserAccount(Handler.U_ACCOUNTsource, Handler.U_ACCOUNTname,
+#       Handler.U_ACCOUNTusername)
+
+        caseTrace.writeHeader()
+
+
+        caseTrace.writePhoneOwner(phoneNumber)
+
+        caseTrace.writeExtraInfo(Handler.EXTRA_INFOdictPath, Handler.EXTRA_INFOdictSize,
+                        Handler.EXTRA_INFOdictTableName, Handler.EXTRA_INFOdictOffset,
+                        Handler.EXTRA_INFOdictNodeInfoId)
+
+        caseTrace.writeFiles(Handler.FILEid, Handler.FILEpath, Handler.FILEsize,
+                        Handler.FILEmd5, Handler.FILEtags, Handler.FILEtimeCreate, 
+                        Handler.FILEtimeModify, Handler.FILEtimeAccess, Handler.FILElocalPath, 
+                        Handler.FILEiNodeNumber, Handler.FILEiNodeTimeModify, 
+                        Handler.FILEownerGID, Handler.FILEownerUID)
+
+
+#---    CONTACTname is a list of names of contacts, 
+#       CONTACTphoneNums is a list of list of phone numbers, each item represents 
+#       the list of phone numbers of a contact. So a contact is identified by 
+#       the item CONTACname[i] and this contact may have many phone numbers 
+#       identified by CONTACTphoneNums[i][j] iterating on the index j
+#       The writeContacts method must be invoked before the processing of
+#       the SMS and Call traces, both of them are based on the list of phone numbers        
+#  
+        caseTrace.writePhoneAccountFromContacts(Handler.CONTACTname, Handler.CONTACTphoneNums)
+
+#---    all parameters are lists containing data of the extracted SMS
+#    
+        caseTrace.writeSms(Handler.SMSid, Handler.SMSstatus, Handler.SMStimeStamp, 
+                    Handler.SMSpartyRoles, Handler.SMSpartyIdentifiers, 
+                    Handler.SMSsmsc, Handler.SMSpartyNames, Handler.SMSfolder, 
+                    Handler.SMSbody, Handler.SMSsource)
+
+#---    all parameters are lists containing data of the extracted CALL_LOG
+#    
+        caseTrace.writeCall(Handler.CALLid, Handler.CALLstatus, Handler.CALLsource, 
+                    Handler.CALLtimeStamp, Handler.CALLdirection, Handler.CALLduration,
+                    Handler.CALLrolesTO, Handler.CALLrolesFROM, Handler.CALLnamesTO, 
+                    Handler.CALLnamesFROM, Handler.CALLoutcome, Handler.CALLidentifiersTO, 
+                    Handler.CALLidentifiersFROM)
+
+#---    all parameters are lists containing data of the extracted CHAT
+#    
+        caseTrace.writeChat(Handler.CHATid, Handler.CHATstatus, Handler.CHATsource, 
+                    Handler.CHATpartyIdentifiers, Handler.CHATpartyNames, 
+                    Handler.CHATmsgIdentifiersFrom, Handler.CHATmsgNamesFrom, 
+                    Handler.CHATmsgIdentifiersTo, Handler.CHATmsgNamesTo,
+                    Handler.CHATmsgBodies, Handler.CHATmsgStatuses,
+                    Handler.CHATmsgOutcomes, Handler.CHATmsgTimeStamps, 
+                    Handler.CHATmsgAttachmentFilenames, Handler.CHATmsgAttachmentUrls)
+
+#---    all parameters are lists containing data of the extracted EMAIL
+#
+        caseTrace.writeEmail(Handler.EMAILid, Handler.EMAILstatus, Handler.EMAILsource, 
+                    Handler.EMAILidentifierFROM, Handler.EMAILidentifiersTO, 
+                    Handler.EMAILidentifiersCC, Handler.EMAILidentifiersBCC, 
+                    Handler.EMAILbody, Handler.EMAILsubject,
+                    Handler.EMAILtimeStamp, Handler.EMAILattachmentsFilename)
+
+# all parameters are lists containing data of the extracted WEB_PAGE
+#
+        caseTrace.writeWebPages(Handler.WEB_PAGEid, Handler.WEB_PAGEstatus, Handler.WEB_PAGEsource, 
+                    Handler.WEB_PAGEurl, Handler.WEB_PAGEtitle, Handler.WEB_PAGEvisitCount,
+                    Handler.WEB_PAGElastVisited)
+
+#---    write the context info: Device info, Forensic tool info, 
+#       Acquisition/Extraction investigative Actions, Peformer info
+#       deviceCreationTime is the Extraction start time
+#
+        caseTrace.writeContextUfed(Handler.CONTEXTufedVersionText, 
+            Handler.CONTEXTdeviceCreationTimeText, Handler.CONTEXTdeviceExtractionStartText,
+            Handler.CONTEXTdeviceExtractionEndText, Handler.CONTEXTexaminerNameText,
+            Handler.CONTEXTdeviceBluetoothAddressText, Handler.CONTEXTdeviceIdText, 
+            Handler.CONTEXTdevicePhoneModelText, Handler.CONTEXTdeviceOsTypeText, 
+            Handler.CONTEXTdeviceOsVersionText, Handler.CONTEXTdevicePhoneVendorText, 
+            Handler.CONTEXTdeviceMacAddressText, Handler.CONTEXTdeviceIccidText, 
+            Handler.CONTEXTdeviceImsiText, Handler.CONTEXTdeviceImeiText, 
+            Handler.CONTEXTimagePath, Handler.CONTEXTimageSize, 
+            Handler.CONTEXTimageMetadataHashSHA, Handler.CONTEXTimageMetadataHashMD5)
+
+#---    this write a single line to complete the JSON output file
+#    
+        caseTrace.writeLastLine()  
+
+        Handler.fOut.close()  
+        return Handler
+
 
 class ExtractTraces(xml.sax.ContentHandler):
-    def __init__(self, kindTraces):
+    def __init__(self):
         self.fOut = ''
         self.lineXML = 0
         self.skipLine = False
-        self.kindTraces = kindTraces
         self.Observable = False
 
         self.C_green  = '\033[32m'
@@ -83,21 +204,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.EXTRA_INFOdictNodeInfoId = {}
 
 #--     CALL  section
-#
-#       XML Elements structure
-#        
-#       <model type="Call"...>
-#               <field name="Source"...>
-#               <field name="Direction"...>
-#               <field name="Type"...>
-#               <field name="Status"...>
-#               <field name="TimeStamp"...>
-#               <field name="Duration"...>        
-#               <multiModelField name="Parties"...>
-#                       <model type="Party"...> (more than one)
-#                               <field name="Identifier" ...>
-#                               <field name="Role" ...>
-#                               <field name="Name" ...>        
 #        
         self.CALLtrace = 'call'
         self.CALLin = False
@@ -161,7 +267,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CALLidentifiersTO = []
         self.CALLidentifiersFROM = []
 
-        # CHAT section
+#---    CHAT section
+#        
         self.CHATtrace = "chat"
         self.CHATin = False
         self.CHATinSource = False
@@ -326,6 +433,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SMSinBodyValue = False
         self.SMSinFolder = False
         self.SMSinFolderValue = False
+
 #---    Short Message Service Center
 #        
         self.SMSinSmsc = False
@@ -368,7 +476,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SMSpartyNames = []
         
 
-        # CONTACT section
+# CONTACT section
+#        
         self.CONTACTtrace = 'contact'
         self.CONTACTin = False
         self.CONTACTinPhoneEntries = False
@@ -384,11 +493,13 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CONTACTid = []
         self.CONTACTstatus = []
         self.CONTACTname = []
+
 #---    the CONTACTphoneNum list contains the phone numbers of a CONTACT. 
 #       At the end of CONTACT elements processing, this list is appended to 
 #       the below  CONTACTphoneNums list
 #        
         self.CONTACTphoneNum = []
+
 #---    list of list: the first list contains all contacts, each item of this list, 
 #       that is, each contact may contain more than one phone number.
 #       so CONTACTphoneNums[i] is the list of phone numbers of the contact i,
@@ -398,7 +509,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CONTACTphoneNums = []
 
 
-        # WEB HISTORY section
+#---    WEB HISTORY section
+#        
         self.WEB_PAGEtrace = 'url'
         self.WEB_PAGEin = False
         self.WEB_PAGEinSource = False
@@ -454,8 +566,9 @@ class ExtractTraces(xml.sax.ContentHandler):
 
         self.U_ACCOUNTtotal = 0
 
-        # Data for the context (tool, mobile device info, acquisition and 
-        # extraction investigative action
+#---    Data for the context (tool, mobile device info, acquisition and 
+#       extraction investigative action
+#        
         self.CONTEXTinAdditionalFields = False
         self.CONTEXTinUfedVersionValue  = False
         self.CONTEXTufedVersionText = ''
@@ -472,7 +585,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CONTEXTinDeviceExtractionEnd  = False
         self.CONTEXTdeviceExtractionEndText  = ''
         
-
         self.CONTEXTinDeviceInfo = False
         self.CONTEXTinDeviceBluetoothAddressValue = False
         self.CONTEXTdeviceBluetoothAddressText = ''
@@ -555,14 +667,13 @@ class ExtractTraces(xml.sax.ContentHandler):
 
     def __startElementModelCHAT(self, attrValue, CHATid, CHATstate):
         if attrValue == 'Chat':                
-                if attrValue.lower() in self.kindTraces:
-                    self.CHATin = True
-                    self.CHATtotal += 1
-                    self.printObservable('CHAT', self.CHATtotal)
-                    self.CHATid.append(CHATid)
-                    self.storeTraceStatus(self.CHATstatus, CHATstate, self.CHATdeleted)
-                    self.skipLine = True 
-                    self.Observable = True             
+            self.CHATin = True
+            self.CHATtotal += 1
+            self.printObservable('CHAT', self.CHATtotal)
+            self.CHATid.append(CHATid)
+            self.storeTraceStatus(self.CHATstatus, CHATstate, self.CHATdeleted)
+            self.skipLine = True 
+            self.Observable = True             
 
         if attrValue == 'InstantMessage': 
             if self.CHATin:
@@ -594,21 +705,17 @@ class ExtractTraces(xml.sax.ContentHandler):
         if attrValue == 'InstantMessage': 
             if self.CHATin:
                 self.CHATinMsg = True
-                #self.CHATmsgAttachmentFilename.append('')
-                #self.CHATmsgAttachmentUrl.append('')
                 self.CHATmsgNum += 1
 
     def __startElementModelCONTACT(self, attrValue, CONTACTid, CONTACTstate):
         if attrValue == 'Contact':
-                if attrValue.lower() in self.kindTraces:
-                    self.CONTACTin = True
-                    self.CONTACTtotal += 1
-                    self.printObservable('CONTACT', self.CONTACTtotal)
-                    self.skipLine = True  
-                    self.Observable = True 
-
-                self.CONTACTid.append(CONTACTid)
-                self.storeTraceStatus(self.CONTACTstatus, CONTACTstate, self.CONTACTdeleted)        
+            self.CONTACTin = True
+            self.CONTACTtotal += 1
+            self.printObservable('CONTACT', self.CONTACTtotal)
+            self.skipLine = True  
+            self.Observable = True 
+            self.CONTACTid.append(CONTACTid)
+            self.storeTraceStatus(self.CONTACTstatus, CONTACTstate, self.CONTACTdeleted)        
         
         else:
             if attrValue == "PhoneNumber":
@@ -620,26 +727,24 @@ class ExtractTraces(xml.sax.ContentHandler):
 
     def __startElementModelEMAIL(self, attrValue, EMAILid, EMAILstate):
         if attrValue == 'Email':                
-            if attrValue.lower() in self.kindTraces:
-                self.EMAILin = True
-                self.EMAILtotal += 1
-                self.printObservable('EMAIL', self.EMAILtotal)
-                self.EMAILid.append(EMAILid)
-                self.storeTraceStatus(self.EMAILstatus, EMAILstate, self.EMAILdeleted) 
-                self.skipLine = True  
-                self.Observable = True 
+            self.EMAILin = True
+            self.EMAILtotal += 1
+            self.printObservable('EMAIL', self.EMAILtotal)
+            self.EMAILid.append(EMAILid)
+            self.storeTraceStatus(self.EMAILstatus, EMAILstate, self.EMAILdeleted) 
+            self.skipLine = True  
+            self.Observable = True 
 
 
     def __startElementModelSMS(self, attrValue, SMSid, SMSstate):
         if attrValue == 'SMS':                
-            if attrValue.lower() in self.kindTraces:
-                self.SMSin = True
-                self.SMStotal += 1
-                self.printObservable('SMS', self.SMStotal)
-                self.SMSid.append(SMSid)
-                self.storeTraceStatus(self.SMSstatus, SMSstate, self.SMSdeleted) 
-                self.skipLine = True 
-                self.Observable = True  
+            self.SMSin = True
+            self.SMStotal += 1
+            self.printObservable('SMS', self.SMStotal)
+            self.SMSid.append(SMSid)
+            self.storeTraceStatus(self.SMSstatus, SMSstate, self.SMSdeleted) 
+            self.skipLine = True 
+            self.Observable = True  
 
     def __startElementModelU_ACCOUNT(self, attrValue):
         if attrValue == 'UserAccount':
@@ -665,30 +770,32 @@ class ExtractTraces(xml.sax.ContentHandler):
 
     def __startElementModelWEB_PAGE(self, attrValue, WEB_PAGEid, WEB_PAGEstate):
         if attrValue == 'VisitedPage':                
-            if attrValue.lower() in self.kindTraces:
-                self.WEB_PAGEin = True
-                self.WEB_PAGEtotal += 1
-                self.printObservable('WEB_HISTORY', self.WEB_PAGEtotal)
-                self.WEB_PAGEid.append(WEB_PAGEid)
-                self.storeTraceStatus(self.WEB_PAGEstatus, WEB_PAGEstate, self.WEB_PAGEdeleted) 
-                self.skipLine = True 
-                self.Observable = True  
+            self.WEB_PAGEin = True
+            self.WEB_PAGEtotal += 1
+            self.printObservable('WEB_HISTORY', self.WEB_PAGEtotal)
+            self.WEB_PAGEid.append(WEB_PAGEid)
+            self.storeTraceStatus(self.WEB_PAGEstatus, WEB_PAGEstate, self.WEB_PAGEdeleted) 
+            self.skipLine = True 
+            self.Observable = True  
 
     def __startElementModelFieldCHAT(self, attrValue):
         self.CHATinModel = True
         if self.CHATinMsg:
             if attrValue == 'From':
                 self.CHATinMsgFrom = True
-                # not always the From/To Identifier and Name are present, so
-                # in order to maintain the same number of items, the current
-                # item is set to empty values 
+
+#---    not always the From/To Identifier and Name are present, so
+#       in order to maintain the same number of items, the current
+#       item is set to empty values 
+#                
             if attrValue == 'To':
                 self.CHATinMsgTo = True
-                # the element modelField with attribute name=From or To is
-                # always present, but it may occur that there is no descendants
-                # elements below. The ChatmsgNum variable takes trace of the number
-                # of message, within a given Chat, that is being processed
 
+#---    the element modelField with attribute name=From or To is
+#       always present, but it may occur that there is no descendants
+#       elements below. The ChatmsgNum variable takes trace of the number
+#       of message, within a given Chat, that is being processed
+#               
     def __startElementModelFieldEMAIL(self, attrValue):
         if self.EMAILin:
             if attrValue == 'From':
@@ -1088,16 +1195,15 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.WEB_PAGEinLastVisitedValue:
             self.WEB_PAGElastVisitedText = ''
 
-# It captures each Element when it is opened., the order depends on their 
-# position from the beginning of the document
+#---    It captures each Element when it is opened., the order depends on their 
+#       position from the beginning of the document
+#            
     def startElement(self, name, attrs):
                                                                                         
         self.lineXML +=1
         attrType = attrs.get('type')
         attrName = attrs.get('name')
         attrSection = attrs.get('section')
-        #print('attrType:' + str(attrType) + ', attrName:' + str(attrName) + 
-        #    ', attrSection:' + str(attrSection))
         
         if name == 'model':                                    
             traceState = attrs.get('deleted_state')
@@ -1155,7 +1261,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         if name == 'taggedFiles':
             self.TAGGED_FILESin = True
 
-        # extraInfo @id is the link with the Trace @id, for any kind of Trace 
+#---    extraInfo @id is the link with the Trace @id, for any kind of Trace 
+#            
         if name == 'extraInfo':
             self.EXTRA_INFOin = True
             self.EXTRA_INFOid = attrs.get('id')
@@ -1170,12 +1277,16 @@ class ExtractTraces(xml.sax.ContentHandler):
         if name == 'nodeInfo':
             if self.EXTRA_INFOin:
                 self.EXTRA_INFOnodeInfoin = True              
-                # key of the dictionaries containing the infoNode values.
-                # Different values are separated by @@@
+
+#---    key of the dictionaries containing the infoNode values.
+#       Different values are separated by @@@
+#                
                 i = self.EXTRA_INFOid
-                # in some cases there are more than one single nodeInfo
-                # contained in the extraInfo element, so a dictionary with
-                # key = extraInfoID is necessary to store the whole info                
+
+#---    in some cases there are more than one single nodeInfo
+#       contained in the extraInfo element, so a dictionary with
+#       key = extraInfoID is necessary to store the whole info                
+#                
                 if attrs.get('id') is None:                    
                     self.EXTRA_INFOdictNodeInfoId[i] = ''
                     charSep = ''
@@ -1273,9 +1384,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             else:
                 print (line , end='\r') 
 
-#    it captures the value/character inside the Text Elements
+#---    it captures the value/character inside the Text Elements
+#                
     def characters(self, ch):
-        #   SMS processing
+#---    SMS processing
+#        
         if self.SMSinSourceValue:
             self.SMSsourceText += ch
         if self.SMSinTimeStampValue:
@@ -1294,7 +1407,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.SMSinPartyNameValue:
             self.SMSpartyNameText += ch
 
-        # CHAT processing
+#---    CHAT processing
+#            
         if self.CHATinSourceValue:
             self.CHATsourceText += ch        
         if self.CHATinPartyIdentifierValue:
@@ -1325,6 +1439,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             if self.CHATmsgAttachmentFilenameText == '':
                 self.CHATmsgAttachmentFilenameText += ch
             else:
+
 #---    The separator ### is for dividing more than one attachment to the same msg
 #                
                 self.CHATmsgAttachmentFilenameText += '###' + ch
@@ -1334,7 +1449,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             else:
                 self.CHATmsgAttachmentUrlText += '###' + ch
 
-        # CALL processing
+#---    CALL processing
+#                
         if self.CALLinSourceValue:
             self.CALLsourceText += ch
         if self.CALLinTimeStampValue:
@@ -1354,13 +1470,15 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.CALLinIdentifierValue:
             self.CALLidentifierText += ch
 
-        #   CONTACT processing
+#---    CONTACT processing
+#            
         if self.CONTACTinNameValue:
             self.CONTACTnameText += ch        
         if self.CONTACTinPhoneNumValue:
             self.CONTACTphoneNumText += ch
 
-        #   EMAIL processing
+#---    EMAIL processing
+#            
         if self.EMAILinSourceValue:
             self.EMAILsourceText += ch
         if self.EMAILinIdentifierFROMvalue:
@@ -1380,7 +1498,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.EMAILinAttachmentFilenameValue:
             self.EMAILattachmentFilenameText += ch
         
-        #   WEB_PAGE processing
+#---    WEB_PAGE processing
+#            
         if self.WEB_PAGEinSourceValue:
             self.WEB_PAGEsourceText += ch
         if self.WEB_PAGEinUrlValue:
@@ -1392,7 +1511,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.WEB_PAGEinLastVisitedValue:
             self.WEB_PAGElastVisitedText += ch
         
-        #   U_ACCOUNT processing for the owner phone number
+#---    U_ACCOUNT processing for the owner phone number
+#            
         if self.U_ACCOUNTinSourceValue:
             self.U_ACCOUNTsourceValueText += ch
         if self.U_ACCOUNTinNameValue:
@@ -1400,7 +1520,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.U_ACCOUNTinUsernameValue:
             self.U_ACCOUNTusernameValueText += ch
         
-        #   TAGGED_FILES processing for Chain of Evidence
+#---    TAGGED_FILES processing for Chain of Evidence
+#            
         if self.TAGGED_FILESinAccessInfoCreate:
             self.TAGGED_FILESCreateText += ch
         if self.TAGGED_FILESinAccessInfoModify:
@@ -1422,8 +1543,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.TAGGED_FILESinOwnerUID:
             self.TAGGED_FILESownerUIDText += ch
 
-        # CONTEXT for the information about device, tool, 
-        # acquisition/extrtaction actions
+#---    CONTEXT for the information about device, tool, 
+#       acquisition/extrtaction actions
+#
         if self.CONTEXTinDeviceCreationTimeValue:
             self.CONTEXTdeviceCreationTimeText += ch
         if self.CONTEXTinUfedVersionValue:
@@ -1635,13 +1757,15 @@ class ExtractTraces(xml.sax.ContentHandler):
                         self.CHATmsgAttachmentFilenameText = ''
                         self.CHATmsgAttachmentUrlText = ''
                         self.CHATinMsg = False
-                # This corresponds to the end of the element model (type="Chat") that
-                # occurs when a Chat has been processed 
+#---    This corresponds to the end of the element model (type="Chat") that
+#       occurs when a Chat has been processed 
+#                        
                     else: 
                         if self.CHATin:                    
-                            # the notation msg[:] creates a copy of the list, otherwise the 
-                            # next clear would empty both instances: clearing the CHAT.msgBody
-                            # would empty the same item in the container list CHAT.msgBodies
+#---    the notation msg[:] creates a copy of the list, otherwise the 
+#       next clear would empty both instances: clearing the CHAT.msgBody
+#       would empty the same item in the container list CHAT.msgBodies
+#                            
                             if len(self.CHATmsgBody) == 0:
                                 self.CHATmsgBody.append("")
                             if len(self.CHATmsgIdentifierTo) == 0:
@@ -1662,7 +1786,6 @@ class ExtractTraces(xml.sax.ContentHandler):
                                 self.CHATmsgNameFrom.append("")
                             if len(self.CHATmsgNameTo) == 0:
                                 self.CHATmsgNameTo.append("")
-
 
                             self.CHATpartyIdentifiers.append(self.CHATpartyIdentifier[:])
                             self.CHATpartyNames.append(self.CHATpartyName[:])
@@ -1765,9 +1888,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             if source == '':
                 pass
             else:
-                # in UFED the field Source represents the application
-                # and the Whatsapp value is not WhatsAppiMessage but
-                # just Whatsapp! 
+
+#---    in UFED the field Source represents the application
+#       and the Whatsapp value is not WhatsAppiMessage but
+#       just Whatsapp! 
+#                
                 source = source.replace('WhatsAppiMessage', 'Whatsapp')
                 source = source.replace('FacebookiMessage', 'Facebook')
                 source = source.replace('Facebook MessengeriMessage', 'Facebook Messenger')
@@ -2138,7 +2263,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTEXTinImageMetadataHashValueMD5 = False
 
 
-#    It captures each Element when it is closed
+#---    It captures each Element when it is closed
+#            
     def endElement(self, name):
         self.lineXML +=1
 
@@ -2160,8 +2286,9 @@ class ExtractTraces(xml.sax.ContentHandler):
             if self.SMSinParty:
                 self.SMSinParty = False
             
-            # this works when a <multiModelField> element is followed by 
-            # an <empty> element
+#---    this works when a <multiModelField> element is followed by 
+#       an <empty> element
+#                
             if self.EMAILinModelFieldFROM:
                 self.EMAILinModelFieldFROM = False
             if self.EMAILinMultiModelFieldTO:
@@ -2233,184 +2360,82 @@ class ExtractTraces(xml.sax.ContentHandler):
         if name == 'images':
             self.CONTEXTinImages = False
 
-#--- debug: ctime processing
-tic=timeit.default_timer()
+if __name__ == '__main__':
 
-parser = argparse.ArgumentParser(description='Parser to convert XML Report from UFED PA into CASE-JSON-LD standard.')
+#---    debug: ctime processing
+#
+    tic=timeit.default_timer()
 
-# report XML exported by UFED PA, to be converted/parsed into CASE
-parser.add_argument('-r', '--report', dest='inFileXML', required=True, 
+    parserArgs = argparse.ArgumentParser(description='Parser to convert XML Report from UFED PA into CASE-JSON-LD standard.')
+
+#---    report XML exported by UFED PA, to be converted/parsed into CASE
+#
+    parserArgs.add_argument('-r', '--report', dest='inFileXML', required=True, 
                     help='The UFED XML report from which to extract digital traces and convert them into CASE; it supports UFED PA version from 7.24 to 7.37')
 
-# Cast input to integer, with a default value
-parser.add_argument('-t', '--trace', type=str, dest='kindTrace', 
-	               choices=['all', 'call', 'contact', 'chat', 'sms', 'url', 'email'], 
-	               help="Traces to be extracted, default all", default='all')
+    parserArgs.add_argument('-o', '--output', dest='output_CASE_JSON', required=True, help='File CASE-JSON-LD to be generated')
 
-parser.add_argument('-o', '--output', dest='output_CASE_JSON', required=True, help='File CASE-JSON-LD to be generated')
+    parserArgs.add_argument('-d', '--debug', dest='output_DEBUG', required=False, help='File for writing debug')
 
-parser.add_argument('-d', '--debug', dest='output_DEBUG', required=False, help='File for writing debug')
+    args = parserArgs.parse_args()
 
-args = parser.parse_args()
 
-# create the SAX parser
-parser = xml.sax.make_parser()
+    if args.output_CASE_JSON is None:
+        path, name = os.path.split(args.inFileXML[0:-3] + 'JSON')
+        args.output_CASE_JSON = name
 
-# disable name space processing, 1=enable: parser.setFeature(feature_namespaces, 0)
+    print('*--- Input paramaters start \n')
+    print('\tFile XML:\t\t' + args.inFileXML)
 
-kindTraces = [] 
-if args.kindTrace == 'all':
-    kindTraces=['call', 'contact', 'chat', 'email', 'file', 'sms', 'visitedpage', 'email']
-else:
-    if args.kindTrace == 'url':
-        kindTraces.append('visitedpage')
+    head, tail = os.path.split(args.output_CASE_JSON)
+    print('\tFile Output:\t\t' + args.output_CASE_JSON)
+
+    if args.output_DEBUG is None:
+        pass
     else:
-        kindTraces.append(args.kindTrace)
+        print('\tFile Debug:\t\t' + args.output_DEBUG)
 
-# override the default ContextHandler
-Handler = ExtractTraces(kindTraces)
+    print('\n*--- Input paramaters end')
+    print('\n\n*** Start processing\n')
 
-if args.output_CASE_JSON is None:
-    path, name = os.path.split(args.inFileXML[0:-3] + 'JSON')
-    args.output_CASE_JSON = name
-
-print('*--- Input paramaters start \n')
-print('\tFile XML:\t\t' + args.inFileXML)
-print('\tTraces  :\t\t' + args.kindTrace)
-
-head, tail = os.path.split(args.output_CASE_JSON)
-print('\tFile Output:\t\t' + args.output_CASE_JSON)
-
-if args.output_DEBUG is None:
-    pass
-else:
-    print('\tFile Debug:\t\t' + args.output_DEBUG)
-
-print('\n*--- Input paramaters end')
-print('\n\n*** Start processing\n')
-
-Handler.createOutFile(args.output_CASE_JSON)
-
-parser.setContentHandler(Handler)
-   
-parser.parse(args.inFileXML)
-
-if args.output_DEBUG is None:
-    pass
-else: 
-    import UFEDdebug
-    debug = UFEDdebug.ParserDebug(args.output_DEBUG)
-    debug.writeDebugEXTRA_INFO(Handler)     
-    debug.writeDebugCALL(Handler)              
-    debug.writeDebugCHAT(Handler)     
-    debug.writeDebugCONTACT(Handler)  
-    debug.writeDebugCONTEXT(Handler)       
-    debug.writeDebugEMAIL(Handler)         
-    debug.writeDebugFILES(Handler)     
-    debug.writeDebugSMS(Handler)     
-    debug.writeDebugU_ACCOUNT(Handler)     
-    debug.writeDebugWEB_PAGE(Handler)     
-    debug.closeDebug() 
+    gadget = UFEDgadget(args.inFileXML, args.output_CASE_JSON)    
     
+    Handler = gadget.processXmlReport()
 
-print('\n\n\nCASE is being generated ...')
+    if args.output_DEBUG is None:
+        pass
+    else: 
+        import UFEDdebug
+        debug = UFEDdebug.ParserDebug(args.output_DEBUG)
+        debug.writeDebugEXTRA_INFO(Handler)     
+        debug.writeDebugCALL(Handler)              
+        debug.writeDebugCHAT(Handler)     
+        debug.writeDebugCONTACT(Handler)  
+        debug.writeDebugCONTEXT(Handler)       
+        debug.writeDebugEMAIL(Handler)         
+        debug.writeDebugFILES(Handler)     
+        debug.writeDebugSMS(Handler)     
+        debug.writeDebugU_ACCOUNT(Handler)     
+        debug.writeDebugWEB_PAGE(Handler)     
+        debug.closeDebug() 
+            
 
-phoneNumber = Handler.findOwnerPhone(Handler.U_ACCOUNTusername).replace(' ', '')
+    toc=timeit.default_timer()
+    elapsedTime = round(toc - tic, 2)
+    (ss, ms) = divmod(elapsedTime, 1)
+    elapsedMm = str(int(ss) // 60)
+    elapsedSs = str(int(ss) % 60)
+    elapsedMs = str(round(ms, 2))[2:]
+    elapsedTime = elapsedMm + ' min. ' +  elapsedSs + ' sec. and ' + \
+        elapsedMs + ' hundredths'
+    print(Handler.C_green + '\n*** End processing, elapsed time: ' + elapsedTime + \
+        '\n\n' + Handler.C_end)
 
-if phoneNumber == '':
-    phoneNumber = Handler.CONTEXTdeviceMsisdnText.replace(' ', '')
+# else:
+# #---    
+#     xmlFile = '../CASE-dataset.xml.reports/UFED/ANDROID/19_UFED_ANDROID_CROSSOVER.xml'
+#     jsonFile = './_19gadget.json'   
+#     gadget = UFEDgadget(xmlFile, jsonFile)
+#     gadget.processXmlReport()
+#     print("end XML processing, created " + jsonFile) 
 
-print(Handler.C_cyan + "owner's phone number: " + phoneNumber + '\n' + Handler.C_end)
-
-caseTrace = CJ.UFEDtoJSON(Handler.fOut, Handler.U_ACCOUNTsource, 
-        Handler.U_ACCOUNTname, Handler.U_ACCOUNTusername)
-
-#caseTrace.storeUserAccount(Handler.U_ACCOUNTsource, Handler.U_ACCOUNTname,
-#            Handler.U_ACCOUNTusername)
-
-caseTrace.writeHeader()
-
-
-caseTrace.writePhoneOwner(phoneNumber)
-
-caseTrace.writeExtraInfo(Handler.EXTRA_INFOdictPath, Handler.EXTRA_INFOdictSize,
-                    Handler.EXTRA_INFOdictTableName, Handler.EXTRA_INFOdictOffset,
-                    Handler.EXTRA_INFOdictNodeInfoId)
-
-caseTrace.writeFiles(Handler.FILEid, Handler.FILEpath, Handler.FILEsize,
-                    Handler.FILEmd5, Handler.FILEtags, Handler.FILEtimeCreate, 
-                    Handler.FILEtimeModify, Handler.FILEtimeAccess, Handler.FILElocalPath, 
-                    Handler.FILEiNodeNumber, Handler.FILEiNodeTimeModify, 
-                    Handler.FILEownerGID, Handler.FILEownerUID)
-
-
-# CONTACTname is a list of names of contacts, 
-# CONTACTphoneNums is a list of list of phone numbers, each item represents 
-# the list of phone numbers of a contact. So a contact is identified by 
-# the item CONTACname[i] and this contact may have many phone numbers 
-# identified by CONTACTphoneNums[i][j] iterating on the index j
-# The writeContacts method must be invoked before the processing of
-# the SMS and Call traces, both of them are based on the list of phone numbers
-
-caseTrace.writePhoneAccountFromContacts(Handler.CONTACTname, Handler.CONTACTphoneNums)
-
-# all parameters are lists containing data of the extracted SMS
-caseTrace.writeSms(Handler.SMSid, Handler.SMSstatus, Handler.SMStimeStamp, 
-                Handler.SMSpartyRoles, Handler.SMSpartyIdentifiers, 
-                Handler.SMSsmsc, Handler.SMSpartyNames, Handler.SMSfolder, 
-                Handler.SMSbody, Handler.SMSsource)
-
-# all parameters are lists containing data of the extracted CALL_LOG
-caseTrace.writeCall(Handler.CALLid, Handler.CALLstatus, Handler.CALLsource, 
-                Handler.CALLtimeStamp, Handler.CALLdirection, Handler.CALLduration,
-                Handler.CALLrolesTO, Handler.CALLrolesFROM, Handler.CALLnamesTO, 
-                Handler.CALLnamesFROM, Handler.CALLoutcome, Handler.CALLidentifiersTO, 
-                Handler.CALLidentifiersFROM)
-
-# all parameters are lists containing data of the extracted CHAT
-caseTrace.writeChat(Handler.CHATid, Handler.CHATstatus, Handler.CHATsource, 
-                Handler.CHATpartyIdentifiers, Handler.CHATpartyNames, 
-                Handler.CHATmsgIdentifiersFrom, Handler.CHATmsgNamesFrom, 
-                Handler.CHATmsgIdentifiersTo, Handler.CHATmsgNamesTo,
-                Handler.CHATmsgBodies, Handler.CHATmsgStatuses,
-                Handler.CHATmsgOutcomes, Handler.CHATmsgTimeStamps, 
-                Handler.CHATmsgAttachmentFilenames, Handler.CHATmsgAttachmentUrls)
-
-caseTrace.writeEmail(Handler.EMAILid, Handler.EMAILstatus, Handler.EMAILsource, 
-                Handler.EMAILidentifierFROM, Handler.EMAILidentifiersTO, 
-                Handler.EMAILidentifiersCC, Handler.EMAILidentifiersBCC, 
-                Handler.EMAILbody, Handler.EMAILsubject,
-                Handler.EMAILtimeStamp, Handler.EMAILattachmentsFilename)
-# all parameters are lists containing data of the extracted WEB_PAGE
-caseTrace.writeWebPages(Handler.WEB_PAGEid, Handler.WEB_PAGEstatus, Handler.WEB_PAGEsource, 
-                Handler.WEB_PAGEurl, Handler.WEB_PAGEtitle, Handler.WEB_PAGEvisitCount,
-                Handler.WEB_PAGElastVisited)
-
-#---    Write the context info: Device info, Forensic tool info, 
-#       Acquisition/Extraction investigative Actions, Peformer info
-#       deviceCreationTime is the Extraction start time
-#
-caseTrace.writeContextUfed(Handler.CONTEXTufedVersionText, 
-    Handler.CONTEXTdeviceCreationTimeText, Handler.CONTEXTdeviceExtractionStartText,
-    Handler.CONTEXTdeviceExtractionEndText, Handler.CONTEXTexaminerNameText,
-    Handler.CONTEXTdeviceBluetoothAddressText, Handler.CONTEXTdeviceIdText, 
-    Handler.CONTEXTdevicePhoneModelText, Handler.CONTEXTdeviceOsTypeText, 
-    Handler.CONTEXTdeviceOsVersionText, Handler.CONTEXTdevicePhoneVendorText, 
-    Handler.CONTEXTdeviceMacAddressText, Handler.CONTEXTdeviceIccidText, 
-    Handler.CONTEXTdeviceImsiText, Handler.CONTEXTdeviceImeiText, 
-    Handler.CONTEXTimagePath, Handler.CONTEXTimageSize, 
-    Handler.CONTEXTimageMetadataHashSHA, Handler.CONTEXTimageMetadataHashMD5)
-
-# this write a single line to complete the JSON output file
-caseTrace.writeLastLine()
-
-Handler.fOut.close()
-
-toc=timeit.default_timer()
-elapsedTime = round(toc - tic, 2)
-(ss, ms) = divmod(elapsedTime, 1)
-elapsedMm = str(int(ss) // 60)
-elapsedSs = str(int(ss) % 60)
-elapsedMs = str(round(ms, 2))[2:]
-elapsedTime = elapsedMm + ' min. ' +  elapsedSs + ' sec. and ' + elapsedMs + ' hundredths'
-print(Handler.C_green + '\n*** End processing, elapsed time: ' + elapsedTime + '\n\n' + Handler.C_end)
