@@ -1,4 +1,6 @@
-###
+#!/usr/bin/env python3
+
+####
 #	parser_UFEDtoCASE: SAX parser for extracrtiong the main Artifacts from a 
 #   UFED XML report
 ###
@@ -13,9 +15,10 @@ import re
 import timeit
 
 class UFEDgadget():
-    def __init__(self, xmlReport, jsonCASE):    
+    def __init__(self, xmlReport, jsonCASE, baseLocalPath):    
         self.xmlReport = xmlReport
         self.jsonCASE = jsonCASE
+        self.baseLocalPath = baseLocalPath
 
     def processXmlReport(self):
 #---    create the SAX parser
@@ -24,7 +27,7 @@ class UFEDgadget():
 
 #---    override the default ContextHandler
 #            
-        Handler = ExtractTraces() 
+        Handler = ExtractTraces(self.baseLocalPath) 
         Handler.createOutFile(self.jsonCASE)
 
         SAXparser.setContentHandler(Handler)
@@ -135,7 +138,7 @@ class UFEDgadget():
 
 
 class ExtractTraces(xml.sax.ContentHandler):
-    def __init__(self):
+    def __init__(self, baseLocalPath):
         self.fOut = ''
         self.lineXML = 0
         self.skipLine = False
@@ -168,6 +171,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.TAGGED_FILESinTags = False
         self.TAGGED_FILEStagsText = ''
         self.TAGGED_FILESinLocalPath  = False  
+        self.TAGGED_FILESbaseLocalPath = baseLocalPath
         self.TAGGED_FILESlocalPathText = '' 
         self.TAGGED_FILESinInodeNumber = False
         self.TAGGED_FILESiNodeNumberText = ''
@@ -1368,6 +1372,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         if name == 'image':
             if self.CONTEXTinImages:
                 self.CONTEXTinImage = True
+                #print("attr namme=image, CONTEXTimagePath: " + attrs.get('path'))
                 self.CONTEXTimagePath.append(attrs.get('path'))
                 self.CONTEXTimageSize.append(attrs.get('size'))
 
@@ -2203,7 +2208,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.TAGGED_FILEStagsText = ''
             self.TAGGED_FILESinTags = False
         if self.TAGGED_FILESinLocalPath:
-            self.FILElocalPath.append(self.TAGGED_FILESlocalPathText)
+            self.FILElocalPath.append(self.TAGGED_FILESbaseLocalPath + 
+                self.TAGGED_FILESlocalPathText)
             self.TAGGED_FILESlocalPathText = ''
             self.TAGGED_FILESinLocalPath = False
         if self.TAGGED_FILESinInodeNumber:
@@ -2398,7 +2404,11 @@ if __name__ == '__main__':
     print('\n*--- Input paramaters end')
     print('\n\n*** Start processing\n')
 
-    gadget = UFEDgadget(args.inFileXML, args.output_CASE_JSON)    
+#---    baseLocalPath is for setting the fileLocalPath property of FileFacet 
+#       Observable. 
+#    
+    baseLocalPath = ''
+    gadget = UFEDgadget(args.inFileXML, args.output_CASE_JSON, baseLocalPath)    
     
     Handler = gadget.processXmlReport()
 

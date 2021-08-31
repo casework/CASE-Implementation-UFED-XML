@@ -141,6 +141,7 @@ class UFEDtoJSON:
 		idFilesAcquisition = []
 		for i in range(len(imagePath)):
 			if imageMetadataHashSHA[i].strip() == '':
+				print("in ___generateContextUfed, imagePath:" + imagePath[i])
 				idFileAcquisition = self.__generateTraceFile(imagePath[i], 
 				imageSize[i], 'MD5', imageMetadataHashMD5[i], 'Uncategorized', 
 				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP,
@@ -197,14 +198,17 @@ class UFEDtoJSON:
 		if self.EXTRA_INFOdictNodeInfoId.get(IdTrace, '').strip() == '':
 			path = self.EXTRA_INFOdictPath.get(IdTrace, '_?PATH')
 			size = self.EXTRA_INFOdictSize.get(IdTrace, '_?SIZE')
-			uuidFile = self.__generateTraceFile(path, size, UFEDtoJSON.C_NP, 
-					UFEDtoJSON.C_NP, 'Uncategorized', UFEDtoJSON.C_NP, 
-					UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, 
-					UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP)
+			if path == '_?PATH':
+				pass
+			else:
+				uuidFile = self.__generateTraceFile(path, size, UFEDtoJSON.C_NP, 
+						UFEDtoJSON.C_NP, 'Uncategorized', UFEDtoJSON.C_NP, 
+						UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, 
+						UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP)
 
-			self.FILEuuid[IdTrace] = uuidFile
-			self.__generateTraceRelation(uuidTrace, uuidFile, 'Contained_Within', 
-				table, offset);
+				self.FILEuuid[IdTrace] = uuidFile
+				self.__generateTraceRelation(uuidTrace, uuidFile, 'Contained_Within', 
+					table, offset);
 		else:
 			nodeInfoIdList = self.EXTRA_INFOdictNodeInfoId.get(IdTrace, '@@@').split('@@@')
 			for node in nodeInfoIdList:
@@ -870,6 +874,7 @@ class UFEDtoJSON:
 		FILEHashValue, FILETag, FILEtimeC, FILEtimeM, FILEtimeA, FILElocalPath, 
 		FILEiNode, FILEiNodeTimeM, FILEgid, FILEuid):
 		
+		#print("original FILEpath:" + FILEpath)
 		head, tail = os.path.split(FILEpath)
 		tail = tail.replace("\\", "/")
 		tail = tail.replace('"', "'")
@@ -990,6 +995,11 @@ class UFEDtoJSON:
 		if FILEgid.find('0x') > - 1:
 			FILEgid = int(FILEgid, 16)
 
+		localPath = FILElocalPath.replace("\\", "/")
+
+		#print("fileName: " + tail)
+		#print("filePath: " + path)
+
 		line = "".join(['{ \n', \
 			UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n', \
 			UFEDtoJSON.C_TAB + '"@type":"uco-observable:ObservableObject",\n', \
@@ -1000,11 +1010,11 @@ class UFEDtoJSON:
 			UFEDtoJSON.C_TAB*2 + '"@type":"uco-observable:FileFacet",\n', \
 			UFEDtoJSON.C_TAB*2 + '"uco-observable:fileName":"' + tail + '",\n', \
 			UFEDtoJSON.C_TAB*2 + '"uco-observable:filePath":"' + path + '",\n', \
-#	CASE 0.2/UCO 0.4 compliant, no 	uco-observable:fileLocalPath property in observable.ttl
-#				
-		#localPath = FILElocalPath.replace("\\", "/")
-		#line += UFEDtoJSON.C_TAB*2 + '"uco-observable:drafting:fileLocalPath":"' + localPath + '",\n' 		
-		
+
+#--- 	the property fileLocalPath is not included in the UCO observable.TTL
+#			ontology yet
+#			
+			UFEDtoJSON.C_TAB*2 + '"uco-observable:fileLocalPath":"' + localPath + '",\n', \
 			UFEDtoJSON.C_TAB*2 + '"uco-observable:extension":"' + sExt + '",\n', \
 			UFEDtoJSON.C_TAB*2 + '"uco-observable:fileSystemType":"userdata (ExtX)",\n', \
 			UFEDtoJSON.C_TAB*2 + '"uco-observable:isDirectory":false,\n', \
@@ -1810,7 +1820,7 @@ class UFEDtoJSON:
 					FILEtimeCreate, FILEtimeModify, FILEtimeAccess, FILElocalPath, 
                     FILEiNodeNumber, FILEiNodeTimeM, FILEownerGID, FILEownerUID):
 			self.FILEid = FILEid
-			for i in range(len(FILEid)):			
+			for i in range(len(FILEid)):					
 				uuid = self.__generateTraceFile(FILEpath[i], FILEsize[i], 
 					'MD5', FILEmd5[i],	FILETag[i], FILEtimeCreate[i], FILEtimeModify[i], 
 					FILEtimeAccess[i], FILElocalPath[i], FILEiNodeNumber[i], FILEiNodeTimeM[i],
@@ -1824,7 +1834,7 @@ class UFEDtoJSON:
                 CHATmsgNamesTo, CHATmsgBodies, CHATmsgStatuses, CHATmsgOutcomes,
                 CHATmsgTimeStamps, CHATmsgAttachmentFilenames, CHATmsgAttachmentUrls):		
 		
-		for i in range(len(CHATid)):
+		for i in range(len(CHATid)):			
 			if CHATsource[i].strip().lower() in self.appNameList: 
 				idx = self.appNameList.index(CHATsource[i].strip().lower())
 				idAppName = self.appNameList[idx]
@@ -1888,8 +1898,8 @@ class UFEDtoJSON:
 #			iterates over all these messages
 #			
 			#print("Attachments Chat[" + str(i) + "], len(msgBodies): " + str(len(CHATmsgBodies[i])))
-			for j in range(len(CHATmsgBodies[i])):				
-				#print("chat attachment: " + CHATmsgAttachmentFilenames[i][j])
+			for j in range(len(CHATmsgBodies[i])):	
+
 #---	IdentifiersTo may contain more than one ID, separated by ###. This occurs
 #			when a message is sent to a group and more than one recipient is involved
 #				
@@ -1930,7 +1940,6 @@ class UFEDtoJSON:
 					#		break
 					# comment 2021-05-11 - end
 
-				
 				chatUuid = self.__generateTraceChat(CHATmsgBodies[i][j], idAppIdentity, 
 					CHATmsgTimeStamps[i][j], CHATmsgFrom, 
 					CHATmsgTo, CHATmsgStatuses[i][j], CHATmsgOutcomes[i][j],
@@ -1952,7 +1961,7 @@ class UFEDtoJSON:
 #---	If there are not messages for this Chat or no ChatAccount has been
 #			generated, the ThreadMessage is not generated. Moreover the Chain of
 #			evidence is built upon the ThreadUuid
-#				
+#			
 			if (len(CHATthread) == 0) or (len(CHATidAccountList) == 0):
 				pass
 			else:
