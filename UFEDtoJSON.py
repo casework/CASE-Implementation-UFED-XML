@@ -397,6 +397,7 @@ class UFEDtoJSON:
 						nameParty = nameFROM
 						nameTO = 'PHONE OWNER'
 						
+			#print(f'#CALL {i}, nameTO: {nameTO}, nameFROM: {nameFROM}, idParty: {idParty.strip()}')
 			resPattern = re.match(phonePattern, idParty.strip())
 
 			if resPattern:
@@ -935,7 +936,7 @@ class UFEDtoJSON:
 			FILEsize = UFEDtoJSON.C_INT;
 
 
-#---	the xsd:dateTime has the structure YYYY-MM-DDTHH:MM:SS (UTCxxx
+#---	the xsd:dateTime has the structure YYYY-MM-DDTHH:MM:SS (UTCxxx)
 #			the character "/" is not allowed
 #		
 		FILEtimeC = FILEtimeC.replace("/", "-")
@@ -1121,10 +1122,10 @@ class UFEDtoJSON:
 			UFEDtoJSON.C_TAB*2 + '}, \n',\
 			UFEDtoJSON.C_TAB*2 + '{ \n',\
 			UFEDtoJSON.C_TAB*2 + '"@type":"uco-observable:PhoneAccountFacet", \n',\
-			UFEDtoJSON.C_TAB*2 + '"uco-observable:phoneNumber":"' + PhoneNum + '" \n',\
+			UFEDtoJSON.C_TAB*2 + '"uco-observable:phoneNumber":"' + PhoneNum + '", \n',\
 #	CASE 0.2/UCO 0.4 compliant, no 	uco-observable:name property in observable.ttl
 #			
-		#line += UFEDtoJSON.C_TAB*2 + '"uco-observable:name":"' + Name + '" \n'
+			UFEDtoJSON.C_TAB*2 + '"uco-core:name":"' + Name + '" \n', \
 			UFEDtoJSON.C_TAB*2 + '} \n',\
 			UFEDtoJSON.C_TAB + '] \n',\
 			'}, \n'])
@@ -1211,11 +1212,11 @@ class UFEDtoJSON:
 		else:
 			aTime = duration.split(":")
 			if len(aTime) == 3:
-				nTime = aTime[0]*3600 + aTime[1]*60 + aTime[2] 
+				nTime = int(aTime[0])*3600 + int(aTime[1])*60 + int(aTime[2])
 			if len(aTime) == 2:
-				nTime = aTime[0]*60 + aTime[1] 
+				nTime = int(aTime[0])*60 + int(aTime[1]) 
 			if len(aTime) == 1:
-				nTime = aTime[0] 
+				nTime = int(aTime[0]) 
 		duration = str(nTime)
 		duration = duration.lstrip('0')
 		
@@ -1300,11 +1301,11 @@ class UFEDtoJSON:
 			UFEDtoJSON.C_TAB*2 + '}, \n',\
 			UFEDtoJSON.C_TAB*2 + '{ \n',\
 			UFEDtoJSON.C_TAB*2 + '"@type":"uco-observable:PhoneAccountFacet", \n',\
-			UFEDtoJSON.C_TAB*2 + '"uco-observable:phoneNumber":"' + PhoneNum + '" \n',\
+			UFEDtoJSON.C_TAB*2 + '"uco-observable:phoneNumber":"' + PhoneNum + '", \n',\
 			lineSource,\
 #	CASE 0.2/UCO 0.4 compliant	
 #	
-		#line += UFEDtoJSON.C_TAB*2 + '"uco-observable:name":"' + Name + '" \n'
+			UFEDtoJSON.C_TAB*2 + '"uco-core:name":"' + Name + '" \n', \
 			UFEDtoJSON.C_TAB*2 + '} \n',\
 			UFEDtoJSON.C_TAB + ']\n',\
 			'}, \n'])

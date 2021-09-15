@@ -1472,6 +1472,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALLroleText += ch
         if self.CALLinNameValue:
             self.CALLnameText += ch
+            #print(f'#call {self.CALLtotal}, name caller {self.CALLnameText}')
         if self.CALLinIdentifierValue:
             self.CALLidentifierText += ch
 
