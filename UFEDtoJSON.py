@@ -21,7 +21,7 @@ class UFEDtoJSON:
 
 # default value for date value not provided
 #
-	C_DATE = '1900-01-01T08:00:00+0'				
+	C_DATE = '1900-01-01T08:00:00'				
 
 # default value for Hash Method value not provided
 #
@@ -93,6 +93,57 @@ class UFEDtoJSON:
 		'''
 		return str(uuid.uuid4())
 
+	def __cleanDate(self, originalDate):
+#---	the xsd:dateTime must have the format YYYY-MM-DDTHH:MM:SS (UTCxxx)
+#		
+
+		if 	originalDate.strip() == '':
+			return UFEDtoJSON.C_DATE
+
+		originalDate = originalDate.replace("/", "-")
+		originalDate = originalDate.replace("(", "-")
+		originalDate = originalDate.replace(")", "-")
+		originalDate = originalDate.replace(' ', 'T', 1)
+		originalDate = originalDate.replace('UTC', '')
+		if re.search('^[0-9]{4}', originalDate):
+			pass
+		else:
+			originalDate = re.sub('-([0-9][0-9])T', '-20\g<1>T', originalDate)
+			originalDate = str(originalDate[6:10]) + originalDate[2:6] + originalDate[0:2] + \
+				originalDate[10:] 
+
+		startTZ = originalDate.find("+")
+		if startTZ > -1:
+			originalDate = originalDate[:startTZ]
+
+		firstChars = originalDate[:10]
+		firstChars = firstChars.replace(".", "-")
+		originalDate = firstChars + originalDate[10:]
+
+		originalDate = originalDate.strip()
+
+		if originalDate[-1] == '-':
+			originalDate = originalDate[0:-1]
+
+		originalDate = originalDate.replace('.000', '')
+		originalDate = originalDate.replace('.', ':')
+
+		if re.search('T\d{2}\.', originalDate):
+			originalDate = originalDate.replace('.', ':')
+
+		#print(f'*DEBUG* before replacing, dateTime\t {originalDate}')
+		if re.search('(\d{2}:\d{2}:\d{2})$', originalDate):
+			pass
+		else:
+			originalDate = re.sub('(\d{2}:\d{2})$', '\g<1>:00', originalDate)
+
+		if re.search('T\d{2}:\d{2}:\d{2}(.+)$', originalDate):
+			originalDate = re.sub('(T\d{2}:\d{2}:\d{2})(.+)$', '\g<1>', originalDate)
+
+		#print(f'*DEBUG* after replacing, dateTime\t {originalDate}\n')
+
+		return originalDate.strip()	
+
 	def ___generateContextUfed(self, ufedVersion, deviceReportCreateTime,
 			deviceExtractionStartTime, deviceExtractionEndTime, examinerName, 
 		deviceBluetoothAddress, deviceId, devicePhoneModel, 
@@ -141,7 +192,6 @@ class UFEDtoJSON:
 		idFilesAcquisition = []
 		for i in range(len(imagePath)):
 			if imageMetadataHashSHA[i].strip() == '':
-				print("in ___generateContextUfed, imagePath:" + imagePath[i])
 				idFileAcquisition = self.__generateTraceFile(imagePath[i], 
 				imageSize[i], 'MD5', imageMetadataHashMD5[i], 'Uncategorized', 
 				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP,
@@ -535,12 +585,8 @@ class UFEDtoJSON:
 		TOlist = TOlist.replace('\t', ' ')
 
 		uuid = "kb:" + UFEDtoJSON.__createUUID()
-#---	the xsd:dateTime has the structure YYYY-MM-DDTHH:MM:SS (UTCxxx
-#			the character "/" is not allowed
-#		
-		timeStamp = timeStamp.replace("/", "-")
-		timeStamp = timeStamp.replace(' ', 'T', 1)
-		timeStamp = timeStamp.replace('UTC', '')
+		
+		timeStamp = self.__cleanDate(timeStamp)
 
 
 		line = "".join(['{ \n', \
@@ -763,12 +809,7 @@ class UFEDtoJSON:
 
 		uuid = "kb:" + UFEDtoJSON.__createUUID()
 
-#---	the xsd:dateTime has the structure YYYY-MM-DDTHH:MM:SS (UTCxxx
-#			the character "/" is not allowed
-#		
-		EMAILtimeStamp = EMAILtimeStamp.replace("/", "-")	
-		EMAILtimeStamp = EMAILtimeStamp.replace(' ', 'T', 1)
-		EMAILtimeStamp = EMAILtimeStamp.replace('UTC', '')	
+		EMAILtimeStamp = self.__cleanDate(EMAILtimeStamp)	
 
 		line = "".join(['{ \n', \
 			UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n', \
@@ -937,35 +978,14 @@ class UFEDtoJSON:
 
 
 #---	the xsd:dateTime has the structure YYYY-MM-DDTHH:MM:SS (UTCxxx)
-#			the character "/" is not allowed
+#		the character "/" is not allowed
 #		
-		FILEtimeC = FILEtimeC.replace("/", "-")
-		FILEtimeC = FILEtimeC.replace(' ', 'T', 1)
-		FILEtimeC = FILEtimeC.replace('UTC', '')
 		
-		if 	FILEtimeC.strip() == '':
-			FILEtimeC = UFEDtoJSON.C_DATE
+		FILEtimeC = self.__cleanDate(FILEtimeC)
+		FILEtimeM = self.__cleanDate(FILEtimeM)
+		FILEtimeA = self.__cleanDate(FILEtimeA)	
 
-		FILEtimeM = FILEtimeM.replace("/", "-")
-		FILEtimeM = FILEtimeM.replace(' ', 'T', 1)
-		FILEtimeM = FILEtimeM.replace('UTC', '')	
-		
-		if 	FILEtimeM.strip() == '':
-			FILEtimeM = UFEDtoJSON.C_DATE
-
-		FILEtimeA = FILEtimeA.replace("/", "-")	
-		FILEtimeA = FILEtimeA.replace(' ', 'T', 1)
-		FILEtimeA = FILEtimeA.replace('UTC', '')	
-
-		if 	FILEtimeA.strip() == '':
-			FILEtimeA = UFEDtoJSON.C_DATE
-
-		FILEiNodeTimeM = FILEiNodeTimeM.replace("/", "-")	
-		FILEiNodeTimeM = FILEiNodeTimeM.replace(' ', 'T', 1)
-		FILEiNodeTimeM = FILEiNodeTimeM.replace('UTC', '')	
-		
-		if 	FILEiNodeTimeM.strip() == '':
-			FILEiNodeTimeM = UFEDtoJSON.C_DATE
+		FILEiNodeTimeM = self.__cleanDate(FILEiNodeTimeM)
 
 #---	these values are defined as xsd:integer
 #		
@@ -1023,17 +1043,17 @@ class UFEDtoJSON:
 			UFEDtoJSON.C_TAB*2 + '"@type":"xsd:integer", \n',\
 			UFEDtoJSON.C_TAB*2 + '"@value":"' + FILEsize + '"\n',\
 			UFEDtoJSON.C_TAB*2 + '},\n',\
-			UFEDtoJSON.C_TAB*2 + '"uco-observable:observableCreatedTime":\n',\
+			UFEDtoJSON.C_TAB*2 + '"uco-core:objectCreatedTime":\n',\
 			UFEDtoJSON.C_TAB*3 + '{\n',\
 			UFEDtoJSON.C_TAB*3 + '"@type":"xsd:dateTime",\n',\
 			UFEDtoJSON.C_TAB*3 + '"@value":"' + FILEtimeC + '"\n',\
 			UFEDtoJSON.C_TAB*3 + '},\n',\
-			UFEDtoJSON.C_TAB*2 + '"uco-observable:observableModifiedTime":\n',\
+			UFEDtoJSON.C_TAB*2 + '"uco-core:objectModifiedTime":\n',\
 			UFEDtoJSON.C_TAB*3 + '{\n',\
 			UFEDtoJSON.C_TAB*3 + '"@type":"xsd:dateTime",\n',\
 			UFEDtoJSON.C_TAB*3 + '"@value":"' + FILEtimeM + '"\n',\
 			UFEDtoJSON.C_TAB*3 + '},\n',\
-			UFEDtoJSON.C_TAB*2 + '"uco-observable:observableAccessedTime":\n',\
+			UFEDtoJSON.C_TAB*2 + '"uco-core:objectAccessedTime":\n',\
 			UFEDtoJSON.C_TAB*3 + '{\n',\
 			UFEDtoJSON.C_TAB*3 + '"@type":"xsd:dateTime",\n',\
 			UFEDtoJSON.C_TAB*3 + '"@value":"' + FILEtimeA + '"\n',\
@@ -1073,12 +1093,7 @@ class UFEDtoJSON:
 #---	the xsd:dateTime has the structure YYYY-MM-DDTHH:MM:SS (UTCxxx
 #			the character "/" is not allowed
 #		
-		birthDate = birthDate.replace("/", "-")
-		birthDate = birthDate.replace(' ', 'T', 1)
-		birthDate = birthDate.replace('UTC', '')	
-		
-		if birthDate.strip() == '':
-			birthDate = UFEDtoJSON.C_DATE
+		birthDate = self.__cleanDate(birthDate)
 
 		line = "".join(['{ \n', \
 			UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n',\
@@ -1150,16 +1165,8 @@ class UFEDtoJSON:
 #---	the xsd:dateTime has the structure YYYY-MM-DDTHH:MM:SS (UTCxxx
 #			the character "/" is not allowed
 #		
-		startTime = startTime.replace("/", "-")
-		startTime = startTime.replace(' ', 'T', 1)
-		startTime = startTime.replace('UTC', '')			
-
-		endTime = endTime.replace("/", "-")
-		endTime = endTime.replace(' ', 'T', 1)
-		endTime = endTime.replace('UTC', '')	
-		
-		if endTime.strip() == '':
-			endTime = UFEDtoJSON.C_DATE
+		startTime = self.__cleanDate(startTime)
+		endTime = self.__cleanDate(endTime)
 
 		if location.strip() == '':
 			location = UFEDtoJSON.C_LOCATION	
@@ -1237,12 +1244,7 @@ class UFEDtoJSON:
 			self.appIDList.append(idAppIdentity)
 
 		uuid = "kb:" + UFEDtoJSON.__createUUID()
-#---	the xsd:dateTime has the structure YYYY-MM-DDTHH:MM:SS (UTCxxx
-#			the character "/" is not allowed
-#		
-		startTime = startTime.replace("/", "-")
-		startTime = startTime.replace(' ', 'T', 1)
-		startTime = startTime.replace('UTC', '')			
+		startTime = self.__cleanDate(startTime)
 
 		line = "".join(['{ \n', \
 			UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n',\
@@ -1683,8 +1685,7 @@ class UFEDtoJSON:
 #
 			uuid = "kb:" + UFEDtoJSON.__createUUID()
 			
-			if WEB_PAGElastVisited[i].strip() == '':
-				WEB_PAGElastVisited[i] = UFEDtoJSON.C_DATE
+			WEB_PAGElastVisited[i] = self.__cleanDate(WEB_PAGElastVisited[i])
 
 			line = '\n{ \n'
 			line += UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n'
@@ -1714,7 +1715,7 @@ class UFEDtoJSON:
 			line += UFEDtoJSON.C_TAB*3 + '"uco-observable:firstVisit":\n'
 			line += UFEDtoJSON.C_TAB*4 + '{\n'
 			line += UFEDtoJSON.C_TAB*4 + '"@type":"xsd:dateTime",\n'
-			line += UFEDtoJSON.C_TAB*4 + '"@value":"1900-01-01T08:00:00+00"\n'
+			line += UFEDtoJSON.C_TAB*4 + '"@value":"1900-01-01T08:00:00"\n'
 			line += UFEDtoJSON.C_TAB*4 + '},\n'
 			line += UFEDtoJSON.C_TAB*3 + '"uco-observable:lastVisit":\n'
 			line += UFEDtoJSON.C_TAB*4 + '{\n'
@@ -1724,7 +1725,7 @@ class UFEDtoJSON:
 			line += UFEDtoJSON.C_TAB*3 + '"uco-observable:expirationTime":\n'
 			line += UFEDtoJSON.C_TAB*4 + '{\n'
 			line += UFEDtoJSON.C_TAB*4 + '"@type":"xsd:dateTime",\n'
-			line += UFEDtoJSON.C_TAB*4 + '"@value":"1900-01-01T08:00:00+00"\n'
+			line += UFEDtoJSON.C_TAB*4 + '"@value":"1900-01-01T08:00:00"\n'
 			line += UFEDtoJSON.C_TAB*4 + '},\n'
 			line += UFEDtoJSON.C_TAB*3 + '"uco-observable:userProfile":"",\n'
 			uuidUrl = self.__generateTraceURL(WEB_PAGEurl[i])

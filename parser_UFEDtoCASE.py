@@ -1553,7 +1553,8 @@ class ExtractTraces(xml.sax.ContentHandler):
 #       acquisition/extrtaction actions
 #
         if self.CONTEXTinDeviceCreationTimeValue:
-            self.CONTEXTdeviceCreationTimeText += ch
+            if self.CONTEXTdeviceCreationTimeText == '':
+                self.CONTEXTdeviceCreationTimeText += ch
         if self.CONTEXTinUfedVersionValue:
             self.CONTEXTufedVersionText += ch
         
@@ -1561,10 +1562,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTEXTexaminerNameText += ch
         
         if self.CONTEXTinDeviceExtractionStart:
-            self.CONTEXTdeviceExtractionStartText += ch
+            if self.CONTEXTdeviceExtractionStartText == '':
+                self.CONTEXTdeviceExtractionStartText += ch
         if self.CONTEXTinDeviceExtractionEnd:
-            self.CONTEXTdeviceExtractionEndText += ch
-
+            if self.CONTEXTdeviceExtractionEndText == '':
+                self.CONTEXTdeviceExtractionEndText += ch
         if self.CONTEXTinDeviceOsVersionValue:
             self.CONTEXTdeviceOsVersionText  += ch
         if self.CONTEXTinDevicePhoneVendorValue:
