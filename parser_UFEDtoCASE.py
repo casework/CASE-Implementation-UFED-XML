@@ -18,7 +18,7 @@ class UFEDgadget():
     def __init__(self, xmlReport, jsonCASE, baseLocalPath):    
         self.xmlReport = xmlReport
         self.jsonCASE = jsonCASE
-        self.baseLocalPath = baseLocalPath
+        self.baseLocalPath = os.path.join(baseLocalPath, '')
 
     def processXmlReport(self):
 #---    create the SAX parser
@@ -2211,8 +2211,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.TAGGED_FILEStagsText = ''
             self.TAGGED_FILESinTags = False
         if self.TAGGED_FILESinLocalPath:
-            self.FILElocalPath.append(self.TAGGED_FILESbaseLocalPath + 
-                self.TAGGED_FILESlocalPathText)
+            self.FILElocalPath.append(os.path.join(self.TAGGED_FILESbaseLocalPath, 
+                self.TAGGED_FILESlocalPathText))
             self.TAGGED_FILESlocalPathText = ''
             self.TAGGED_FILESinLocalPath = False
         if self.TAGGED_FILESinInodeNumber:
