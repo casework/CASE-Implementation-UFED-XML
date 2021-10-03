@@ -181,7 +181,7 @@ class UFEDtoJSON:
 		idDeviceList = []
 		idDeviceList.append(idDevice)
 		idProvenanceDevice = self.__generateTraceProvencance(idDeviceList, 'Mobile device', 
-			UFEDtoJSON.C_NP, deviceExtractionStartTime) 
+			'', deviceExtractionStartTime) 
 		
 #---	generate Trace/File for each file extracted by the Acuisition action
 #			idFileList contains the uuid of these files and it is used for
@@ -193,22 +193,20 @@ class UFEDtoJSON:
 		for i in range(len(imagePath)):
 			if imageMetadataHashSHA[i].strip() == '':
 				idFileAcquisition = self.__generateTraceFile(imagePath[i], 
-				imageSize[i], 'MD5', imageMetadataHashMD5[i], 'Uncategorized', 
-				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP,
-				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP)  
+				imageSize[i], 'MD5', imageMetadataHashMD5[i], 'Uncategorized', '', '', '', '',
+				'', '', '', '', '', '', '', '', '', '', '')  
 				 
 			else:
 				idFileAcquisition = self.__generateTraceFile(imagePath[i], 
 				imageSize[i], 'SHA256', imageMetadataHashSHA[i], 'Uncategorized', 
-				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP,
-				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP) 				
+				'', '', '', '', '', '', '', '', '', '', '', '', '', '', '') 				
 			
 			idFilesAcquisition.append(idFileAcquisition)  	
 		
 
 		idProvenanceAcquisitionFiles = \
 			self.__generateTraceProvencance(idFilesAcquisition, 
-        	'Acquisition files', UFEDtoJSON.C_NP, deviceExtractionStartTime)
+        	'Acquisition files', '', deviceExtractionStartTime)
 
 		idProvenanceAcquisitionFilesList = []
 		idProvenanceAcquisitionFilesList.append(idProvenanceAcquisitionFiles)
@@ -216,7 +214,7 @@ class UFEDtoJSON:
 		idProvencanceAcquisitionAction = \
 		self.__generateTraceInvestigativeAction('acquisition', 
 			'Forensic mobile device acquisition', deviceExtractionStartTime, 
-			deviceExtractionEndTime, idTool, UFEDtoJSON.C_NP, 
+			deviceExtractionEndTime, idTool, '', 
 			idIdentity, idProvenanceDevice, idProvenanceAcquisitionFilesList, ',');
 
 		idFilesExtraction = []
@@ -225,13 +223,13 @@ class UFEDtoJSON:
 
 		idProvenanceExtractionFiles = \
 		self.__generateTraceProvencance(idFilesExtraction, 'Extraction',
-			UFEDtoJSON.C_NP, deviceReportCreateTime);
+			'', deviceReportCreateTime);
         
 		idProvenanceExtractionFilesList = []
 		idProvenanceExtractionFilesList.append(idProvenanceExtractionFiles)
 		self.__generateTraceInvestigativeAction('extraction', 
 			'Forensic mobile device extraction', deviceReportCreateTime,
-			deviceReportCreateTime, idTool, UFEDtoJSON.C_NP, idIdentity,
+			deviceReportCreateTime, idTool, '', idIdentity,
 			idProvenanceAcquisitionFiles, idProvenanceExtractionFilesList, '');
 
 	def __generateChainOfEvidence(self, IdTrace, uuidTrace, endChar=','):
@@ -251,10 +249,9 @@ class UFEDtoJSON:
 			if path == '_?PATH':
 				pass
 			else:
-				uuidFile = self.__generateTraceFile(path, size, UFEDtoJSON.C_NP, 
-						UFEDtoJSON.C_NP, 'Uncategorized', UFEDtoJSON.C_NP, 
-						UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, 
-						UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP)
+				uuidFile = self.__generateTraceFile(path, size, '', 
+						'', 'Uncategorized', '', '', '', '', '', 
+						'', '', '', '', '', '', '', '', '', '')
 
 				self.FILEuuid[IdTrace] = uuidFile
 				self.__generateTraceRelation(uuidTrace, uuidFile, 'Contained_Within', 
@@ -644,12 +641,11 @@ class UFEDtoJSON:
 				# listFileUrls[i] will be stored in the property
 				# path of the FILE trace
 				fileUuid = self.__generateTraceFile(listFileNames[i], 
-				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, 'Uncategorized',
-				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, listFileUrls[i],
-				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP)
+				'', '', '', 'Uncategorized', '', '', '', listFileUrls[i],
+				'', '', '', '', '', '', '', '', '', '', '')
 				
 				self.__generateTraceRelation(fileUuid, uuid, 'Connected_To', 
-				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP)
+				'', '')
 		return uuid
 
 
@@ -858,11 +854,10 @@ class UFEDtoJSON:
 				pass
 			else:
 				fileUuid = self.__generateTraceFile(EMAILattachmentsFilename[i], 
-				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, 'Uncategorized',
-  				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP,
-  				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP, UFEDtoJSON.C_NP)
+				'', '', '', 'Uncategorized', '', '', '', '',
+  				'', '', '', '', '', '', '', '', '', '', '')
 				self.__generateTraceRelation(fileUuid, uuid, 'Attached_To', 
-				UFEDtoJSON.C_NP, UFEDtoJSON.C_NP)
+				'', '')
 		return uuid
 
 	def __generateTraceEmailAccount(self, address):
@@ -880,7 +875,7 @@ class UFEDtoJSON:
 #	CASE 0.2/UCO 0.4 compliant, there is no property accountIssuer
 #		
 		#line += UFEDtoJSON.C_TAB*2 + '"uco-observable:accountIssuer": "' + \
-		#	UFEDtoJSON.C_NP + '",\n'
+		#	'' + '",\n'
 			UFEDtoJSON.C_TAB*2 + '"uco-observable:isActive":true,\n', \
 			UFEDtoJSON.C_TAB*2 + '"uco-observable:accountIdentifier":" "\n', \
 			UFEDtoJSON.C_TAB*2 + '},\n', \
@@ -914,8 +909,8 @@ class UFEDtoJSON:
 
 	def __generateTraceFile(self, FILEpath, FILEsize, FILEhashType, 
 		FILEHashValue, FILETag, FILEtimeC, FILEtimeM, FILEtimeA, FILElocalPath, 
-		FILEiNode, FILEiNodeTimeM, FILEgid, FILEuid):
-		
+		FILEiNode, FILEiNodeTimeM, FILEgid, FILEuid, FILEexifLatitudeRef, FILEexifLatitude, 
+		FILEexifLongitudeRef, FILEexifLongitude, FILEexifAltitude, FILEexifMake, FILEexifModel):		
 		#print("original FILEpath:" + FILEpath)
 		head, tail = os.path.split(FILEpath)
 		tail = tail.replace("\\", "/")
@@ -1016,10 +1011,53 @@ class UFEDtoJSON:
 		if FILEgid.find('0x') > - 1:
 			FILEgid = int(FILEgid, 16)
 
-		localPath = FILElocalPath.replace("\\", "/")
+		localPath = FILElocalPath.replace("\\", "/")	 
 
-		#print("fileName: " + tail)
-		#print("filePath: " + path)
+		line_exif = ''
+		if FILEexifLatitude.strip() != '':
+			line_exif = "".join([',' + UFEDtoJSON.C_TAB*2 + '{\n' ,\
+				UFEDtoJSON.C_TAB*3 + '"@type":"uco-observable:EXIFFacet",\n',\
+				UFEDtoJSON.C_TAB*3 + '"uco-observable:exifData": {\n',\
+				UFEDtoJSON.C_TAB*4 + '"@type": "uco-types:ControlledDictionary",\n',\
+				UFEDtoJSON.C_TAB*4 + ' "uco-types:entry": [\n',\
+				UFEDtoJSON.C_TAB*5 + '{\n',\
+				UFEDtoJSON.C_TAB*6 + '"@type": "uco-types:ControlledDictionaryEntry",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:key": "Make",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:value": "' + FILEexifMake + '"\n',\
+				UFEDtoJSON.C_TAB*5 + '},\n',\
+				UFEDtoJSON.C_TAB*5 + '{\n',\
+				UFEDtoJSON.C_TAB*6 + '"@type": "uco-types:ControlledDictionaryEntry",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:key": "Model",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:value": "' + FILEexifModel + '"\n',\
+				UFEDtoJSON.C_TAB*5 + '},\n',\
+				UFEDtoJSON.C_TAB*5 + '{\n',\
+				UFEDtoJSON.C_TAB*6 + '"@type": "uco-types:ControlledDictionaryEntry",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:key": "LatitudeRef",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:value": "' + FILEexifLatitudeRef + '"\n',\
+				UFEDtoJSON.C_TAB*5 + '},\n',\
+				UFEDtoJSON.C_TAB*5 + '{\n',\
+				UFEDtoJSON.C_TAB*6 + '"@type": "uco-types:ControlledDictionaryEntry",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:key": "Latitude",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:value": "' + FILEexifLatitude + '"\n',\
+				UFEDtoJSON.C_TAB*5 + '},\n',\
+				UFEDtoJSON.C_TAB*5 + '{\n',\
+				UFEDtoJSON.C_TAB*6 + '"@type": "uco-types:ControlledDictionaryEntry",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:key": "LongitudeRef",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:value": "' + FILEexifLongitudeRef + '"\n',\
+				UFEDtoJSON.C_TAB*5 + '},\n',\
+				UFEDtoJSON.C_TAB*5 + '{\n',\
+				UFEDtoJSON.C_TAB*6 + '"@type": "uco-types:ControlledDictionaryEntry",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:key": "Longitude",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:value": "' + FILEexifLongitude + '"\n',\
+				UFEDtoJSON.C_TAB*5 + '},\n',\
+				UFEDtoJSON.C_TAB*5 + '{\n',\
+				UFEDtoJSON.C_TAB*6 + '"@type": "uco-types:ControlledDictionaryEntry",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:key": "Altitude",\n',\
+				UFEDtoJSON.C_TAB*6 + '"uco-types:value": "' + FILEexifAltitude + '"\n',\
+				UFEDtoJSON.C_TAB*5 + '}\n',\
+				UFEDtoJSON.C_TAB*4 + ']\n',\
+				UFEDtoJSON.C_TAB*3 + '}\n',\
+				UFEDtoJSON.C_TAB*2 + '}\n'])
 
 		line = "".join(['{ \n', \
 			UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n', \
@@ -1081,7 +1119,8 @@ class UFEDtoJSON:
 			UFEDtoJSON.C_TAB*3 + '"@type":"xsd:dateTime",\n',\
 			UFEDtoJSON.C_TAB*3 + '"@value":"' + FILEiNodeTimeM + '"\n',\
 			UFEDtoJSON.C_TAB*3 + '}\n',\
-			sizeFile, \
+			sizeFile , \
+			line_exif , \
 			UFEDtoJSON.C_TAB + ']\n',\
 			'},\n'])
 		self.FileOut.write(line);
@@ -1732,11 +1771,12 @@ class UFEDtoJSON:
 			line += UFEDtoJSON.C_TAB*3 + '"uco-observable:url":{\n' 
 			line += UFEDtoJSON.C_TAB*4 + '"@id":"' + uuidUrl + '"\n'
 			line += UFEDtoJSON.C_TAB*3 + '},\n'
-			
-			uuidUrl = self.__generateTraceURL(UFEDtoJSON.C_REF_URL)
-			line += UFEDtoJSON.C_TAB*3 + '"uco-observable:referrerUrl":{\n'			
-			line += UFEDtoJSON.C_TAB*4 + '"@id":"' + uuidUrl + '"\n'
-			line += UFEDtoJSON.C_TAB*3 + '},\n'
+#---	Referer URL is not present in the XML report, so it will be ignored
+#			
+			#uuidUrl = self.__generateTraceURL(UFEDtoJSON.C_REF_URL)
+			#line += UFEDtoJSON.C_TAB*3 + '"uco-observable:referrerUrl":{\n'			
+			#line += UFEDtoJSON.C_TAB*4 + '"@id":"' + uuidUrl + '"\n'
+			#line += UFEDtoJSON.C_TAB*3 + '},\n'
 			line += UFEDtoJSON.C_TAB*3 + '"uco-observable:pageTitle":"' 
 			title = WEB_PAGEtitle[i].replace('"', '')
 			line += title + '",\n'
@@ -1820,13 +1860,17 @@ class UFEDtoJSON:
 
 	def writeFiles(self, FILEid, FILEpath, FILEsize, FILEmd5, FILETag, 
 					FILEtimeCreate, FILEtimeModify, FILEtimeAccess, FILElocalPath, 
-                    FILEiNodeNumber, FILEiNodeTimeM, FILEownerGID, FILEownerUID):
+                    FILEiNodeNumber, FILEiNodeTimeM, FILEownerGID, FILEownerUID,
+                    FILEexifLatitudeRef, FILEexifLatitude, FILEexifLongitudeRef,
+                    FILEexifLongitude, FILEexifAltitude, FILEexifMake, FILEexifModel):
 			self.FILEid = FILEid
 			for i in range(len(FILEid)):					
 				uuid = self.__generateTraceFile(FILEpath[i], FILEsize[i], 
 					'MD5', FILEmd5[i],	FILETag[i], FILEtimeCreate[i], FILEtimeModify[i], 
 					FILEtimeAccess[i], FILElocalPath[i], FILEiNodeNumber[i], FILEiNodeTimeM[i],
-					FILEownerGID[i], FILEownerUID[i])
+					FILEownerGID[i], FILEownerUID[i], FILEexifLatitudeRef[i], 
+					FILEexifLatitude[i], FILEexifLongitudeRef[i], FILEexifLongitude[i], 
+					FILEexifAltitude[i], FILEexifMake[i], FILEexifModel[i])
 
 				self.FILEuuid[FILEid[i]] = uuid
 				self.FILEpath[FILEid[i]] = FILEpath[i]

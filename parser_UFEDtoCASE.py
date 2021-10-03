@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-####
-#	parser_UFEDtoCASE: SAX parser for extracrtiong the main Artifacts from a 
-#   UFED XML report
-###
+#---
+#       parser_UFEDtoCASE:    
+#               SAX parser for extracrtiong the main Artifacts from a UFED XML report
+#
 
-import xml.sax 
+import xml.sax
 import string
 import argparse
 import os
@@ -15,19 +15,19 @@ import re
 import timeit
 
 class UFEDgadget():
-    def __init__(self, xmlReport, jsonCASE, baseLocalPath):    
+    def __init__(self, xmlReport, jsonCASE, baseLocalPath):
         self.xmlReport = xmlReport
         self.jsonCASE = jsonCASE
         self.baseLocalPath = os.path.join(baseLocalPath, '')
 
     def processXmlReport(self):
-#---    create the SAX parser
+#---    create the SAX parser object
 #    
         SAXparser = xml.sax.make_parser()
 
 #---    override the default ContextHandler
 #            
-        Handler = ExtractTraces(self.baseLocalPath) 
+        Handler = ExtractTraces(self.baseLocalPath)
         Handler.createOutFile(self.jsonCASE)
 
         SAXparser.setContentHandler(Handler)
@@ -62,7 +62,11 @@ class UFEDgadget():
                         Handler.FILEmd5, Handler.FILEtags, Handler.FILEtimeCreate, 
                         Handler.FILEtimeModify, Handler.FILEtimeAccess, Handler.FILElocalPath, 
                         Handler.FILEiNodeNumber, Handler.FILEiNodeTimeModify, 
-                        Handler.FILEownerGID, Handler.FILEownerUID)
+                        Handler.FILEownerGID, Handler.FILEownerUID, Handler.FILEexifLatitudeRef,
+                        Handler.FILEexifLatitude, Handler.FILEexifLongitudeRef,
+                        Handler.FILEexifLongitude, Handler.FILEexifAltitude, Handler.FILEexifMake,
+                        Handler.FILEexifModel)
+
 
 
 #---    CONTACTname is a list of names of contacts, 
@@ -170,6 +174,22 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.TAGGED_FILESmd5Text = ''
         self.TAGGED_FILESinTags = False
         self.TAGGED_FILEStagsText = ''
+        self.TAGGED_FILESinExifLatitudeRef = False
+        self.TAGGED_FILESexifLatitudeRef = ''
+        self.TAGGED_FILESinExifLatitude = False
+        self.TAGGED_FILESexifLatitude = ''
+        self.TAGGED_FILESinExifLongitudeRef = False
+        self.TAGGED_FILESexifLongitudeRef = ''
+        self.TAGGED_FILESinExifLongitude = False
+        self.TAGGED_FILESexifLongitude = ''
+        self.TAGGED_FILESinExifAltitude = False
+        self.TAGGED_FILESexifAltitude = ''
+        self.TAGGED_FILESinExifMake = False
+        self.TAGGED_FILESexifMake = ''
+        self.TAGGED_FILESinExifModel = False
+        self.TAGGED_FILESexifModel = ''
+
+
         self.TAGGED_FILESinLocalPath  = False  
         self.TAGGED_FILESbaseLocalPath = baseLocalPath
         self.TAGGED_FILESlocalPathText = '' 
@@ -189,13 +209,21 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.FILEtimeCreate = []
         self.FILEtimeModify = []
         self.FILEtimeAccess = []
-        self.FILEmd5 = [] 
-        self.FILEtags = [] 
-        self.FILElocalPath = []   
+        self.FILEmd5 = []
+        self.FILEtags = []
+        self.FILElocalPath = []
         self.FILEiNodeNumber = []
         self.FILEiNodeTimeModify = []
         self.FILEownerGID =[]
-        self.FILEownerUID = []      
+        self.FILEownerUID = []
+        self.FILEexifLatitudeRef = []
+        self.FILEexifLatitude = []
+        self.FILEexifLongitudeRef = []
+        self.FILEexifLongitude = []
+        self.FILEexifAltitude = []
+        self.FILEexifMake = []
+        self.FILEexifModel = []
+
 
         self.EXTRA_INFOin = False 
         self.EXTRA_INFOnodeInfoin = False
@@ -1059,7 +1087,23 @@ class ExtractTraces(xml.sax.ContentHandler):
                 if attrValue == 'Owner GID':
                     self.TAGGED_FILESinOwnerGID = True
                 if attrValue == 'Owner UID':
-                    self.TAGGED_FILESinOwnerUID = True 
+                    self.TAGGED_FILESinOwnerUID = True
+                if attrValue == 'ExifEnumGPSLatitudeRef':
+                    self.TAGGED_FILESinExifLatitudeRef = True 
+                if attrValue == 'ExifEnumGPSLatitude':
+                    self.TAGGED_FILESinExifLatitude = True
+                if attrValue == 'ExifEnumGPSLongitudeRef':
+                    self.TAGGED_FILESinExifLongitudeRef = True
+                if attrValue == 'ExifEnumGPSLongitude':
+                    self.TAGGED_FILESinExifLongitude = True
+                if attrValue == 'ExifEnumGPSAltitude':
+                    self.TAGGED_FILESinExifAltitude = True
+                if attrValue == 'ExifEnumMake':
+                    self.TAGGED_FILESinExifMake = True
+                if attrValue == 'ExifEnumModel':
+                    self.TAGGED_FILESinExifModel = True
+
+
 
     def __startElementValueCALL(self):
         if self.CALLinSource:
@@ -1321,7 +1365,14 @@ class ExtractTraces(xml.sax.ContentHandler):
                     self.FILEiNodeTimeModify.append('00-00-0000 00:00:00')
                     self.FILEownerGID.append('0')
                     self.FILEownerUID.append('0')
-                    self.FILEidx += 1                                        
+                    self.FILEexifLatitudeRef.append('')
+                    self.FILEexifLatitude.append('')
+                    self.FILEexifLongitudeRef.append('')
+                    self.FILEexifLongitude.append('')
+                    self.FILEexifAltitude.append('')
+                    self.FILEexifMake.append('')
+                    self.FILEexifModel.append('')
+                    self.FILEidx += 1
 
         if name == 'accessInfo':
             if self.TAGGED_FILESinFile:
@@ -1548,6 +1599,20 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.TAGGED_FILESownerGIDText += ch
         if self.TAGGED_FILESinOwnerUID:
             self.TAGGED_FILESownerUIDText += ch
+        if self.TAGGED_FILESinExifLatitudeRef:
+            self.TAGGED_FILESexifLatitudeRef += ch
+        if self.TAGGED_FILESinExifLatitude:
+            self.TAGGED_FILESexifLatitude += ch
+        if self.TAGGED_FILESinExifLongitudeRef:
+            self.TAGGED_FILESexifLongitudeRef += ch
+        if self.TAGGED_FILESinExifLongitude:
+            self.TAGGED_FILESexifLongitude += ch
+        if self.TAGGED_FILESinExifAltitude:
+            self.TAGGED_FILESexifAltitude += ch
+        if self.TAGGED_FILESinExifMake:
+            self.TAGGED_FILESexifMake += ch
+        if self.TAGGED_FILESinExifModel:
+            self.TAGGED_FILESexifModel += ch
 
 #---    CONTEXT for the information about device, tool, 
 #       acquisition/extrtaction actions
@@ -2223,6 +2288,34 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.FILEiNodeTimeModify[self.FILEidx] = self.TAGGED_FILESiNodeTimeModifyText
             self.TAGGED_FILESiNodeTimeModifyText = ''
             self.TAGGED_FILESinInodeTimeModify = False
+        if self.TAGGED_FILESinExifLatitudeRef:
+            self.FILEexifLatitudeRef[self.FILEidx] = self.TAGGED_FILESexifLatitudeRef
+            self.TAGGED_FILESexifLatitudeRef = ''
+            self.TAGGED_FILESinExifLatitudeRef = False
+        if self.TAGGED_FILESinExifLatitude:
+            self.FILEexifLatitude[self.FILEidx] = self.TAGGED_FILESexifLatitude
+            self.TAGGED_FILESexifLatitude = ''
+            self.TAGGED_FILESinExifLatitude = False
+        if self.TAGGED_FILESinExifLongitudeRef:
+            self.FILEexifLongitudeRef[self.FILEidx] = self.TAGGED_FILESexifLongitudeRef
+            self.TAGGED_FILESexifLongitudeRef = ''
+            self.TAGGED_FILESinExifLongitudeRef = False
+        if self.TAGGED_FILESinExifLongitude:
+            self.FILEexifLongitude[self.FILEidx] = self.TAGGED_FILESexifLongitude
+            self.TAGGED_FILESexifLongitude = ''
+            self.TAGGED_FILESinExifLongitude = False
+        if self.TAGGED_FILESinExifAltitude:
+            self.FILEexifAltitude[self.FILEidx] = self.TAGGED_FILESexifAltitude
+            self.TAGGED_FILESexifAltitude = ''
+            self.TAGGED_FILESinExifAltitude = False
+        if self.TAGGED_FILESinExifMake:
+            self.FILEexifMake[self.FILEidx] = self.TAGGED_FILESexifMake
+            self.TAGGED_FILESexifMake = ''
+            self.TAGGED_FILESinExifMake = False
+        if self.TAGGED_FILESinExifModel:
+            self.FILEexifModel[self.FILEidx] = self.TAGGED_FILESexifModel
+            self.TAGGED_FILESexifModel = ''
+            self.TAGGED_FILESinExifModel = False
         if self.TAGGED_FILESinOwnerGID:
             self.FILEownerGID[self.FILEidx] = self.TAGGED_FILESownerGIDText
             self.TAGGED_FILESownerGIDText = ''
@@ -2420,16 +2513,16 @@ if __name__ == '__main__':
     else: 
         import UFEDdebug
         debug = UFEDdebug.ParserDebug(args.output_DEBUG)
-        debug.writeDebugEXTRA_INFO(Handler)     
-        debug.writeDebugCALL(Handler)              
-        debug.writeDebugCHAT(Handler)     
-        debug.writeDebugCONTACT(Handler)  
-        debug.writeDebugCONTEXT(Handler)       
-        debug.writeDebugEMAIL(Handler)         
+        #debug.writeDebugEXTRA_INFO(Handler)     
+        #debug.writeDebugCALL(Handler)              
+        #debug.writeDebugCHAT(Handler)     
+        #debug.writeDebugCONTACT(Handler)  
+        #debug.writeDebugCONTEXT(Handler)       
+        #debug.writeDebugEMAIL(Handler)         
         debug.writeDebugFILES(Handler)     
-        debug.writeDebugSMS(Handler)     
-        debug.writeDebugU_ACCOUNT(Handler)     
-        debug.writeDebugWEB_PAGE(Handler)     
+        #debug.writeDebugSMS(Handler)     
+        #debug.writeDebugU_ACCOUNT(Handler)     
+        #debug.writeDebugWEB_PAGE(Handler)     
         debug.closeDebug() 
             
 

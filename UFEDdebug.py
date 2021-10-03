@@ -175,6 +175,12 @@ class ParserDebug:
 			line += '\n\t[iNodeNumber] ' + data.FILEiNodeNumber[i] 
 			line += '\n\t[OwnerGID] ' + data.FILEownerGID[i] 
 			line += '\n\t[OwnerUID] ' + data.FILEownerUID[i]
+			if data.FILEexifLatitudeRef[i] != '':
+				line += '\n\t[EXIF]\n' + '\t' + data.FILEexifLatitudeRef[i] + \
+					' ' + data.FILEexifLatitude[i] + '\n' + \
+					'\t' + data.FILEexifLongitudeRef[i] + ' ' + data.FILEexifLongitude[i] + '\n' + \
+					'\t' + data.FILEexifAltitude[i] + '\n' + \
+					'\t' + data.FILEexifMake[i] + ' ' + data.FILEexifModel[i]
 			self.dFileHandle.write(line)
 
 	def writeDebugSMS(self, data):
