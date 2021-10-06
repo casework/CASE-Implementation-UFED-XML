@@ -1258,6 +1258,11 @@ class UFEDtoJSON:
 		else:
 			aTime = duration.split(":")
 			if len(aTime) == 3:
+				if aTime[2].find('.') > -1:
+					aTime[2] = aTime[2][0:aTime[2].find('.')]
+				if aTime[2].find(',') > -1:
+					aTime[2] = aTime[2][0:aTime[2].find(',')]
+
 				nTime = int(aTime[0])*3600 + int(aTime[1])*60 + int(aTime[2])
 			if len(aTime) == 2:
 				nTime = int(aTime[0])*60 + int(aTime[1]) 
