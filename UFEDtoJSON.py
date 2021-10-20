@@ -308,6 +308,7 @@ class UFEDtoJSON:
 
 	def __generateTraceAppAccount(self, source, name, identifier, idApp, idIdentity):
 		print('in __generateTraceAppAccount ' + identifier)
+		name = name.replace('"', ' ')
 		uuid = "kb:" + UFEDtoJSON.__createUUID()
 		line = "".join(['{ \n', \
 			UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n', \
@@ -338,6 +339,7 @@ class UFEDtoJSON:
 		return uuid
 
 	def __generateTraceAppSystemMessageNotFound(self, name, identifier):
+		name = name.replace('"', ' ')
 		uuid = "kb:" + UFEDtoJSON.__createUUID()
 		line = "".join(['{ \n', \
 			UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n', \
@@ -397,6 +399,32 @@ class UFEDtoJSON:
 		return uuid
 
 
+	def __getMaxLenCallElement(self, CALLrolesTO, CALLrolesFROM, 
+					CALLnamesTO, CALLnamesFROM, CALLidentifiersTO, 
+					CALLidentifiersFROM):
+		
+		maxLen = len(CALLrolesTO)
+		
+		if len(CALLrolesFROM) > maxLen:
+			maxLen = len(CALLrolesFROM)
+
+		if len(CALLnamesTO) > maxLen:
+			maxLen = len(CALLnamesTO)
+
+		if len(CALLnamesFROM) > maxLen:
+			maxLen = len(CALLnamesFROM)
+
+		if len(CALLidentifiersTO) > maxLen:
+			maxLen = len(CALLidentifiersTO)
+
+		if len(CALLidentifiersFROM) > maxLen:
+			maxLen = len(CALLidentifiersFROM)
+
+		return maxLen
+
+
+
+
 	def writeCall(self, CALLid, CALLstatus, CALLsource, CALLtimeStamp, 
 					CALLdirection, CALLduration, CALLrolesTO, CALLrolesFROM, 
 					CALLnamesTO, CALLnamesFROM, CALLoutcome, CALLidentifiersTO, 
@@ -415,6 +443,47 @@ class UFEDtoJSON:
 			idPartyFROM = ''
 			idParty = ''
 			nameParty =''
+			
+			maxLen = self.__getMaxLenCallElement(CALLrolesTO[i], CALLrolesFROM[i], 
+					CALLnamesTO[i], CALLnamesFROM[i], CALLidentifiersTO[i], 
+					CALLidentifiersFROM[i])
+			
+#---	all these arrays should have the same size, the check fill in the values.
+#		if this is not the case, the loops make the size the same for all arrays
+#
+			for j in range(maxLen - len(CALLrolesTO[i])):
+				CALLrolesTO[i].append('')
+			
+			for j in range(maxLen - len(CALLrolesFROM[i])):
+				CALLrolesFROM[i].append('')
+			
+			for j in range(maxLen - len(CALLnamesTO[i])):
+				CALLnamesTO[i].append('')
+			
+			for j in range(maxLen - len(CALLnamesFROM[i])):
+				CALLnamesFROM[i].append('')
+			
+			for j in range(maxLen - len(CALLidentifiersTO[i])):
+				CALLidentifiersTO[i].append('')
+			
+			for j in range(maxLen - len(CALLidentifiersFROM[i])):
+				CALLidentifiersFROM[i].append('')
+			
+			if maxLen == 0:
+				CALLrolesTO[i].append('')
+				CALLrolesFROM[i].append('')
+				CALLnamesTO[i].append('')
+				CALLnamesFROM[i].append('')
+				CALLidentifiersTO[i].append('')
+				CALLidentifiersFROM[i].append('')
+
+			# print(f'CALLrolesTO[i]={CALLrolesTO[i]}')
+			# print(f'CALLrolesFROM[i]={CALLrolesFROM[i]}')
+			# print(f'CALLnamesTO[i]={CALLnamesTO[i]}')
+			# print(f'CALLnamesFROM[i]={CALLnamesFROM[i]}')
+			# print(f'CALLidentifiersTO[i]={CALLidentifiersTO[i]}')
+			# print(f'CALLidentifiersFROM[i]={CALLidentifiersFROM[i]}')
+
 			if (len(CALLrolesFROM[i]) > 1):
 				nameParty = ''
 				if CALLrolesFROM[i][0].strip() == '':					
@@ -428,7 +497,7 @@ class UFEDtoJSON:
 					nameFROM = CALLnamesFROM[i][0]
 					idPartyTO 	= CALLidentifiersTO[i][1]
 					nameTO = CALLnamesTO[i][1]
-			else:
+			else:					
 					if CALLrolesFROM[i][0].strip() == '':
 						idPartyFROM = self.phoneOwnerNumber
 						nameFROM = 'PHONE OWNER'
@@ -515,6 +584,7 @@ class UFEDtoJSON:
 
 
 	def __generateTraceChatAccount(self, issuer, partyId, partyName, idApp):
+		partyName = partyName.replace('"', ' ')
 		uuid = "kb:" + UFEDtoJSON.__createUUID()
 		partyId = partyId.replace('"', '')
 		line = "".join(['{ \n', \
@@ -1669,6 +1739,8 @@ class UFEDtoJSON:
 	def __generateTraceURL (self, URL_Value):
 		
 		URL_Value = URL_Value.strip()
+		URL_Value = URL_Value.replace('"', ' ')
+		URL_Value = URL_Value.replace('\n', '')
 		startHttp = URL_Value.strip().find('http')
 		
 		if startHttp > - 1:
