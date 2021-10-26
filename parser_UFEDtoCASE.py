@@ -1038,18 +1038,15 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CONTEXTinDevicePhoneVendorValue = True
             if attrValue == 'DeviceInfoDetectedPhoneModel':
                 self.CONTEXTinDevicePhoneModelValue = True
-            if (attrValue == 'DeviceInfoAppleID') or \
-                (attrValue == 'DeviceInfoAndroidID') :
+            if attrValue in ('DeviceInfoAppleID', 'DeviceInfoAndroidID'):
                 self.CONTEXTinDeviceIdValue = True
-            if (attrValue == 'Indirizzo MAC') or \
-                (attrValue == 'MAC Address'):
+            if attrValue in ('Indirizzo MAC', 'MAC Address'):
                 self.CONTEXTinDeviceMacAddressValue = True
             if attrValue == 'ICCID':
                 self.CONTEXTinDeviceIccidValue = True
             if attrValue == 'MSISDN':
                 self.CONTEXTinDeviceMsisdnValue = True
-            if (attrValue == 'Indirizzo MAC Bluetooth') or \
-                (attrValue == 'Bluetooth MAC Address'):
+            if attrValue in ('Indirizzo MAC Bluetooth', 'Bluetooth MAC Address'):
                 self.CONTEXTinDeviceBluetoothAddressValue = True
             if attrValue == 'IMSI':
                 self.CONTEXTinDeviceImsiValue = True
@@ -1275,7 +1272,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                     else:
                         self.CHATinParty = True 
            
-        if (name == 'modelField' or name =='multiModelField'):
+        if name in ('modelField', 'multiModelField'):
             self.__startElementModelFieldCHAT(attrName)
             self.__startElementModelFieldEMAIL(attrName)
             self.__startElementModelFieldSMS(attrName)
@@ -2379,7 +2376,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.__endElementModelU_ACCOUNT()
             self.__endElementModelWEB_PAGE()            
 
-        if (name == 'modelField' or name == 'multiModelField'):
+        if name in ('modelField', 'multiModelField'):
             if self.CHATinMsgFrom:
                 self.CHATinMsgFrom = False
             if self.CHATinMsgTo:

@@ -190,14 +190,14 @@ class UFEDtoJSON:
 #			2021-08-02: actually the XML report doesn't include the Acquisition info
 #		
 		idFilesAcquisition = []
-		for i in range(len(imagePath)):
+		for i, img_path in enumerate(imagePath):
 			if imageMetadataHashSHA[i].strip() == '':
-				idFileAcquisition = self.__generateTraceFile(imagePath[i], 
+				idFileAcquisition = self.__generateTraceFile(img_path, 
 				imageSize[i], 'MD5', imageMetadataHashMD5[i], 'Uncategorized', '', '', '', '',
 				'', '', '', '', '', '', '', '', '', '', '')  
 				 
 			else:
-				idFileAcquisition = self.__generateTraceFile(imagePath[i], 
+				idFileAcquisition = self.__generateTraceFile(img_path, 
 				imageSize[i], 'SHA256', imageMetadataHashSHA[i], 'Uncategorized', 
 				'', '', '', '', '', '', '', '', '', '', '', '', '', '', '') 				
 			
@@ -246,9 +246,7 @@ class UFEDtoJSON:
 		if self.EXTRA_INFOdictNodeInfoId.get(IdTrace, '').strip() == '':
 			path = self.EXTRA_INFOdictPath.get(IdTrace, '_?PATH')
 			size = self.EXTRA_INFOdictSize.get(IdTrace, '_?SIZE')
-			if path == '_?PATH':
-				pass
-			else:
+			if path != '_?PATH':
 				uuidFile = self.__generateTraceFile(path, size, '', 
 						'', 'Uncategorized', '', '', '', '', '', 
 						'', '', '', '', '', '', '', '', '', '')
@@ -259,7 +257,7 @@ class UFEDtoJSON:
 		else:
 			nodeInfoIdList = self.EXTRA_INFOdictNodeInfoId.get(IdTrace, '@@@').split('@@@')
 			for node in nodeInfoIdList:
-				if node.strip() != '':
+				if node.strip() != '': 
 					if node in self.FILEid: 
 						#idFile = self.FILEid.index(node)
 						#uuid = FILEuuid.get(idFile, '_?UUID')
@@ -307,7 +305,6 @@ class UFEDtoJSON:
 		self.FileOut.write(line)
 
 	def __generateTraceAppAccount(self, source, name, identifier, idApp, idIdentity):
-		print('in __generateTraceAppAccount ' + identifier)
 		name = name.replace('"', ' ')
 		uuid = "kb:" + UFEDtoJSON.__createUUID()
 		line = "".join(['{ \n', \
@@ -368,14 +365,9 @@ class UFEDtoJSON:
 			UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n', \
 			UFEDtoJSON.C_TAB + '"@type":"uco-observable:ObservableObject", \n', \
 			UFEDtoJSON.C_TAB + '"uco-observable:hasChanged":true,\n',\
-		# aligned wit CASE version 0.4
-		#line += UFEDtoJSON.C_TAB + '"uco-core:name":"' + appName + '",\n'
 			UFEDtoJSON.C_TAB + '"uco-core:hasFacet":[ \n', \
 			UFEDtoJSON.C_TAB*2 + '{ \n', \
 			UFEDtoJSON.C_TAB*2 + '"@type":"uco-observable:ApplicationFacet", \n', \
-#	CASE 0.2/UCO 0.4 compliant, no uco-observable:out property in Observable
-#		
-		#line += UFEDtoJSON.C_TAB*2 + '"uco-core:proposed:appName": "' + appName + '"\n'
 			UFEDtoJSON.C_TAB*2 + '"uco-core:name": "' + appName + '"\n', \
 			UFEDtoJSON.C_TAB*2 + '}\n', \
 			UFEDtoJSON.C_TAB + ']\n', \
@@ -435,7 +427,7 @@ class UFEDtoJSON:
 #	
 		phonePattern = '^\+?[0-9]+$'	# phone number pattern
 		
-		for i in range(len(CALLid)):
+		for i, call_id in enumerate(CALLid):
 			
 #---	there are two Parties, each of them with their own role
 #						
@@ -476,13 +468,6 @@ class UFEDtoJSON:
 				CALLnamesFROM[i].append('')
 				CALLidentifiersTO[i].append('')
 				CALLidentifiersFROM[i].append('')
-
-			# print(f'CALLrolesTO[i]={CALLrolesTO[i]}')
-			# print(f'CALLrolesFROM[i]={CALLrolesFROM[i]}')
-			# print(f'CALLnamesTO[i]={CALLnamesTO[i]}')
-			# print(f'CALLnamesFROM[i]={CALLnamesFROM[i]}')
-			# print(f'CALLidentifiersTO[i]={CALLidentifiersTO[i]}')
-			# print(f'CALLidentifiersFROM[i]={CALLidentifiersFROM[i]}')
 
 			if (len(CALLrolesFROM[i]) > 1):
 				nameParty = ''
@@ -580,7 +565,7 @@ class UFEDtoJSON:
 				uuid = self.__generateTracePhoneCall(CALLdirection[i].lower(), 
 					CALLtimeStamp[i], uuidPartyTO, uuidPartyFROM, CALLduration[i],
                            CALLstatus[i], CALLoutcome[i])
-			self.__generateChainOfEvidence(CALLid[i], uuid)
+			self.__generateChainOfEvidence(call_id, uuid)
 
 
 	def __generateTraceChatAccount(self, issuer, partyId, partyName, idApp):
@@ -703,14 +688,10 @@ class UFEDtoJSON:
 				listFileNames.append('')
 
 
-		for i in range(len(listFileNames)):
-			if (listFileNames[i].strip() == '') and \
-			 	(listFileUrls[i].strip() == ''):
-				pass
-			else:
-				# listFileUrls[i] will be stored in the property
-				# path of the FILE trace
-				fileUuid = self.__generateTraceFile(listFileNames[i], 
+		for i, file_name in enumerate(listFileNames):
+			if (file_name.strip() != '') or \
+			 	(listFileUrls[i].strip() != ''):
+				fileUuid = self.__generateTraceFile(file_name, 
 				'', '', '', 'Uncategorized', '', '', '', listFileUrls[i],
 				'', '', '', '', '', '', '', '', '', '', '')
 				
@@ -807,16 +788,14 @@ class UFEDtoJSON:
 			idFROM = uuidEmail
 
 		itemsTO = ''
-		for i in range(len(EMAILidentifiersTO)):
-			if EMAILidentifiersTO[i].strip() == '':
-				pass
-			else:
-				if EMAILidentifiersTO[i].strip() in self.EMAILaddressList:
-					idx = self.EMAILaddressList.index(EMAILidentifiersTO[i].strip())
+		for i, email_identifier in enumerate(EMAILidentifiersTO):
+			if email_identifier.strip() != '':
+				if email_identifier.strip() in self.EMAILaddressList:
+					idx = self.EMAILaddressList.index(email_identifier.strip())
 					idTO = '{"@id":"' + self.EMAILaccountIdList[idx] + '"}'
 				else:
-					self.EMAILaddressList.append(EMAILidentifiersTO[i].strip())
-					uuidEmail = self.__generateTraceEmailAccount(EMAILidentifiersTO[i].strip())
+					self.EMAILaddressList.append(email_identifier.strip())
+					uuidEmail = self.__generateTraceEmailAccount(email_identifier.strip())
 					self.EMAILaccountIdList.append(uuidEmail)
 					idTO = '{"@id":"' + uuidEmail + '"}'
 				itemsTO += itemsTO + idTO + ','
@@ -825,16 +804,14 @@ class UFEDtoJSON:
 		itemsTO = itemsTO[0:-1]
 
 		itemsCC = ''
-		for i in range(len(EMAILidentifiersCC)):
-			if EMAILidentifiersCC[i].strip() == '':
-				pass
-			else:
-				if EMAILidentifiersCC[i].strip() in self.EMAILaddressList:
-					idx = self.EMAILaddressList.index(EMAILidentifiersCC[i].strip())
+		for i, email_identifier_cc in enumerate(EMAILidentifiersCC):
+			if email_identifier_cc.strip() != '':
+				if email_identifier_cc.strip() in self.EMAILaddressList:
+					idx = self.EMAILaddressList.index(email_identifier_cc.strip())
 					idCC = '{"@id":"' + self.EMAILaccountIdList[idx] + '"}'
 				else:
-					self.EMAILaddressList.append(EMAILidentifiersCC[i].strip())
-					uuidEmail = self.__generateTraceEmailAccount(EMAILidentifiersCC[i].strip())
+					self.EMAILaddressList.append(email_identifier_cc.strip())
+					uuidEmail = self.__generateTraceEmailAccount(email_identifier_cc.strip())
 					self.EMAILaccountIdList.append(uuidEmail)
 					idCC = '{"@id":"' + uuidEmail + '"}'
 				itemsCC += itemsCC + idCC + ','
@@ -846,16 +823,14 @@ class UFEDtoJSON:
 #		
 		
 		itemsBCC = ''
-		for i in range(len(EMAILidentifiersBCC)):
-			if EMAILidentifiersBCC[i].strip() == '':
-				pass
-			else:
-				if EMAILidentifiersBCC[i].strip() in self.EMAILaddressList:
-					idx = self.EMAILaddressList.index(EMAILidentifiersBCC[i].strip())
+		for i, email_identifier_bcc in enumerate(EMAILidentifiersBCC):
+			if email_identifier_bcc.strip() != '':
+				if email_identifier_bcc.strip() in self.EMAILaddressList:
+					idx = self.EMAILaddressList.index(email_identifier_bcc.strip())
 					idBCC = '{"@id":"' + self.EMAILaccountIdList[idx] + '"}'
 				else:
-					self.EMAILaddressList.append(EMAILidentifiersBCC[i].strip())
-					uuidEmail = self.__generateTraceEmailAccount(EMAILidentifiersBCC[i].strip())
+					self.EMAILaddressList.append(email_identifier_bcc.strip())
+					uuidEmail = self.__generateTraceEmailAccount(email_identifier_bcc.strip())
 					self.EMAILaccountIdList.append(uuidEmail)
 					idBCC = '{"@id":"' + uuidEmail + '"}'
 				itemsBCC += itemsBCC + idBCC + ','
@@ -919,11 +894,9 @@ class UFEDtoJSON:
 		self.FileOut.write(line);
 		self.__generateChainOfEvidence(EMAILid, uuid)
 
-		for i in range(len(EMAILattachmentsFilename)):
-			if EMAILattachmentsFilename[i].strip() == '':
-				pass
-			else:
-				fileUuid = self.__generateTraceFile(EMAILattachmentsFilename[i], 
+		for i, email_attachment in enumerate(EMAILattachmentsFilename):
+			if email_attachment.strip() != '':
+				fileUuid = self.__generateTraceFile(email_attachment, 
 				'', '', '', 'Uncategorized', '', '', '', '',
   				'', '', '', '', '', '', '', '', '', '', '')
 				self.__generateTraceRelation(fileUuid, uuid, 'Attached_To', 
@@ -1323,9 +1296,7 @@ class UFEDtoJSON:
 								duration, status, outcome):
 
 		nTime = 0
-		if duration == "":
-			pass
-		else:
+		if duration != "":
 			aTime = duration.split(":")
 			if len(aTime) == 3:
 				if aTime[2].find('.') > -1:
@@ -1526,28 +1497,23 @@ class UFEDtoJSON:
 	def __generateTraceSms(self, SMSid, SMSstatus, SMStimeStamp, 
 							SMSpartyRoles, SMSpartyIdentifiers, 
 							SMSsmsc, SMSpartyNames, SMSfolder, SMSbody, SMSsource):		
-		for i in range(len(SMSid)):
+		for i, sms_id in enumerate(SMSid):
 			#print('SMSC=' + SMSsmsc[i])
 			phoneUuidTo = ''
 			phoneUuidFrom = ''
-			for j in range(len(SMSpartyIdentifiers[i])):				
-				if SMSpartyIdentifiers[i][j].strip() == '':
-					pass
-				else:
-					#print('SMSpartyIdentifiers:' + SMSpartyIdentifiers[i][j])
-					#print(self.phoneNumberList)
-					if SMSpartyIdentifiers[i][j] in self.phoneNumberList:						
-						idx = self.phoneNumberList.index(SMSpartyIdentifiers[i][j])						
+			for j, sms_party_identifier in enumerate(SMSpartyIdentifiers[i]):				
+				if sms_party_identifier.strip() != '':
+					if sms_party_identifier in self.phoneNumberList:						
+						idx = self.phoneNumberList.index(sms_party_identifier)						
 						userId = self.phoneNumberList[idx]
 						phonePartyUuid = self.phoneUuidList[idx]
 					else:
 # see previous comment of the use of the mobileOperator variable
-						self.phoneNumberList.append(SMSpartyIdentifiers[i][j])
+						self.phoneNumberList.append(sms_party_identifier)
 						self.phoneNameList.append(SMSpartyNames[i][j])
 						mobileOperator = ""
-						#print('in __generateTraceSms, num: ' + SMSpartyIdentifiers[i][j])
 						phonePartyUuid = self.__generateTracePhoneAccount(mobileOperator, 
-							SMSpartyNames[i][j], SMSpartyIdentifiers[i][j])	
+							SMSpartyNames[i][j], sms_party_identifier)	
 						self.phoneUuidList.append(phonePartyUuid)
 				
 					phoneUuidTo = ''
@@ -1560,9 +1526,7 @@ class UFEDtoJSON:
 						phoneUuidTo = '{"@id":"' + self.phoneOwnerUuid + '"}'
 			
 			phoneSmscUuid = ''
-			if SMSsmsc[i].strip() == '':
-				pass
-			else:
+			if SMSsmsc[i].strip() != '':
 				if SMSsmsc[i].strip() in self.phoneNumberList:						
 					idx = self.phoneNumberList.index(SMSsmsc[i].strip())						
 					userId = self.phoneNumberList[idx]
@@ -1583,15 +1547,11 @@ class UFEDtoJSON:
 				if phoneUuidTo.strip() == '':
 						phoneUuidTo = phoneSmscUuid	
 
-			if self.phoneOwnerUuid.strip() == '':
-				pass
-			else:	
+			if self.phoneOwnerUuid.strip() != '':
 				if phoneUuidTo == self.phoneOwnerUuid:
 					phoneUuidTo = '{"@id":"' + self.phoneOwnerUuid + '"}'	
 				else:
-					if phoneUuidTo == '':
-						pass
-					else:
+					if phoneUuidTo != '':
 						if phoneUuidTo[-1] == ',':
 							phoneUuidTo = phoneUuidTo[0:-1]
 
@@ -1639,7 +1599,7 @@ class UFEDtoJSON:
 				UFEDtoJSON.C_TAB + '] \n',\
 				'}, \n'])
 			self.FileOut.write(line)
-			self.__generateChainOfEvidence(SMSid[i], uuid)
+			self.__generateChainOfEvidence(sms_id, uuid)
 
 	def __generateThreadMessages(self, chatTraceId, chatThread, chatIdAccountList):
 		
@@ -1796,9 +1756,8 @@ class UFEDtoJSON:
 
 	def __generateTraceWebPages(self, WEB_PAGEid, WEB_PAGEstatus, WEB_PAGEsource, WEB_PAGEurl, 
 				WEB_PAGEtitle, WEB_PAGEvisitCount,  WEB_PAGElastVisited):
-		for i in range(len(WEB_PAGEid)):
-#	CASE 0.4/UCO 0.6 compliant, new URLHistoryFacet class
-#
+
+		for i, web_page_id in enumerate(WEB_PAGEid):
 			uuid = "kb:" + UFEDtoJSON.__createUUID()
 			
 			WEB_PAGElastVisited[i] = self.__cleanDate(WEB_PAGElastVisited[i])
@@ -1876,26 +1835,22 @@ class UFEDtoJSON:
 			line += '},\n'  						
 			self.FileOut.write(line);
 			
-#---	DEBUG
-#			print("WEB_PAGEid" + WEB_PAGEid[i] + "\n")
-#			
 			endChar = ','
 #---	last web page item, endChar is not "," (default) but " "
 #			
 			if i == len(WEB_PAGEid) - 1:
 				endChar	= ' '
 
-			self.__generateChainOfEvidence(WEB_PAGEid[i], uuid, endChar)
+			self.__generateChainOfEvidence(web_page_id, uuid, endChar)
 
-	#not used anymore, every time the field Source is extracted
-	# an uco-observable:Application item is created
+#---	it is not used anymore, every time the field Source is extracted
+#		an uco-observable:Application item is created
+#			
 	def storeUserAccount(self, U_ACCOUNTsource, U_ACCOUNTname,
 			U_ACCOUNTusername):
-		for i in range(len(U_ACCOUNTsource)):
-			idAppName = self.__generateTraceAppName(U_ACCOUNTsource[i])
-			self.appNameList.append(U_ACCOUNTsource[i])
-			#self.appAccountNameList.append(U_ACCOUNTname[i])
-			#self.appAccountUsernameList.append(U_ACCOUNTusername[i])
+		for i, u_account_source in enumerate(U_ACCOUNTsource):
+			idAppName = self.__generateTraceAppName(u_account_source)
+			self.appNameList.append(u_account_source)
 			self.appIDList.append(idAppName)
 
 
@@ -1908,17 +1863,16 @@ class UFEDtoJSON:
 		self.EXTRA_INFOdictNodeInfoId = EXTRA_INFOdictNodeInfoId		
 
 	def writePhoneAccountFromContacts(self, CONTACTname, CONTACTphoneNums):
-		for i in range(len(CONTACTname)):
-			for j in range(len(CONTACTphoneNums[i])):
-				if CONTACTphoneNums[i][j] in self.phoneNumberList:					
+		for i, contact_name in enumerate(CONTACTname):
+			for j, contact_phone_num in enumerate(CONTACTphoneNums[i]):
+				if contact_phone_num in self.phoneNumberList:					
 					pass
 				else:
-					self.phoneNumberList.append(CONTACTphoneNums[i][j])
-					self.phoneNameList.append(CONTACTname[i])
-# see previous comment of the use of the mobileOperator variable
+					self.phoneNumberList.append(contact_phone_num)
+					self.phoneNameList.append(contact_name)
 					mobileOperator = ""
-					#print('in writePhoneAccountFromContacts, num:' + CONTACTphoneNums[i][j])
-					uuid = self.__generateTracePhoneAccount(mobileOperator, CONTACTname[i], CONTACTphoneNums[i][j])
+					uuid = self.__generateTracePhoneAccount(mobileOperator, 
+						contact_name, contact_phone_num)
 					self.phoneUuidList.append(uuid)
 
 	def writeHeader(self):
@@ -1941,7 +1895,7 @@ class UFEDtoJSON:
                     FILEexifLatitudeRef, FILEexifLatitude, FILEexifLongitudeRef,
                     FILEexifLongitude, FILEexifAltitude, FILEexifMake, FILEexifModel):
 			self.FILEid = FILEid
-			for i in range(len(FILEid)):					
+			for i, file_id in enumerate(FILEid):					
 				uuid = self.__generateTraceFile(FILEpath[i], FILEsize[i], 
 					'MD5', FILEmd5[i],	FILETag[i], FILEtimeCreate[i], FILEtimeModify[i], 
 					FILEtimeAccess[i], FILElocalPath[i], FILEiNodeNumber[i], FILEiNodeTimeM[i],
@@ -1949,15 +1903,15 @@ class UFEDtoJSON:
 					FILEexifLatitude[i], FILEexifLongitudeRef[i], FILEexifLongitude[i], 
 					FILEexifAltitude[i], FILEexifMake[i], FILEexifModel[i])
 
-				self.FILEuuid[FILEid[i]] = uuid
-				self.FILEpath[FILEid[i]] = FILEpath[i]
+				self.FILEuuid[file_id] = uuid
+				self.FILEpath[file_id] = FILEpath[i]
 
 	def writeChat(self, CHATid, CHATstatus, CHATsource, CHATpartyIdentifiers, CHATpartyNames, 
                 CHATmsgIdentifiersFrom, CHATmsgNamesFrom, CHATmsgIdentifiersTo, 
                 CHATmsgNamesTo, CHATmsgBodies, CHATmsgStatuses, CHATmsgOutcomes,
                 CHATmsgTimeStamps, CHATmsgAttachmentFilenames, CHATmsgAttachmentUrls):		
 		
-		for i in range(len(CHATid)):			
+		for i, chat_id in enumerate(CHATid):			
 			if CHATsource[i].strip().lower() in self.appNameList: 
 				idx = self.appNameList.index(CHATsource[i].strip().lower())
 				idAppName = self.appNameList[idx]
@@ -1968,16 +1922,16 @@ class UFEDtoJSON:
 				self.appIDList.append(idAppIdentity)
 			
 			CHATidAccountList = []
-			for j in range(len(CHATpartyIdentifiers[i])):				
-				if CHATpartyIdentifiers[i][j].strip() in self.CHATparticipantsIdList: 
-					idx = self.CHATparticipantsIdList.index(CHATpartyIdentifiers[i][j].strip())
+			for j, chat_party_id in enumerate(CHATpartyIdentifiers[i]):				
+				if chat_party_id.strip() in self.CHATparticipantsIdList: 
+					idx = self.CHATparticipantsIdList.index(chat_party_id.strip())
 					CHATidAccountList.append(self.CHATaccountIdList[idx])
 				else:
 					self.CHATparticipantsNameList.append(CHATpartyNames[i][j].strip())
 					idChatAccount = self.__generateTraceChatAccount(CHATsource[i].strip(),
-						CHATpartyIdentifiers[i][j].strip(), CHATpartyNames[i][j].strip(),
+						chat_party_id.strip(), CHATpartyNames[i][j].strip(),
 						idAppIdentity)
-					self.CHATparticipantsIdList.append(CHATpartyIdentifiers[i][j].strip())
+					self.CHATparticipantsIdList.append(chat_party_id.strip())
 					self.CHATaccountIdList.append(idChatAccount)
 					CHATidAccountList.append(idChatAccount)
 
@@ -2021,7 +1975,7 @@ class UFEDtoJSON:
 #			iterates over all these messages
 #			
 			#print("Attachments Chat[" + str(i) + "], len(msgBodies): " + str(len(CHATmsgBodies[i])))
-			for j in range(len(CHATmsgBodies[i])):	
+			for j, chat_msg_body in enumerate(CHATmsgBodies[i]):	
 
 #---	IdentifiersTo may contain more than one ID, separated by ###. This occurs
 #			when a message is sent to a group and more than one recipient is involved
@@ -2036,34 +1990,18 @@ class UFEDtoJSON:
 #				
 				
 				if CHATmsgTo[0].strip() == '':
-					# comment 2021-05-11 - start
-					#for k in range(len(CHATpartyIdentifiers[i])):
-					#	if CHATpartyIdentifiers[i][k] == CHATmsgFrom:
-					#		pass
-					#	else:
-					#		CHATmsgTo[0] = CHATpartyIdentifiers[i][k]
-					#		break
-					# comment 2021-05-11 - end				
 					CHATmsgTo[0] = self.phoneOwnerNumber + '@s.whatsapp.net'
 					direction = 'Incoming'
 				else:			
 					direction = 'Outgoing'
 				
-#---	If Identifiers FROM is empty, the array CHATpartyIdentifiers must
-#			be iterated to find the right Party
+#---	if Identifiers FROM is empty, the array CHATpartyIdentifiers must
+#		be iterated to find the right Party
 #									
 				if CHATmsgFrom == '':
 					CHATmsgFrom = self.phoneOwnerNumber + '@s.whatsapp.net'
-					# comment 2021-05-11 start
-					#for k in range(len(CHATpartyIdentifiers[i])):
-					#	if CHATpartyIdentifiers[i][k] in CHATmsgTo:
-					#		pass
-					#	else:
-					#		CHATmsgFrom = CHATpartyIdentifiers[i][k]
-					#		break
-					# comment 2021-05-11 - end
 
-				chatUuid = self.__generateTraceChat(CHATmsgBodies[i][j], idAppIdentity, 
+				chatUuid = self.__generateTraceChat(chat_msg_body, idAppIdentity, 
 					CHATmsgTimeStamps[i][j], CHATmsgFrom, 
 					CHATmsgTo, CHATmsgStatuses[i][j], CHATmsgOutcomes[i][j],
 					direction, CHATmsgAttachmentFilenames[i][j], 
@@ -2073,30 +2011,29 @@ class UFEDtoJSON:
 					#print("chat n." + str(i) + ', msg n.' + str(j) + ', attachment: ' + 
 					#CHATmsgAttachmentFilenames[i][j])
 					CHATattachmentFiles = CHATmsgAttachmentFilenames[i][j].split('###')
-					for idx in range(len(CHATattachmentFiles)):
-						#print('Attachment: ' + CHATattachmentFiles[idx])
+					for idx, chat_attachment_file in enumerate(CHATattachmentFiles):
 						for key in self.FILEpath:						
-							if self.FILEpath[key].find(CHATattachmentFiles[idx]) > - 1:
-								#print('FILEuuid:' + self.FILEuuid[key])
-								self.__generateTraceRelation(self.FILEuuid[key], chatUuid, 'Attached_To', '', '');
+							if self.FILEpath[key].find(chat_attachment_file) > - 1:
+								self.__generateTraceRelation(self.FILEuuid[key], 
+									chatUuid, 'Attached_To', '', '');
 								break			
 
-#---	If there are not messages for this Chat or no ChatAccount has been
-#			generated, the ThreadMessage is not generated. Moreover the Chain of
-#			evidence is built upon the ThreadUuid
+#---	if there are not messages for this Chat or no ChatAccount has been generated, 
+#		the ThreadMessage is not generated. Moreover the Chain of evidence is built 
+#		upon the ThreadUuid
 #			
 			if (len(CHATthread) == 0) or (len(CHATidAccountList) == 0):
 				pass
 			else:
-				uuidThread = self.__generateThreadMessages(CHATid[i], CHATthread, 
+				uuidThread = self.__generateThreadMessages(chat_id, CHATthread, 
 								CHATidAccountList)
-				self.__generateChainOfEvidence(CHATid[i], uuidThread)
+				self.__generateChainOfEvidence(chat_id, uuidThread)
 
 	def writeEmail(self, EMAILid, EMAILstatus, EMAILsource, EMAILidentifierFROM, 
 				EMAILidentifiersTO, EMAILidentifiersCC, EMAILidentifiersBCC, 
                 EMAILbody, EMAILsubject, EMAILtimeStamp, EMAILattachmentsFilename):
-		for i in range(len(EMAILid)):
-			self.__generateTraceEmail(EMAILid[i], EMAILstatus[i], EMAILsource[i],
+		for i, email_id in enumerate(EMAILid):
+			self.__generateTraceEmail(email_id, EMAILstatus[i], EMAILsource[i],
 				EMAILidentifierFROM[i], EMAILidentifiersTO[i], 
 				EMAILidentifiersCC[i], EMAILidentifiersBCC[i], EMAILbody[i], 
 				EMAILsubject[i], EMAILtimeStamp[i], EMAILattachmentsFilename[i])
