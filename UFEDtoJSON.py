@@ -610,12 +610,11 @@ class UFEDtoJSON:
 		for item in idToList:
 			if item in self.CHATparticipantsIdList:
 				idx = self.CHATparticipantsIdList.index(item)
-				TOlist = '{"@id":"' + self.CHATaccountIdList[idx] + '"},'
+				TOlist += '{"@id":"' + self.CHATaccountIdList[idx] + '"},'
 			else:
-				TOlist = '{"@id":"' + self.phoneOwnerUuid + '"},'
+				TOlist += '{"@id":"' + self.phoneOwnerUuid + '"},'
 
 		TOlist = TOlist[0:-1] 
-
 		if idFrom in self.CHATparticipantsIdList:
 			idx = self.CHATparticipantsIdList.index(idFrom)
 			FROMitem = self.CHATaccountIdList[idx]
@@ -1922,7 +1921,7 @@ class UFEDtoJSON:
 				self.appIDList.append(idAppIdentity)
 			
 			CHATidAccountList = []
-			for j, chat_party_id in enumerate(CHATpartyIdentifiers[i]):				
+			for j, chat_party_id in enumerate(CHATpartyIdentifiers[i]):	
 				if chat_party_id.strip() in self.CHATparticipantsIdList: 
 					idx = self.CHATparticipantsIdList.index(chat_party_id.strip())
 					CHATidAccountList.append(self.CHATaccountIdList[idx])
@@ -1936,20 +1935,16 @@ class UFEDtoJSON:
 					CHATidAccountList.append(idChatAccount)
 
 			appSource = CHATsource[i].strip().lower()
-			# if the Source is whatsapp, then the owner's whatsapp
-			# account must be part of the participants of the Chat
+#---	if the Source is whatsapp, then the owner's whatsapp account must be part of 
+#		the participants of the Chat
+#			
 			if appSource == 'whatsapp':
-				if 'whatsapp' in self.appNameList:
-					idx = self.appNameList.index('whatsapp')
-				else:
+				if 'whatsapp' not in self.appNameList:
 					idApp = self.__generateTraceAppName('whatsapp')
-					#idIdentity = self.__generateTraceAppIdentity('WhatsApp')
 					self.appNameList.append('whatsapp')
-					#self.appAccountUsername.append(idIdentity)
-					self.appIDList.append(idApp)
-					idx = self.appNameList.index('whatsapp')
+					self.appIDList.append(idApp)					
 
-				#idAppWhatsApp = self.appAccountUsername[idx]
+				idx = self.appNameList.index('whatsapp')
 				idAppWhatsApp = self.appIDList[idx]
 				idPhoneOwner = self.phoneOwnerNumber + '@s.whatsapp.net'			
 				if idPhoneOwner in self.CHATparticipantsIdList:
@@ -1961,8 +1956,8 @@ class UFEDtoJSON:
 					self.CHATparticipantsIdList.append(idPhoneOwner)
 					self.CHATaccountIdList.append(idChatAccount)
 
-				# the owner's phone num must be always part of the 
-				# participants Chat account
+#---	the owner's phone num must be always part of the participants Chat account
+#					
 				idx = self.CHATparticipantsIdList.index(idPhoneOwner)
 				chatAccountPhoneOwner = self.CHATaccountIdList[idx]
 				if chatAccountPhoneOwner in CHATidAccountList:
@@ -1971,22 +1966,23 @@ class UFEDtoJSON:
 					CHATidAccountList.append(chatAccountPhoneOwner)
 			
 			CHATthread = []
+
 #---	CHATmsgBodies[i] is the list of the messages of the same thread, the j index
 #			iterates over all these messages
 #			
-			#print("Attachments Chat[" + str(i) + "], len(msgBodies): " + str(len(CHATmsgBodies[i])))
 			for j, chat_msg_body in enumerate(CHATmsgBodies[i]):	
 
 #---	IdentifiersTo may contain more than one ID, separated by ###. This occurs
-#			when a message is sent to a group and more than one recipient is involved
+#		when a message is sent to a group and more than one recipient is involved
 #				
 				CHATmsgTo = CHATmsgIdentifiersTo[i][j].split('###')	
+
 #---	If IdentifiersTo is empty, there is only a recipient: the phone owner number								
 #				
 				CHATmsgFrom = CHATmsgIdentifiersFrom[i][j].strip() 
 
 #---	If Identifiers TO is empty, the array CHATpartyIdentifiers must
-#			be iterated to find the right Party
+#		be iterated to find the right Party
 #				
 				
 				if CHATmsgTo[0].strip() == '':

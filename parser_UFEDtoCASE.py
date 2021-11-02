@@ -1465,7 +1465,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.CHATinSourceValue:
             self.CHATsourceText += ch        
         if self.CHATinPartyIdentifierValue:
-            self.CHATpartyIdentifierText += ch        
+            self.CHATpartyIdentifierText += ch 
         if self.CHATinPartyNameValue:
             self.CHATpartyNameText += ch        
         if self.CHATinMsgIdentifierFromValue:
