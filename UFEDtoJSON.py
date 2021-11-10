@@ -94,17 +94,40 @@ class UFEDtoJSON:
 		return str(uuid.uuid4())
 
 	def __cleanDate(self, originalDate):
+		aMonths = {
+			'Jan': '01',
+			'Feb': '02',
+			'Mar': '03',
+			'Apr': '04',
+			'May': '05',
+			'Jun': '06',
+			'Jul': '07',
+			'Aug': '08',
+			'Sep': '09',
+			'Oct': '10',
+			'Nov': '11',
+			'Dec': '12'
+		}
+
+		originalDate = originalDate.strip()
 #---	the xsd:dateTime must have the format YYYY-MM-DDTHH:MM:SS (UTCxxx)
 #		
 
-		if 	originalDate.strip() == '':
+		if 	originalDate == '':
 			return UFEDtoJSON.C_DATE
+
+		for k,v in aMonths.items():
+			if originalDate.find(k) > -1:
+				originalDate = originalDate.replace(k, v)
+				break
 
 		originalDate = originalDate.replace("/", "-")
 		originalDate = originalDate.replace("(", "-")
 		originalDate = originalDate.replace(")", "-")
 		originalDate = originalDate.replace(' ', 'T', 1)
 		originalDate = originalDate.replace('UTC', '')
+		originalDate = originalDate.replace('AM', '')
+		originalDate = originalDate.replace('PM', '')
 		if re.search('^[0-9]{4}', originalDate):
 			pass
 		else:
@@ -137,10 +160,18 @@ class UFEDtoJSON:
 		else:
 			originalDate = re.sub('(\d{2}:\d{2})$', '\g<1>:00', originalDate)
 
+		if re.search('T(\d):', originalDate):
+			originalDate = re.sub('T(\d):', 'T0\g<1>:', originalDate)
+
+		if re.search(':(\d):', originalDate):
+			originalDate = re.sub(':(\d):', ':0\g<1>:', originalDate)
+
+		if re.search(':(\d)$', originalDate):
+			originalDate = re.sub(':(\d)$', ':0\g<1>', originalDate)
+
 		if re.search('T\d{2}:\d{2}:\d{2}(.+)$', originalDate):
 			originalDate = re.sub('(T\d{2}:\d{2}:\d{2})(.+)$', '\g<1>', originalDate)
 
-		#print(f'*DEBUG* after replacing, dateTime\t {originalDate}\n')
 
 		return originalDate.strip()	
 
@@ -1021,7 +1052,7 @@ class UFEDtoJSON:
 		FILEtimeC = self.__cleanDate(FILEtimeC)
 		FILEtimeM = self.__cleanDate(FILEtimeM)
 		FILEtimeA = self.__cleanDate(FILEtimeA)	
-
+		
 		FILEiNodeTimeM = self.__cleanDate(FILEiNodeTimeM)
 
 #---	these values are defined as xsd:integer
