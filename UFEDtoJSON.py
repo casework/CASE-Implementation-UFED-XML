@@ -177,7 +177,7 @@ class UFEDtoJSON:
 
 	def ___generateContextUfed(self, ufedVersion, deviceReportCreateTime,
 			deviceExtractionStartTime, deviceExtractionEndTime, examinerName, 
-		deviceBluetoothAddress, deviceId, devicePhoneModel, 
+		deviceBluetoothAddress, deviceBluetoothName, deviceId, devicePhoneModel, 
 		deviceOsType, deviceOsVersion, devicePhoneVendor, 
 		deviceMacAddress, deviceIccid, deviceImsi, deviceImei, 
 		imagePath, imageSize, imageMetadataHashSHA, imageMetadataHashMD5):
@@ -197,8 +197,8 @@ class UFEDtoJSON:
 
 		# generate Trace/Device for the mobile phone
 		idDevice = self.__generateTraceDevice(deviceMacAddress, deviceId, devicePhoneModel,
-			deviceOsType, deviceOsVersion, devicePhoneVendor, '',
-			deviceIccid, deviceImsi, deviceImei, deviceBluetoothAddress)
+			deviceOsType, deviceOsVersion, devicePhoneVendor, deviceMacAddress,
+			deviceIccid, deviceImsi, deviceImei, deviceBluetoothAddress, deviceBluetoothName)
 		
 #---	the XML report contains the attribute DeviceInfoExtractionStartDateTime 
 #			that is the Acquisition Start Date and similarly for the Acquisition
@@ -732,7 +732,7 @@ class UFEDtoJSON:
 
 	def __generateTraceDevice(self, deviceMAC, deviceSN, deviceModel,
 		deviceOS, deviceOSVersion, deviceManufacturer, deviceWiFi, deviceICCID,
-		deviceIMSI, deviceIMEI, deviceBluetoothAddress):
+		deviceIMSI, deviceIMEI, deviceBluetoothAddress, deviceBluetoothName):
 		uuid = "kb:" + UFEDtoJSON.__createUUID()
 		line = "".join(['{ \n', \
 			UFEDtoJSON.C_TAB + '"@id":"' +  uuid + '", \n', \
@@ -746,6 +746,8 @@ class UFEDtoJSON:
 			UFEDtoJSON.C_TAB*2 + '},\n', \
 			UFEDtoJSON.C_TAB*2 + '{\n', \
 			UFEDtoJSON.C_TAB*3 + '"@type":"uco-observable:MobileDeviceFacet",\n', \
+			UFEDtoJSON.C_TAB*3 + '"uco-observable:IMSI":"' + deviceIMSI + '",\n', \
+			UFEDtoJSON.C_TAB*3 + '"uco-observable:ICCID":"' + deviceICCID + '",\n', \
 			UFEDtoJSON.C_TAB*3 + '"uco-observable:IMEI":"' + deviceIMEI + '"\n', \
 		
 #	if properties are not provided, the related line is not written
@@ -788,6 +790,7 @@ class UFEDtoJSON:
 		#line += UFEDtoJSON.C_TAB*2 + '},\n'
 			UFEDtoJSON.C_TAB*2 + '{\n', \
 			UFEDtoJSON.C_TAB*2 + '"@type":"uco-observable:BluetoothAddressFacet",\n', \
+			UFEDtoJSON.C_TAB*2 + '"uco-core:name":"' + deviceBluetoothName + '",\n', \
 			UFEDtoJSON.C_TAB*2 + '"uco-observable:addressValue":"' + deviceBluetoothAddress + '"\n', \
 			UFEDtoJSON.C_TAB*2 + '},\n ', \
 			UFEDtoJSON.C_TAB*2 + '{\n', \
@@ -2078,7 +2081,7 @@ class UFEDtoJSON:
 
 	def writeContextUfed(self, ufedVersionText, deviceReportCreateTime,
 		deviceExtractionStartTime, deviceExtractionEndTime, examinerNameText,
-		deviceBluetoothAddressText, deviceIdText, devicePhoneModelText, 
+		deviceBluetoothAddressText, deviceBluetoothNameText, deviceIdText, devicePhoneModelText, 
 		deviceOsTypeText, deviceOsVersionText, devicePhoneVendorText, 
 		deviceMacAddressText, deviceIccidText, deviceImsiText, 
 		deviceImeiText, imagePath, imageSize, 
@@ -2086,8 +2089,8 @@ class UFEDtoJSON:
 
 		self.___generateContextUfed(ufedVersionText, deviceReportCreateTime,
 			deviceExtractionStartTime, deviceExtractionEndTime, examinerNameText, 
-			deviceBluetoothAddressText, deviceIdText, devicePhoneModelText, 
-			deviceOsTypeText, deviceOsVersionText, devicePhoneVendorText, 
+			deviceBluetoothAddressText, deviceBluetoothNameText, deviceIdText, 
+			devicePhoneModelText, deviceOsTypeText, deviceOsVersionText, devicePhoneVendorText, 
 			deviceMacAddressText, deviceIccidText, deviceImsiText, 
 			deviceImeiText, imagePath, imageSize, 
 			imageMetadataHashSHA, imageMetadataHashMD5)

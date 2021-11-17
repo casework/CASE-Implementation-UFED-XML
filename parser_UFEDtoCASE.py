@@ -125,12 +125,12 @@ class UFEDgadget():
         caseTrace.writeContextUfed(Handler.CONTEXTufedVersionText, 
             Handler.CONTEXTdeviceCreationTimeText, Handler.CONTEXTdeviceExtractionStartText,
             Handler.CONTEXTdeviceExtractionEndText, Handler.CONTEXTexaminerNameText,
-            Handler.CONTEXTdeviceBluetoothAddressText, Handler.CONTEXTdeviceIdText, 
-            Handler.CONTEXTdevicePhoneModelText, Handler.CONTEXTdeviceOsTypeText, 
-            Handler.CONTEXTdeviceOsVersionText, Handler.CONTEXTdevicePhoneVendorText, 
-            Handler.CONTEXTdeviceMacAddressText, Handler.CONTEXTdeviceIccidText, 
-            Handler.CONTEXTdeviceImsiText, Handler.CONTEXTdeviceImeiText, 
-            Handler.CONTEXTimagePath, Handler.CONTEXTimageSize, 
+            Handler.CONTEXTdeviceBluetoothAddressText, Handler.CONTEXTdeviceBluetoothNameText,
+            Handler.CONTEXTdeviceIdText, Handler.CONTEXTdevicePhoneModelText, 
+            Handler.CONTEXTdeviceOsTypeText, Handler.CONTEXTdeviceOsVersionText, 
+            Handler.CONTEXTdevicePhoneVendorText, Handler.CONTEXTdeviceMacAddressText, 
+            Handler.CONTEXTdeviceIccidText, Handler.CONTEXTdeviceImsiText, 
+            Handler.CONTEXTdeviceImeiText, Handler.CONTEXTimagePath, Handler.CONTEXTimageSize, 
             Handler.CONTEXTimageMetadataHashSHA, Handler.CONTEXTimageMetadataHashMD5)
 
 #---    this write a single line to complete the JSON output file
@@ -620,6 +620,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CONTEXTinDeviceInfo = False
         self.CONTEXTinDeviceBluetoothAddressValue = False
         self.CONTEXTdeviceBluetoothAddressText = ''
+        self.CONTEXTinDeviceBluetoothName = False
+        self.CONTEXTdeviceBluetoothNameText = ''
         self.CONTEXTinDeviceIdValue = False
         self.CONTEXTdeviceIdText = ''
         self.CONTEXTinDevicePhoneModelValue = False
@@ -1040,14 +1042,17 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CONTEXTinDevicePhoneModelValue = True
             if attrValue in ('DeviceInfoAppleID', 'DeviceInfoAndroidID'):
                 self.CONTEXTinDeviceIdValue = True
-            if attrValue in ('Indirizzo MAC', 'MAC Address'):
+            if attrValue in ('Indirizzo MAC', 'Mac Address', 'DeviceInfoWiFiMACAddress'):
                 self.CONTEXTinDeviceMacAddressValue = True
             if attrValue == 'ICCID':
                 self.CONTEXTinDeviceIccidValue = True
-            if attrValue == 'MSISDN':
+            if attrValue in ('MSISDN', 'LastUsedMSISDN'):
                 self.CONTEXTinDeviceMsisdnValue = True
-            if attrValue in ('Indirizzo MAC Bluetooth', 'Bluetooth MAC Address'):
+            if attrValue in ('Indirizzo MAC Bluetooth', 'Bluetooth MAC Address', 
+                'DeviceInfoBluetoothDeviceAddress'):
                 self.CONTEXTinDeviceBluetoothAddressValue = True
+            if attrValue == 'DeviceInfoBluetoothDeviceName':
+                self.CONTEXTinDeviceBluetoothName = True 
             if attrValue == 'IMSI':
                 self.CONTEXTinDeviceImsiValue = True
             if attrValue == 'IMEI':
@@ -1636,7 +1641,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.CONTEXTinDevicePhoneModelValue:
             self.CONTEXTdevicePhoneModelText  += ch
         if self.CONTEXTinDeviceIdValue:
-            self.CONTEXTdeviceIdText  += ch
+            if self.CONTEXTdeviceIdText.strip() == '':
+                self.CONTEXTdeviceIdText  += ch
         if self.CONTEXTinDeviceMacAddressValue:
             self.CONTEXTdeviceMacAddressText  += ch
         if self.CONTEXTinDeviceIccidValue:
@@ -1644,8 +1650,13 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.CONTEXTinDeviceMsisdnValue:
             if self.CONTEXTdeviceMsisdnText.strip() == '':
                 self.CONTEXTdeviceMsisdnText  += ch
+            else:
+                self.CONTEXTdeviceMsisdnText  += '/' + ch
         if self.CONTEXTinDeviceBluetoothAddressValue:
-            self.CONTEXTdeviceBluetoothAddressText  += ch
+            if self.CONTEXTdeviceBluetoothAddressText == '':
+                self.CONTEXTdeviceBluetoothAddressText  += ch
+        if self.CONTEXTinDeviceBluetoothName:
+            self.CONTEXTdeviceBluetoothNameText  += ch
         if self.CONTEXTinDeviceImsiValue:
             self.CONTEXTdeviceImsiText  += ch
         if self.CONTEXTinDeviceImeiValue:
@@ -2335,6 +2346,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTEXTinDeviceCreationTimeValue = False
         if self.CONTEXTinDeviceBluetoothAddressValue:
             self.CONTEXTinDeviceBluetoothAddressValue = False
+        if self.CONTEXTinDeviceBluetoothName:
+            self.CONTEXTinDeviceBluetoothName = False
         if self.CONTEXTinDeviceIdValue:
             self.CONTEXTinDeviceIdValue = False
         if self.CONTEXTinDevicePhoneModelValue:
