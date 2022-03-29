@@ -13,44 +13,83 @@ import codecs
 import UFEDtoJSON as CJ
 import re
 import timeit
+import sys
+from time import localtime, strftime
+#import logging
 
-class UFEDgadget():
-    def __init__(self, xmlReport, jsonCASE, baseLocalPath):
+
+class UFEDgadget():         
+    def __init__(self, xmlReport, jsonCASE, baseLocalPath, verbose=False):
         self.xmlReport = xmlReport
         self.jsonCASE = jsonCASE
-        self.baseLocalPath = os.path.join(baseLocalPath, '')
+        self.baseLocalPath = os.path.join(baseLocalPath, '') 
+        # logging.basicConfig(filename='_ufed_chat.txt', level=logging.INFO,
+        #     filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
+        # #logging.basicConfig(filename='_ufed_log.txt', level=logging.INFO,
+        #    filemode='w', format='%(message)s')
+        self.tic_start = timeit.default_timer()
+        self.verbose = verbose
+
+    def show_elapsed_time(self, tic, message):
+        toc = timeit.default_timer()
+        C_CYAN = '\033[36m'
+        C_BLACK = '\033[0m'
+        elapsed_seconds = round(toc - tic, 2)
+        (ss, ms) = divmod(elapsed_seconds, 1)
+        elapsedMm = str(int(ss) // 60)
+        elapsedSs = str(int(ss) % 60)
+        elapsedMs = str(round(ms, 2))[2:]
+        elapsed_time = elapsedMm + ' min. ' +  elapsedSs + ' sec. and ' + \
+            elapsedMs + ' hundredths'
+        if self.verbose:
+            print('\n' + C_CYAN + 'elapsed time - ' + message + ': ' + elapsed_time + '\n' + C_BLACK)
 
     def processXmlReport(self):
 #---    create the SAX parser object
-#    
+#
         SAXparser = xml.sax.make_parser()
 
 #---    override the default ContextHandler
-#            
-        Handler = ExtractTraces(self.baseLocalPath)
+#
+        Handler = ExtractTraces(self.baseLocalPath, self.verbose)        
+
         Handler.createOutFile(self.jsonCASE)
 
         SAXparser.setContentHandler(Handler)
-       
-        SAXparser.parse(self.xmlReport)
-        
-        print('\n\n\nCASE is being generated ...')
 
-        phoneNumber = Handler.findOwnerPhone(Handler.U_ACCOUNTusername).replace(' ', '')
+        SAXparser.parse(self.xmlReport)
+
+        self.show_elapsed_time(self.tic_start, 'Extraction Traces')
+
+        if self.verbose:
+            print('\n\n\nCASE JSON-LD file is being generated ...')
         
+        tic_case_start = timeit.default_timer()
+        
+        phoneNumber = Handler.findOwnerPhone(Handler.U_ACCOUNTusername).replace(' ', '')
+
         if phoneNumber == '':
             phoneNumber = Handler.CONTEXTdeviceMsisdnText.replace(' ', '')
 
-        print(Handler.C_cyan + "owner's phone number: " + phoneNumber + '\n' + Handler.C_end)
+        if self.verbose:
+            print(Handler.C_CYAN + "owner's phone number: " + phoneNumber + '\n' + Handler.C_BLACK)
 
         caseTrace = CJ.UFEDtoJSON(Handler.fOut, Handler.U_ACCOUNTsource, 
         Handler.U_ACCOUNTname, Handler.U_ACCOUNTusername)
 
 #---    caseTrace.storeUserAccount(Handler.U_ACCOUNTsource, Handler.U_ACCOUNTname,
-#       Handler.U_ACCOUNTusername)
+#       Handler.U_ACCOUNTusername)        
 
         caseTrace.writeHeader()
 
+        #tic_write = timeit.default_timer()
+        caseTrace.writeDevice(Handler.CONTEXTdeviceIdText, Handler.CONTEXTdevicePhoneModelText,            
+            Handler.CONTEXTdeviceOsTypeText, Handler.CONTEXTdeviceOsVersionText, 
+            Handler.CONTEXTdevicePhoneVendorText, Handler.CONTEXTdeviceMacAddressText, 
+            Handler.CONTEXTdeviceIccidText, Handler.CONTEXTdeviceImsiText, 
+            Handler.CONTEXTdeviceImeiText, Handler.CONTEXTdeviceBluetoothAddressText, 
+            Handler.CONTEXTdeviceBluetoothNameText)
+        #self.show_elapsed_time(tic_write, 'Write DEVICE')
 
         caseTrace.writePhoneOwner(phoneNumber)
 
@@ -58,6 +97,7 @@ class UFEDgadget():
                         Handler.EXTRA_INFOdictTableName, Handler.EXTRA_INFOdictOffset,
                         Handler.EXTRA_INFOdictNodeInfoId)
 
+        #tic_write = timeit.default_timer()
         caseTrace.writeFiles(Handler.FILEid, Handler.FILEpath, Handler.FILEsize,
                         Handler.FILEmd5, Handler.FILEtags, Handler.FILEtimeCreate, 
                         Handler.FILEtimeModify, Handler.FILEtimeAccess, Handler.FILElocalPath, 
@@ -65,96 +105,198 @@ class UFEDgadget():
                         Handler.FILEownerGID, Handler.FILEownerUID, Handler.FILEexifLatitudeRef,
                         Handler.FILEexifLatitude, Handler.FILEexifLongitudeRef,
                         Handler.FILEexifLongitude, Handler.FILEexifAltitude, Handler.FILEexifMake,
-                        Handler.FILEexifModel)
+                        Handler.FILEexifModel)        
+        #self.show_elapsed_time(tic_write, 'Write FILES')
 
 
-
-#---    CONTACTname is a list of names of contacts, 
-#       CONTACTphoneNums is a list of list of phone numbers, each item represents 
+#---    CONTACTname:        list of contact's names
+#       CONTACTphoneNums:   list of contact's phone numbers. Eeach item represents 
 #       the list of phone numbers of a contact. So a contact is identified by 
 #       the item CONTACname[i] and this contact may have many phone numbers 
 #       identified by CONTACTphoneNums[i][j] iterating on the index j
-#       The writeContacts method must be invoked before the processing of
-#       the SMS and Call traces, both of them are based on the list of phone numbers        
-#  
-        caseTrace.writePhoneAccountFromContacts(Handler.CONTACTname, Handler.CONTACTphoneNums)
-
+#          
+        #tic_write = timeit.default_timer()        
+        caseTrace.writeContact(Handler.CONTACTid, Handler.CONTACTstatus, Handler.CONTACTsource, 
+            Handler.CONTACTname, Handler.CONTACTuserIds, Handler.CONTACTphoneNums, 
+            Handler.CONTACTaccount)       
+        #self.show_elapsed_time(tic_write, 'Write CONTACT')
+            
 #---    all parameters are lists containing data of the extracted SMS
 #    
+        #tic_write = timeit.default_timer()
         caseTrace.writeSms(Handler.SMSid, Handler.SMSstatus, Handler.SMStimeStamp, 
-                    Handler.SMSpartyRoles, Handler.SMSpartyIdentifiers, 
-                    Handler.SMSsmsc, Handler.SMSpartyNames, Handler.SMSfolder, 
-                    Handler.SMSbody, Handler.SMSsource)
+            Handler.SMSpartyRoles, Handler.SMSpartyIdentifiers, 
+            Handler.SMSsmsc, Handler.SMSpartyNames, Handler.SMSfolder, 
+            Handler.SMSbody, Handler.SMSsource)        
+        #self.show_elapsed_time(tic_write, 'Write SMS')
 
 #---    all parameters are lists containing data of the extracted CALL_LOG
 #    
+        tic_write= timeit.default_timer()
         caseTrace.writeCall(Handler.CALLid, Handler.CALLstatus, Handler.CALLsource, 
-                    Handler.CALLtimeStamp, Handler.CALLdirection, Handler.CALLduration,
-                    Handler.CALLrolesTO, Handler.CALLrolesFROM, Handler.CALLnamesTO, 
-                    Handler.CALLnamesFROM, Handler.CALLoutcome, Handler.CALLidentifiersTO, 
-                    Handler.CALLidentifiersFROM)
+            Handler.CALLtimeStamp, Handler.CALLdirection, Handler.CALLduration,
+            Handler.CALLrolesTO, Handler.CALLrolesFROM, Handler.CALLnamesTO, 
+            Handler.CALLnamesFROM, Handler.CALLoutcome, Handler.CALLidentifiersTO, 
+            Handler.CALLidentifiersFROM)        
+        #self.show_elapsed_time(tic_write, 'Write CALL')
+
+#---    all parameters are lists containing data of the extracted CELL_TOWER
+#    
+        #tic_write = timeit.default_timer()
+        caseTrace.writeCalendar(Handler.CALENDARid, Handler.CALENDARstatus, 
+            Handler.CALENDARcategory, Handler.CALENDARsubject,
+            Handler.CALENDARdetails, Handler.CALENDARstartDate,
+            Handler.CALENDARendDate, Handler.CALENDARrepeatUntil, 
+            Handler.CALENDARrepeatDay, Handler.CALENDARrepeatInterval)        
+        #self.show_elapsed_time(tic_write, 'Write CALENDAR')
+
+#---    all parameters are lists containing data of the extracted CELL_TOWER
+#    
+        #tic_write = timeit.default_timer()
+        caseTrace.writeCell_Tower(Handler.CELL_TOWERid, Handler.CELL_TOWERstatus, 
+            Handler.CELL_TOWERlongitude, Handler.CELL_TOWERlatitude,
+            Handler.CELL_TOWERtimeStamp, Handler.CELL_TOWERmcc,
+            Handler.CELL_TOWERmnc, Handler.CELL_TOWERlac, Handler.CELL_TOWERcid,
+            Handler.CELL_TOWERnid, Handler.CELL_TOWERbid, Handler.CELL_TOWERsid)                
+        #self.show_elapsed_time(tic_write, 'Write CELL TOWER')
 
 #---    all parameters are lists containing data of the extracted CHAT
-#    
+#            
+        #tic_write = timeit.default_timer()        
         caseTrace.writeChat(Handler.CHATid, Handler.CHATstatus, Handler.CHATsource, 
-                    Handler.CHATpartyIdentifiers, Handler.CHATpartyNames, 
-                    Handler.CHATmsgIdentifiersFrom, Handler.CHATmsgNamesFrom, 
-                    Handler.CHATmsgIdentifiersTo, Handler.CHATmsgNamesTo,
-                    Handler.CHATmsgBodies, Handler.CHATmsgStatuses,
-                    Handler.CHATmsgOutcomes, Handler.CHATmsgTimeStamps, 
-                    Handler.CHATmsgAttachmentFilenames, Handler.CHATmsgAttachmentUrls)
+            Handler.CHATpartyIdentifiers, Handler.CHATpartyNames, 
+            Handler.CHATmsgIdentifiersFrom, Handler.CHATmsgNamesFrom, 
+            Handler.CHATmsgBodies, Handler.CHATmsgStatuses,
+            Handler.CHATmsgOutcomes, Handler.CHATmsgTimeStamps, 
+            Handler.CHATmsgAttachmentFilenames, Handler.CHATmsgAttachmentUrls)        
+        #self.show_elapsed_time(tic_write, 'Write CHAT')
+
+#---    all parameters are lists containing data of the extracted COOKIE
+#    
+        #tic_write = timeit.default_timer()
+        caseTrace.writeCookie(Handler.COOKIEid, Handler.COOKIEstatus, 
+            Handler.COOKIEsource, Handler.COOKIEname,
+            Handler.COOKIEvalue, Handler.COOKIEdomain,
+            Handler.COOKIEcreationTime, Handler.COOKIElastAccessTime, 
+            Handler.COOKIEexpiry)        
+        #self.show_elapsed_time(tic_write, 'Write COOKIE')
+
+#---    all parameters are lists containing data of the extracted COOKIE
+#    
+        #tic_write = timeit.default_timer()
+        caseTrace.writeDeviceEvent(Handler.DEVICE_EVENTid, Handler.DEVICE_EVENTstatus, 
+            Handler.DEVICE_EVENTtimeStamp, Handler.DEVICE_EVENTeventType,
+            Handler.DEVICE_EVENTvalue)        
+        #self.show_elapsed_time(tic_write, 'Write DEVICE EVENT')
 
 #---    all parameters are lists containing data of the extracted EMAIL
 #
+        #tic_write = timeit.default_timer()
         caseTrace.writeEmail(Handler.EMAILid, Handler.EMAILstatus, Handler.EMAILsource, 
-                    Handler.EMAILidentifierFROM, Handler.EMAILidentifiersTO, 
-                    Handler.EMAILidentifiersCC, Handler.EMAILidentifiersBCC, 
-                    Handler.EMAILbody, Handler.EMAILsubject,
-                    Handler.EMAILtimeStamp, Handler.EMAILattachmentsFilename)
+            Handler.EMAILidentifierFROM, Handler.EMAILidentifiersTO, 
+            Handler.EMAILidentifiersCC, Handler.EMAILidentifiersBCC, 
+            Handler.EMAILbody, Handler.EMAILsubject, Handler.EMAILtimeStamp, 
+            Handler.EMAILattachmentsFilename)        
+        #self.show_elapsed_time(tic_write, 'Write EMAIL')
+
+
+#---    all parameters are lists containing data of the extracted LOCATION
+#    
+        #tic_write = timeit.default_timer()
+        caseTrace.writeInstantMessage(Handler.INSTANT_MSGid, Handler.INSTANT_MSGstatus, 
+            Handler.INSTANT_MSGsource, Handler.INSTANT_MSGtimeStamp, 
+            Handler.INSTANT_MSGfromIdentifier, Handler.INSTANT_MSGfromName,
+            Handler.INSTANT_MSGtoIdentifier, Handler.INSTANT_MSGtoName, 
+            Handler.INSTANT_MSGsubject, Handler.INSTANT_MSGbody, Handler.INSTANT_MSGfolder, 
+            Handler.INSTANT_MSGtype, Handler.INSTANT_MSGapplication)        
+        #self.show_elapsed_time(tic_write, 'Write INSTANT MESSAGE')
+
+#---    all parameters are lists containing data of the extracted LOCATION
+#    
+        #tic_write = timeit.default_timer()
+        caseTrace.writeLocationDevice(Handler.LOCATIONid, Handler.LOCATIONstatus, 
+            Handler.LOCATIONlongitude, Handler.LOCATIONlatitude,
+            Handler.LOCATIONaltitude, Handler.LOCATIONtimeStamp, 
+            Handler.LOCATIONcategory)        
+        #self.show_elapsed_time(tic_write, 'Write LOCATION DEVICE')
+
+#---    all parameters are lists containing data of the extracted COOKIE
+#    
+        #tic_write = timeit.default_timer()
+        caseTrace.writeSearched_Item(Handler.SEARCHED_ITEMid, Handler.SEARCHED_ITEMstatus, 
+            Handler.SEARCHED_ITEMsource, Handler.SEARCHED_ITEMtimeStamp,
+            Handler.SEARCHED_ITEMvalue, Handler.SEARCHED_ITEMsearchResult)        
+        #self.show_elapsed_time(tic_write, 'Write SEARCHED ITEM')
+
+#---    all parameters are lists containing data of the extracted SOCIAL MEDIA ACTIVITY
+#    
+        #tic_write = timeit.default_timer()            
+        caseTrace.writeSocial_Media(Handler.SOCIAL_MEDIAid, Handler.SOCIAL_MEDIAstatus, 
+            Handler.SOCIAL_MEDIAsource, Handler.SOCIAL_MEDIAtimeStamp, 
+            Handler.SOCIAL_MEDIAbody, Handler.SOCIAL_MEDIAtitle, 
+            Handler.SOCIAL_MEDIAurl, Handler.SOCIAL_MEDIAidentifier, Handler.SOCIAL_MEDIAname, 
+            Handler.SOCIAL_MEDIAreactionsCount, Handler.SOCIAL_MEDIAsharesCount,
+            Handler.SOCIAL_MEDIAactivityType, Handler.SOCIAL_MEDIAcommentCount,
+            Handler.SOCIAL_MEDIAaccount)        
+        #self.show_elapsed_time(tic_write, 'Write SOCIAL MEDIA')
+
 
 # all parameters are lists containing data of the extracted WEB_PAGE
 #
+        #tic_write = timeit.default_timer()
         caseTrace.writeWebPages(Handler.WEB_PAGEid, Handler.WEB_PAGEstatus, Handler.WEB_PAGEsource, 
-                    Handler.WEB_PAGEurl, Handler.WEB_PAGEtitle, Handler.WEB_PAGEvisitCount,
-                    Handler.WEB_PAGElastVisited)
+            Handler.WEB_PAGEurl, Handler.WEB_PAGEtitle, Handler.WEB_PAGEvisitCount,
+            Handler.WEB_PAGElastVisited)        
+        #self.show_elapsed_time(tic_write, 'Write WEB PAGES')
+
+#---    all parameters are lists containing data of the extracted CELL_TOWER
+#    
+        #tic_write = timeit.default_timer()
+        caseTrace.writeWireless_Net(Handler.WIRELESS_NETid, Handler.WIRELESS_NETstatus, 
+            Handler.WIRELESS_NETlongitude, Handler.WIRELESS_NETlatitude,
+            Handler.WIRELESS_NETtimeStamp, Handler.WIRELESS_NETlastConnection,
+            Handler.WIRELESS_NETbssid, Handler.WIRELESS_NETssid)        
+        #self.show_elapsed_time(tic_write, 'Write WIRELESS NET')
 
 #---    write the context info: Device info, Forensic tool info, 
 #       Acquisition/Extraction investigative Actions, Peformer info
 #       deviceCreationTime is the Extraction start time
 #
+        #tic_write = timeit.default_timer()
         caseTrace.writeContextUfed(Handler.CONTEXTufedVersionText, 
             Handler.CONTEXTdeviceCreationTimeText, Handler.CONTEXTdeviceExtractionStartText,
             Handler.CONTEXTdeviceExtractionEndText, Handler.CONTEXTexaminerNameText,
-            Handler.CONTEXTdeviceBluetoothAddressText, Handler.CONTEXTdeviceBluetoothNameText,
-            Handler.CONTEXTdeviceIdText, Handler.CONTEXTdevicePhoneModelText, 
-            Handler.CONTEXTdeviceOsTypeText, Handler.CONTEXTdeviceOsVersionText, 
-            Handler.CONTEXTdevicePhoneVendorText, Handler.CONTEXTdeviceMacAddressText, 
-            Handler.CONTEXTdeviceIccidText, Handler.CONTEXTdeviceImsiText, 
-            Handler.CONTEXTdeviceImeiText, Handler.CONTEXTimagePath, Handler.CONTEXTimageSize, 
-            Handler.CONTEXTimageMetadataHashSHA, Handler.CONTEXTimageMetadataHashMD5)
+            Handler.CONTEXTimagePath, Handler.CONTEXTimageSize, 
+            Handler.CONTEXTimageMetadataHashSHA, Handler.CONTEXTimageMetadataHashMD5)        
+        #self.show_elapsed_time(tic_write, 'Write CONTEXT UFED')
 
 #---    this write a single line to complete the JSON output file
 #    
         caseTrace.writeLastLine()  
+        self.show_elapsed_time(tic_case_start, 'Generation CASE JSON-LD file')
 
         Handler.fOut.close()  
         return Handler
 
 
 class ExtractTraces(xml.sax.ContentHandler):
-    def __init__(self, baseLocalPath):
+    def __init__(self, baseLocalPath, verbose):
         self.fOut = ''
         self.lineXML = 0
         self.skipLine = False
         self.Observable = False
+        self.verbose = verbose
 
-        self.C_green  = '\033[32m'
-        self.C_grey  = '\033[37m'
-        self.C_red = '\033[31m'
-        self.C_cyan = '\033[36m'
-        self.C_end = '\033[0m'
+        self.C_GREEN  = '\033[32m'
+        self.C_GREY  = '\033[37m'
+        self.C_RED = '\033[31m'
+        self.C_CYAN = '\033[36m'
+        self.C_BLACK = '\033[0m'
 
-        # FILE section for the Chain of Evidence
+        #self.ARTIFACTmax = 1000000
+
+# FILE section for the Chain of Evidence
+#        
         self.TAGGED_FILESin = False
         self.TAGGED_FILESsystem = False
         self.TAGGED_FILESinFile = False
@@ -235,21 +377,66 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.EXTRA_INFOdictOffset = {}
         self.EXTRA_INFOdictNodeInfoId = {}
 
+#-- CALENDAR  section
+#                
+        self.CALENDARinModelType = False
+        self.CALENDARin = False
+        self.CALENDARinCategory = False
+        self.CALENDARinCategoryValue = False
+        self.CALENDARinSubject = False
+        self.CALENDARinSubjectValue = False
+        self.CALENDARinDetails = False
+        self.CALENDARinDetailsValue = False
+        self.CALENDARinStartDate = False
+        self.CALENDARinStartDateValue = False
+        self.CALENDARinEndDate = False
+        self.CALENDARinEndDateValue = False
+        self.CALENDARinRepeatUntil = False
+        self.CALENDARinRepeatUntilValue = False
+        self.CALENDARinRepeatDay = False
+        self.CALENDARinRepeatDayValue = False
+        self.CALENDARinRepeatInterval = False
+        self.CALENDARinRepeatIntervalValue = False
+        self.CALENDARinAttendees = False
+        self.CALENDARinAttachments = False
+
+        self.CALENDARtotal = 0
+        self.CALENDARcategoryText = ''
+        self.CALENDARsubjectText = ''
+        self.CALENDARdetailsText = ''
+        self.CALENDARstartDateText = ''
+        self.CALENDARendDateText = ''
+        self.CALENDARrepeatUntilText = ''
+        self.CALENDARrepeatDayText = ''
+        self.CALENDARrepeatIntervalText = ''
+
+        self.CALENDARdeleted = 0
+        self.CALENDARid = []
+        self.CALENDARcategory = []
+        self.CALENDARsubject = []
+        self.CALENDARdetails = []
+        self.CALENDARstartDate = []
+        self.CALENDARendDate = []
+        self.CALENDARrepeatUntil = []
+        self.CALENDARrepeatDay = []
+        self.CALENDARrepeatInterval = []
+        self.CALENDARstatus = []
+
 #--     CALL  section
-#        
-        self.CALLtrace = 'call'
+#           
+        self.CALLinModelType = False
         self.CALLin = False
         self.CALLinSource = False
         self.CALLinSourceValue = False
         self.CALLinDirection = False
         self.CALLinDirectionValue = False        
-        self.CALLinType = False
-        self.CALLinTypeValue = False        
-        self.CALLinOutcome = False
-        self.CALLinOutcomeValue = False
+        self.CALLinOutcomeValue = False        
+        self.CALLinDuration = False
         self.CALLinTimeStamp = False
         self.CALLinTimeStampValue = False
-        self.CALLinDuration = False
+        self.CALLinType = False
+        self.CALLinTypeValue = False        
+        self.CALLinOutcome = False        
         self.CALLinDurationValue = False
         self.CALLinParty = False
         self.CALLinIdentifier = False
@@ -299,35 +486,86 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CALLidentifiersTO = []
         self.CALLidentifiersFROM = []
 
+#-- CELL_TOWER  section
+#                
+        self.CELL_TOWERinModelType = False
+        self.CELL_TOWERin = False
+        self.CELL_TOWERinPosition = False
+        self.CELL_TOWERinLongitude = False
+        self.CELL_TOWERinLongitudeValue = False
+        self.CELL_TOWERinLatitude = False
+        self.CELL_TOWERinLatitudeValue = False
+        self.CELL_TOWERinTimeStamp = False
+        self.CELL_TOWERinTimeStampValue = False
+        self.CELL_TOWERinMCC = False
+        self.CELL_TOWERinMCCValue = False
+        self.CELL_TOWERinMNC = False
+        self.CELL_TOWERinMNCValue = False
+        self.CELL_TOWERinLAC = False
+        self.CELL_TOWERinLACValue = False
+        self.CELL_TOWERinCID = False
+        self.CELL_TOWERinCIDValue = False
+        self.CELL_TOWERinNID = False
+        self.CELL_TOWERinNIDValue = False
+        self.CELL_TOWERinBID = False
+        self.CELL_TOWERinBIDValue = False
+        self.CELL_TOWERinSID = False
+        self.CELL_TOWERinSIDValue = False
+
+        self.CELL_TOWERtotal = 0
+        self.CELL_TOWERlongitudeText = ''
+        self.CELL_TOWERlatitudeText = ''
+        self.CELL_TOWERtimeStampText = ''
+        self.CELL_TOWERmccText = ''
+        self.CELL_TOWERmncText = ''
+        self.CELL_TOWERlacText = ''
+        self.CELL_TOWERcidText = ''
+        self.CELL_TOWERnidText = ''
+        self.CELL_TOWERbidText = ''
+        self.CELL_TOWERsidText = ''
+
+        self.CELL_TOWERdeleted = 0
+        self.CELL_TOWERid = []
+        self.CELL_TOWERlongitude = []
+        self.CELL_TOWERlatitude = []
+        self.CELL_TOWERtimeStamp = []
+        self.CELL_TOWERmcc = []
+        self.CELL_TOWERmnc = []
+        self.CELL_TOWERlac = []
+        self.CELL_TOWERcid = []
+        self.CELL_TOWERnid = []
+        self.CELL_TOWERbid = []
+        self.CELL_TOWERsid = []
+        self.CELL_TOWERstatus = []
+
 #---    CHAT section
-#        
-        self.CHATtrace = "chat"
+#
+        self.CHATinModelType = False
         self.CHATin = False
         self.CHATinSource = False
         self.CHATinSourceValue = False
-        self.CHATinModel = False
         self.CHATinParty = False
         self.CHATinPartyIdentifier = False
         self.CHATinPartyIdentifierValue = False
         self.CHATinPartyName = False        
-        self.CHATinPartyNameValue = False 
-        self.CHATinMsg = False
-        self.CHATinMsgParty = False
+        self.CHATinPartyNameValue = False         
+        self.CHATinInstantMessage = False
+        self.CHATinMultiModelFieldParticipants = False
         self.CHATinMsgFrom = False
-        self.CHATinMsgTo = False
+        self.CHATinMultiModelFieldTo = False
         self.CHATinMsgIdentifierFrom = False
         self.CHATinMsgIdentifierFromValue = False
-        self.CHATinMsgIdentifierTo = False
-        self.CHATinMsgIdentifierToValue = False        
         self.CHATinMsgNameFrom = False
         self.CHATinMsgNameFromValue = False
-        self.CHATinMsgNameTo = False
-        self.CHATinMsgNameToValue = False
+        self.CHATinMultiModelFieldAttachments = False
+        self.CHATinModelFieldAttachment = False
         self.CHATinMsgAttachment = False
+        self.CHATinMultiModelFieldPhotos = False
         self.CHATinMsgContactPhoto = False
-        self.CHATinMsgCoordinate = False
         self.CHATinMsgExtraData = False
         self.CHATinMsgSharedContacts = False
+        self.CHATinMultiModelFieldSharedContacts = False
+        self.CHATinMultiModelFieldMessageExtraData = False
         self.CHATinMsgBody = False
         self.CHATinMsgBodyValue = False
         self.CHATinMsgOutcome = False
@@ -365,9 +603,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CHATpartyName = []
         self.CHATmsgIdentifierFrom = []
         self.CHATmsgNameFrom = []
-        self.CHATmsgNameTo = []
-        self.CHATmsgNamesTo = []
-        self.CHATmsgIdentifierTo = []
         self.CHATmsgAttachmentFilename = []
         self.CHATmsgAttachmentUrl = []
         self.CHATmsgBody = []
@@ -387,7 +622,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CHATpartyNames = []
         self.CHATmsgIdentifiersFrom = []
         self.CHATmsgNamesFrom = []
-        self.CHATmsgIdentifiersTo = []
         self.CHATmsgBodies = []
         self.CHATmsgStatuses = []
         self.CHATmsgOutcomes = []
@@ -396,9 +630,72 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CHATmsgAttachmentFilenames = []
         self.CHATmsgAttachmentUrls = [] 
 
-        # EMAIL section
-        self.EMAILtrace = 'email'
-        self.EMAILin = False        
+#-- COOKIE  section
+#                
+        self.COOKIEin = False
+        self.COOKIEinModelType = False
+        self.COOKIEinSource = False
+        self.COOKIEinSourceValue = False
+        self.COOKIEinName = False
+        self.COOKIEinNameValue = False
+        self.COOKIEinValue = False
+        self.COOKIEinValueValue = False
+        self.COOKIEinDomain = False
+        self.COOKIEinDomainValue = False
+        self.COOKIEinCreationTime = False
+        self.COOKIEinCreationTimeValue = False
+        self.COOKIEinLastAccessTime = False
+        self.COOKIEinLastAccessTimeValue = False
+        self.COOKIEinExpiry = False
+        self.COOKIEinExpiryValue = False
+
+        self.COOKIEtotal = 0
+        self.COOKIEsourceText = ''
+        self.COOKIEnameText = ''
+        self.COOKIEvalueText = ''
+        self.COOKIEdomainText = ''
+        self.COOKIEcreationTimeText = ''
+        self.COOKIElastAccessTimeText = ''
+        self.COOKIEexpiryText = ''
+
+        self.COOKIEdeleted = 0
+        self.COOKIEid = []
+        self.COOKIEsource = []
+        self.COOKIEname = []
+        self.COOKIEvalue = []
+        self.COOKIEdomain = []
+        self.COOKIEcreationTime = []
+        self.COOKIElastAccessTime = []
+        self.COOKIEexpiry = []
+        self.COOKIEstatus = []        
+
+#-- DEVICE_EVENT  section
+#                
+        self.DEVICE_EVENTinModelType = False
+        self.DEVICE_EVENTin = False
+        self.DEVICE_EVENTinTimeStamp = False
+        self.DEVICE_EVENTinTimeStampValue = False
+        self.DEVICE_EVENTinEventType = False
+        self.DEVICE_EVENTinEventTypeValue = False
+        self.DEVICE_EVENTinValue = False
+        self.DEVICE_EVENTinValueValue = False
+        
+        self.DEVICE_EVENTtotal = 0
+        self.DEVICE_EVENTtimeStampText = ''
+        self.DEVICE_EVENTeventTypeText = ''
+        self.DEVICE_EVENTvalueText = ''
+
+        self.DEVICE_EVENTdeleted = 0
+        self.DEVICE_EVENTid = []
+        self.DEVICE_EVENTtimeStamp = []
+        self.DEVICE_EVENTeventType = []
+        self.DEVICE_EVENTvalue = []
+        self.DEVICE_EVENTstatus = []
+        
+#-- EMAIL section
+#
+        self.EMAILinModelType = False
+        self.EMAILin = False
         self.EMAILinSource = False
         self.EMAILinSourceValue = False
         self.EMAILinModelFieldFROM = False
@@ -454,8 +751,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.EMAILidentifiersBCC = []
         self.EMAILattachmentsFilename = []
 
-        # SMS section 
-        self.SMStrace = 'sms'
+# SMS section 
+#
+        self.SMSinModelType = False
         self.SMSin = False
         self.SMSinSource = False
         self.SMSinSourceValue = False        
@@ -466,12 +764,13 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SMSinFolder = False
         self.SMSinFolderValue = False
 
-#---    Short Message Service Center
+        #---    Short Message Service Center, part of the mdelType type="SMS"
 #        
         self.SMSinSmsc = False
         self.SMSinSmscValue = False
 
         self.SMSinParty = False
+        self.SMSinAllTimeStamps = False
         self.SMSinPartyIdentifier = False
         self.SMSinPartyIdentifierValue = False
         self.SMSinPartyName = False
@@ -506,44 +805,243 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SMSpartyIdentifiers = []
         self.SMSpartyRoles = []
         self.SMSpartyNames = []
-        
+
+#-- INSTANT_MSG  section
+#        
+        self.INSTANT_MSGinModelType = False
+        self.INSTANT_MSGin = False
+        self.INSTANT_MSGinSource = False
+        self.INSTANT_MSGinSourceValue = False
+        self.INSTANT_MSGinPartyFrom = False
+        self.INSTANT_MSGinFromIdentifier = False 
+        self.INSTANT_MSGinFromIdentifierValue = False 
+        self.INSTANT_MSGinFromName = False 
+        self.INSTANT_MSGinFromNameValue = False 
+        self.INSTANT_MSGinPartyTo = False
+        self.INSTANT_MSGinToIdentifier = False 
+        self.INSTANT_MSGinToIdentifierValue = False 
+        self.INSTANT_MSGinToName = False 
+        self.INSTANT_MSGinToNameValue = False 
+        self.INSTANT_MSGinSubject = False
+        self.INSTANT_MSGinSubjectValue = False
+        self.INSTANT_MSGinBody = False
+        self.INSTANT_MSGinBodyValue = False
+        self.INSTANT_MSGinTimeStamp= False
+        self.INSTANT_MSGinTimeStampValue = False
+        self.INSTANT_MSGinAttachment = False
+        self.INSTANT_MSGinStatusMsg= False
+        self.INSTANT_MSGinStatusMsgValue = False
+        self.INSTANT_MSGinAttachments = False
+        self.INSTANT_MSGinSharedContacts = False
+        self.INSTANT_MSGinType = False
+        self.INSTANT_MSGinTypeValue = False
+        self.INSTANT_MSGinFolder = False
+        self.INSTANT_MSGinFolderValue = False
+        self.INSTANT_MSGinApplication = False
+        self.INSTANT_MSGinApplicationValue = False
+
+
+        self.INSTANT_MSGtotal = 0
+        self.INSTANT_MSGdeleted = 0
+        self.INSTANT_MSGsourceText = ''
+        self.INSTANT_MSGfromIdentifierText = ''
+        self.INSTANT_MSGfromNameText = ''
+        self.INSTANT_MSGtoIdentifierText = ''
+        self.INSTANT_MSGtoNameText = ''
+        self.INSTANT_MSGsubjectText = ''
+        self.INSTANT_MSGbodyText = ''
+        self.INSTANT_MSGtimeStampText = ''
+        self.INSTANT_MSGstatusMsgText  = ''        
+        self.INSTANT_MSGtypeText = ''
+        self.INSTANT_MSGfolderText = ''
+        self.INSTANT_MSGapplicationText = ''
+
+        self.INSTANT_MSGid = []
+        self.INSTANT_MSGstatus = []
+        self.INSTANT_MSGsource = []
+        self.INSTANT_MSGfromIdentifier = []
+        self.INSTANT_MSGfromName = []
+        self.INSTANT_MSGtoIdentifier = []   # it contains values separated by @@@
+        self.INSTANT_MSGtoName = []         # it contains values separated by @@@
+        self.INSTANT_MSGsubject = []
+        self.INSTANT_MSGbody = []
+        self.INSTANT_MSGtimeStamp = []
+        self.INSTANT_MSGtype = []
+        self.INSTANT_MSGstatusMsg = []
+        self.INSTANT_MSGfolder = []
+        self.INSTANT_MSGapplication = []
+
+
+#-- LOCATION (Device Location) section
+#                
+        self.LOCATIONinModelType = False
+        self.LOCATIONin = False
+        self.LOCATIONinPosition = False
+        self.LOCATIONinLongitude = False
+        self.LOCATIONinLongitudeValue = False
+        self.LOCATIONinLatitude = False
+        self.LOCATIONinLatitudeValue = False
+        self.LOCATIONinAltitude = False
+        self.LOCATIONinAltitudeValue = False
+        self.LOCATIONinTimeStamp = False
+        self.LOCATIONinTimeStampValue = False
+        self.LOCATIONinCategory = False
+        self.LOCATIONinCategoryValue = False
+        self.LOCATIONtic = 0 
+        self.LOCATIONtoc = 0 
+
+        self.LOCATIONtotal = 0        
+        self.LOCATIONrun = 0
+        self.LOCATIONlongitudeText = ''
+        self.LOCATIONlatitudeText = ''
+        self.LOCATIONaltitudeText = ''
+        self.LOCATIONtimeStampText = ''
+        self.LOCATIONcategoryText = ''
+
+        self.LOCATIONdeleted = 0
+        self.LOCATIONid = []
+        self.LOCATIONlongitude = []
+        self.LOCATIONlatitude = []
+        self.LOCATIONaltitude = []
+        self.LOCATIONtimeStamp =[]
+        self.LOCATIONcategory = []
+        self.LOCATIONstatus = []
 
 # CONTACT section
 #        
-        self.CONTACTtrace = 'contact'
         self.CONTACTin = False
-        self.CONTACTinPhoneEntries = False
-        self.CONTACTinPhoneNum = False
-        self.CONTACTinPhoneNumValue = False
+        self.CONTACTinModelType = False
+        self.CONTACTinSource = False
+        self.CONTACTinSourceValue = False
         self.CONTACTinName = False
         self.CONTACTinNameValue = False
-        self.CONTACTinElementModelIgnore = False
+        self.CONTACTinMultiModelFieldPhotos = False
+        self.CONTACTinMultiModelFieldEntries = False
+        self.CONTACTinModelPhoneNumber = False
+        self.CONTACTinModelUserId = False
+        self.CONTACTinUserId = False
+        self.CONTACTinUserIdValue = False
+        self.CONTACTinPhoneNum = False
+        self.CONTACTinPhoneNumValue = False
+        self.CONTACTinModelProfilePicture = False
+        self.CONTACTinAccount = False
+        self.CONTACTinAccountValue = False
+        self.CONTACTinMultiFieldInteractionStatuses = False
+
         self.CONTACTtotal = 0
         self.CONTACTdeleted = 0
-        self.CONTACTnameText = ''
+        self.CONTACTsourceText = ''
+        self.CONTACTnameText = ''        
         self.CONTACTphoneNumText = ''
+        self.CONTACTuserIdText = ''
+        self.CONTACTaccountText = ''
+        
         self.CONTACTid = []
         self.CONTACTstatus = []
         self.CONTACTname = []
-
-#---    the CONTACTphoneNum list contains the phone numbers of a CONTACT. 
-#       At the end of CONTACT elements processing, this list is appended to 
-#       the below  CONTACTphoneNums list
-#        
+        self.CONTACTsource = []
+        self.CONTACTuserId = []
         self.CONTACTphoneNum = []
+        self.CONTACTaccount = []
 
-#---    list of list: the first list contains all contacts, each item of this list, 
-#       that is, each contact may contain more than one phone number.
-#       so CONTACTphoneNums[i] is the list of phone numbers of the contact i,
-#       all the phone numbers of the CONTACT i is contained in the list
-#       CONTACTphoneNums[i][j]
-#
         self.CONTACTphoneNums = []
+        self.CONTACTuserIds = []
 
+
+#-- SEARCHED ITEM  section
+#                
+        self.SEARCHED_ITEMin = False
+        self.SEARCHED_ITEMinModelType = False
+        self.SEARCHED_ITEMinSource = False
+        self.SEARCHED_ITEMinSourceValue = False
+        self.SEARCHED_ITEMinTimeStamp = False
+        self.SEARCHED_ITEMinTimeStampValue = False
+        self.SEARCHED_ITEMinValue = False
+        self.SEARCHED_ITEMinValueValue = False
+        self.SEARCHED_ITEMinSearchResult = False
+        self.SEARCHED_ITEMinSearchResultValue = False
+
+        self.SEARCHED_ITEMtotal = 0
+        self.SEARCHED_ITEMsourceText = ''
+        self.SEARCHED_ITEMtimeStampText = ''
+        self.SEARCHED_ITEMvalueText = ''
+        self.SEARCHED_ITEMsearchResultText = ''
+
+        self.SEARCHED_ITEMdeleted = 0
+        self.SEARCHED_ITEMid = []
+        self.SEARCHED_ITEMsource = []
+        self.SEARCHED_ITEMtimeStamp = []
+        self.SEARCHED_ITEMvalue = []
+        self.SEARCHED_ITEMstatus = []  
+        self.SEARCHED_ITEMsearchResult = []  
+
+#-- SOCIAL MEDIA ACTIVITY (direct interactions with the social media platform)
+#                
+        self.SOCIAL_MEDIAinModelType = False
+        self.SOCIAL_MEDIAin = False
+        self.SOCIAL_MEDIAinSource = False
+        self.SOCIAL_MEDIAinSourceValue = False
+        self.SOCIAL_MEDIAinAttachments = False
+        self.SOCIAL_MEDIAinTimeStamp = False
+        self.SOCIAL_MEDIAinTimeStampValue = False
+        self.SOCIAL_MEDIAinBody = False
+        self.SOCIAL_MEDIAinBodyValue = False
+        self.SOCIAL_MEDIAinTitle = False
+        self.SOCIAL_MEDIAinTitleValue = False
+        self.SOCIAL_MEDIAinUrl = False
+        self.SOCIAL_MEDIAinUrlValue = False
+        self.SOCIAL_MEDIAinAuthor = False
+        self.SOCIAL_MEDIAinIdentifier = False
+        self.SOCIAL_MEDIAinIdentifierValue = False
+        self.SOCIAL_MEDIAinName = False
+        self.SOCIAL_MEDIAinNameValue = False
+        self.SOCIAL_MEDIAinTaggedParties = False
+        self.SOCIAL_MEDIAinReactionsCount = False
+        self.SOCIAL_MEDIAinReactionsCountValue = False
+        self.SOCIAL_MEDIAinSharesCount = False
+        self.SOCIAL_MEDIAinSharesCountValue = False
+        self.SOCIAL_MEDIAinActivityType = False
+        self.SOCIAL_MEDIAinActivityTypeValue = False
+        self.SOCIAL_MEDIAinCommentCount = False
+        self.SOCIAL_MEDIAinCommentCountValue = False
+        self.SOCIAL_MEDIAinAccount = False
+        self.SOCIAL_MEDIAinAccountValue = False
+
+
+        self.SOCIAL_MEDIAtotal = 0        
+        self.SOCIAL_MEDIAsourceText = ''
+        self.SOCIAL_MEDIAtimeStampText = ''
+        self.SOCIAL_MEDIAbodyText = ''
+        self.SOCIAL_MEDIAtitleText = ''
+        self.SOCIAL_MEDIAurlText = ''
+        self.SOCIAL_MEDIAidentifierText = ''
+        self.SOCIAL_MEDIAnameText = ''
+        self.SOCIAL_MEDIAreactionsCountText = ''
+        self.SOCIAL_MEDIAsharesCountText = ''
+        self.SOCIAL_MEDIAactivityTypeText = ''
+        self.SOCIAL_MEDIAcommentCountText = ''
+        self.SOCIAL_MEDIAaccountText = ''
+
+        self.SOCIAL_MEDIAdeleted = 0
+        self.SOCIAL_MEDIAid = []
+        self.SOCIAL_MEDIAsource = []
+        self.SOCIAL_MEDIAtimeStamp = []
+        self.SOCIAL_MEDIAbody = []
+        self.SOCIAL_MEDIAtitle = []
+        self.SOCIAL_MEDIAurl = []
+        self.SOCIAL_MEDIAidentifier = []
+        self.SOCIAL_MEDIAname = []
+        self.SOCIAL_MEDIAreactionsCount = []
+        self.SOCIAL_MEDIAsharesCount = []
+        self.SOCIAL_MEDIAactivityType = []
+        self.SOCIAL_MEDIAcommentCount = []
+        self.SOCIAL_MEDIAaccount = []
+
+        self.SOCIAL_MEDIAstatus = []
 
 #---    WEB HISTORY section
 #        
-        self.WEB_PAGEtrace = 'url'
+        self.WEB_PAGEinModelType = False
         self.WEB_PAGEin = False
         self.WEB_PAGEinSource = False
         self.WEB_PAGEinSourceValue = False
@@ -571,10 +1069,47 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.WEB_PAGEvisitCount = []
         self.WEB_PAGElastVisited = []
         
-        # USER ACCOUNT section, it is for detecting username account
-        # of the owner's phone number for all application installed on
-        # the device (i.e. account Whatsapp that includes the phone number, 
-        # Skype, Telegram, Snapchat, etc.)
+#-- WIRELESS_NET  section
+#         
+        self.WIRELESS_NETin = False
+        self.WIRELESS_NETinModelType = False
+        self.WIRELESS_NETinPosition = False
+        self.WIRELESS_NETinLongitude = False
+        self.WIRELESS_NETinLongitudeValue = False
+        self.WIRELESS_NETinLatitude = False
+        self.WIRELESS_NETinLatitudeValue = False
+        self.WIRELESS_NETinTimeStamp = False
+        self.WIRELESS_NETinTimeStampValue = False
+        self.WIRELESS_NETinLastConnection = False
+        self.WIRELESS_NETinLastConnectionValue = False
+        self.WIRELESS_NETinBssid = False
+        self.WIRELESS_NETinBssidValue = False
+        self.WIRELESS_NETinSsid = False
+        self.WIRELESS_NETinSsidValue = False
+
+        self.WIRELESS_NETtotal = 0
+        self.WIRELESS_NETlongitudeText = ''
+        self.WIRELESS_NETlatitudeText = ''
+        self.WIRELESS_NETtimeStampText = ''
+        self.WIRELESS_NETlastConnectionText = ''
+        self.WIRELESS_NETbssidText = ''
+        self.WIRELESS_NETssidText = ''
+
+        self.WIRELESS_NETdeleted = 0
+        self.WIRELESS_NETid = []
+        self.WIRELESS_NETlongitude = []
+        self.WIRELESS_NETlatitude = []
+        self.WIRELESS_NETtimeStamp = []
+        self.WIRELESS_NETlastConnection = []
+        self.WIRELESS_NETbssid = []
+        self.WIRELESS_NETssid = []
+        self.WIRELESS_NETstatus = []        
+
+#---    USER ACCOUNT section, it is for detecting username account
+#       of the owner's phone number for all application installed on
+#       the device (i.e. account Whatsapp that includes the phone number, 
+#       Skype, Telegram, Snapchat, etc.)
+#        
         self.U_ACCOUNTin = False
         self.U_ACCOUNTinUsername = False
         self.U_ACCOUNTinUsernameValue = False
@@ -661,6 +1196,16 @@ class ExtractTraces(xml.sax.ContentHandler):
         text = text.replace('\n', ' ')
         return text
 
+    def __cleanPhoneNumber(self, phoneNum):
+        phonePattern = '([0-9]+)'
+        #phoneNum = phoneNum.strip().replace(' ', '').replace('+', '00')
+        phoneNum = phoneNum.strip().replace(' ', '')
+        phoneMatch = re.search(phonePattern, phoneNum)
+        if phoneMatch:
+            phoneNum = phoneMatch.group()
+            
+        return phoneNum
+
     def createOutFile(self, filename):
         self.fOut = codecs.open(filename, 'w', encoding='utf8')
 
@@ -682,12 +1227,13 @@ class ExtractTraces(xml.sax.ContentHandler):
                         
 
     def printObservable(self, oName, oCount):        
-        line =  'processing traces --> ' + oName +  ' n. ' +  \
-            str(oCount) + self.C_end
-        if oCount == 1:
-            print(self.C_green + '\n' + line, end='\r') 
-        else:
-            print(self.C_green + line, end='\r') 
+        line =  'Extracting artifacts --> ' + oName +  ' n. ' +  \
+            str(oCount) + self.C_BLACK
+        if self.verbose:            
+            if oCount == 1:
+                print(self.C_GREEN + '\n' + line, end='\r') 
+            else:
+                print(self.C_GREEN + line, end='\r') 
 
     def __startElementModelCALL(self, attrValue, CALLid, CALLstate):
         if attrValue == 'Call':
@@ -698,51 +1244,104 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.storeTraceStatus(self.CALLstatus, CALLstate, self.CALLdeleted)
             self.skipLine = True 
             self.Observable = True 
+        elif attrValue == 'Party':                                
+            self.CALLinParty = True 
 
-    def __startElementModelCHAT(self, attrValue, CHATid, CHATstate):
-        if attrValue == 'Chat':                
+    def __startElementModelCALENDAR(self, attrValue, CALENDARid, CALENDARstate):
+        if attrValue == 'CalendarEntry':
+            self.CALENDARin = True
+            self.CALENDARtotal += 1
+            self.printObservable('CALENDAR', self.CALENDARtotal)
+            self.CALENDARid.append(CALENDARid)
+            self.storeTraceStatus(self.CALENDARstatus, CALENDARstate, 
+                self.CALENDARdeleted)
+            self.skipLine = True 
+            self.Observable = True 
+#---    these assignments guarantee that each array has the same size
+#       in case one of the corresponding XML Element is not present in 
+#       the report
+#
+            self.CALENDARcategory.append('')
+            self.CALENDARsubject.append('')
+            self.CALENDARdetails.append('')
+            self.CALENDARstartDate.append('')
+            self.CALENDARendDate.append('')
+            self.CALENDARrepeatUntil.append('')
+            self.CALENDARrepeatDay.append('')
+            self.CALENDARrepeatInterval.append('')
+
+    def __startElementModelCELL_TOWER(self, attrValue, CELL_TOWERid, CELL_TOWERstate):
+        if attrValue == 'CellTower':
+            self.CELL_TOWERin = True
+            self.CELL_TOWERtotal += 1
+            self.printObservable('CELL_TOWER', self.CELL_TOWERtotal)
+            self.CELL_TOWERid.append(CELL_TOWERid)
+            self.storeTraceStatus(self.CELL_TOWERstatus, CELL_TOWERstate, 
+                self.CELL_TOWERdeleted)
+            self.skipLine = True 
+            self.Observable = True 
+#---    these assignments guarantee that each array has the same size
+#       in case one of the corresponding XML Element is not present in 
+#       the report
+#
+            self.CELL_TOWERlongitude.append('')
+            self.CELL_TOWERlatitude.append('')
+            self.CELL_TOWERtimeStamp.append('')
+            self.CELL_TOWERmcc.append('')
+            self.CELL_TOWERmnc.append('')
+            self.CELL_TOWERlac.append('')
+            self.CELL_TOWERcid.append('')
+            self.CELL_TOWERnid.append('')
+            self.CELL_TOWERbid.append('')
+            self.CELL_TOWERsid.append('')
+
+    def __startElementModelCHAT(self, attrType, CHATid, CHATstate):
+        if self.CHATinMultiModelFieldPhotos or \
+            self.CHATinMultiModelFieldTo or \
+            self.CHATinMultiModelFieldSharedContacts or \
+            self.CHATinMultiModelFieldMessageExtraData:
+            pass 
+        elif attrType == 'Chat':                
             self.CHATin = True
             self.CHATtotal += 1
             self.printObservable('CHAT', self.CHATtotal)
             self.CHATid.append(CHATid)
             self.storeTraceStatus(self.CHATstatus, CHATstate, self.CHATdeleted)
             self.skipLine = True 
-            self.Observable = True             
-
-        if attrValue == 'InstantMessage': 
-            if self.CHATin:
-                self.CHATinMsg = True
-                # status of the Chat Message, deleted or intact
-                self.CHATmsgStatus.append(CHATstate)
-                self.CHATmsgNum += 1
-
-        if attrValue == 'Attachment':
-            if self.CHATin:                
-                self.CHATinMsgAttachment = True
-
-        if attrValue == 'ContactPhoto':
-            if self.CHATin:
-                self.CHATinMsgContactPhoto = True
-
-        if attrValue == 'Coordinate':
-            if self.CHATin:
-                self.CHATinMsgCoordinate = True
-
-        if attrValue == 'MessageExtraData':
-            if self.CHATin:
-                self.CHATinMsgExtraData = True
-
-        if attrValue == 'SharedContacts':
-            if self.CHATin:
-                self.CHATinMsgSharedContacts = True        
-
-        if attrValue == 'InstantMessage': 
-            if self.CHATin:
-                self.CHATinMsg = True
-                self.CHATmsgNum += 1
-
+            self.Observable = True 
+            self.CHATsource.append('')                                       
+        elif attrType == 'Party':
+            if self.CHATinMultiModelFieldParticipants:
+                self.CHATinParty = True
+        elif attrType == 'InstantMessage': 
+            self.CHATinInstantMessage = True
+            self.CHATmsgStatus.append(CHATstate)
+            self.CHATmsgNum += 1   
+            self.CHATmsgIdentifierFrom.append('')
+            self.CHATmsgNameFrom.append('')
+#---    the body is initialised with a space text, instead of an empty value. 
+#       This allows to iterate on this item, otherwise in case the body is empty
+#       it will be ignored and no MessageFacet will be generated
+#                
+            self.CHATmsgBody.append(' ')
+            self.CHATmsgOutcome.append('')
+            self.CHATmsgTimeStamp.append('')
+            self.CHATmsgAttachmentFilename.append('')
+            self.CHATmsgAttachmentUrl.append('')
+        elif attrType == 'Attachment':
+            self.CHATinMsgAttachment = True
+                
     def __startElementModelCONTACT(self, attrValue, CONTACTid, CONTACTstate):
-        if attrValue == 'Contact':
+        if self.CONTACTinMultiModelFieldPhotos:
+            pass            
+        elif self.CONTACTinMultiModelFieldEntries:
+            if attrValue == 'UserID':
+                self.CONTACTinModelUserId = True
+            elif attrValue == "PhoneNumber":
+                self.CONTACTinModelPhoneNumber  = True
+            elif attrValue == "ProfilePicture":
+                self.CONTACTinModelProfilePicture = True # to be ignored
+        elif attrValue == 'Contact':
             self.CONTACTin = True
             self.CONTACTtotal += 1
             self.printObservable('CONTACT', self.CONTACTtotal)
@@ -750,14 +1349,50 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.Observable = True 
             self.CONTACTid.append(CONTACTid)
             self.storeTraceStatus(self.CONTACTstatus, CONTACTstate, self.CONTACTdeleted)        
-        
-        else:
-            if attrValue == "PhoneNumber":
-                if self.CONTACTin:
-                    self.CONTACTinPhoneEntries  = True
-            else:
-                if self.CONTACTin:
-                    self.CONTACTinElementModelIgnore = True
+            self.CONTACTsource.append('')
+            self.CONTACTname.append('')                
+            self.CONTACTaccount.append('')
+
+    def __startElementModelCOOKIE(self, attrValue, COOKIEid, COOKIEstate):
+        if attrValue == 'Cookie':
+            self.COOKIEin = True
+            self.COOKIEtotal += 1
+            self.printObservable('COOKIE', self.COOKIEtotal)
+            self.COOKIEid.append(COOKIEid)
+            self.storeTraceStatus(self.COOKIEstatus, COOKIEstate, 
+                self.COOKIEdeleted)
+            self.skipLine = True 
+            self.Observable = True 
+#---    these assignments guarantee that each array has the same size
+#       in case one of the corresponding XML Element is not present in 
+#       the report
+#
+            self.COOKIEsource.append('')
+            self.COOKIEname.append('')
+            self.COOKIEvalue.append('')
+            self.COOKIEdomain.append('')
+            self.COOKIEcreationTime.append('')
+            self.COOKIElastAccessTime.append('')
+            self.COOKIEexpiry.append('')
+
+
+    def __startElementModelDEVICE_EVENT(self, attrValue, DEVICE_EVENTid, DEVICE_EVENTstate):
+        if attrValue == 'DeviceEvent':
+            self.DEVICE_EVENTin = True
+            self.DEVICE_EVENTtotal += 1
+            self.printObservable('DEVICE_EVENT', self.DEVICE_EVENTtotal)
+            self.DEVICE_EVENTid.append(DEVICE_EVENTid)
+            self.storeTraceStatus(self.DEVICE_EVENTstatus, DEVICE_EVENTstate, 
+                self.DEVICE_EVENTdeleted)
+            self.skipLine = True 
+            self.Observable = True 
+#---    these assignments guarantee that each array has the same size
+#       in case one of the corresponding XML Element is not present in 
+#       the report
+#
+            self.DEVICE_EVENTtimeStamp.append('')
+            self.DEVICE_EVENTeventType.append('')
+            self.DEVICE_EVENTvalue.append('')
 
     def __startElementModelEMAIL(self, attrValue, EMAILid, EMAILstate):
         if attrValue == 'Email':                
@@ -769,6 +1404,77 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.skipLine = True  
             self.Observable = True 
 
+            self.EMAILsource.append('')
+            self.EMAILidentifierFROM.append('')
+            self.EMAILbody.append('')
+            self.EMAILsubject.append('')
+            self.EMAILtimeStamp.append('')
+
+
+    def __startElementModelINSTANT_MSG(self, attrValue, INSTANT_MSGid, INSTANT_MSGstate):
+        if attrValue == 'InstantMessage':
+            self.INSTANT_MSGin = True
+            self.INSTANT_MSGtotal += 1
+            self.printObservable('INSTANT_MSG', self.INSTANT_MSGtotal)
+            self.INSTANT_MSGid.append(INSTANT_MSGid)
+            self.storeTraceStatus(self.INSTANT_MSGstatus, INSTANT_MSGstate, 
+                self.INSTANT_MSGdeleted)
+            self.skipLine = True 
+            self.Observable = True 
+#---    these assignments guarantee that each array has the same size
+#       in case one of the corresponding XML Element is not present in 
+#       the report
+#
+            self.INSTANT_MSGsource.append('')
+            self.INSTANT_MSGfromIdentifier.append('')
+            self.INSTANT_MSGfromName.append('')
+            self.INSTANT_MSGtoIdentifier.append('')
+            self.INSTANT_MSGtoName.append('')
+            self.INSTANT_MSGsubject.append('')
+            self.INSTANT_MSGbody.append('')
+            self.INSTANT_MSGtimeStamp.append('')
+            self.INSTANT_MSGstatusMsg.append('')
+            self.INSTANT_MSGtype.append('')
+            self.INSTANT_MSGfolder.append('')
+            self.INSTANT_MSGapplication.append('')
+
+    def __startElementModelLOCATION(self, attrValue, LOCATIONid, LOCATIONstate):
+#---    in some mobile phone the number of device location exceeds 350.000 items,
+#       therefore the processing time is quite long and the JSON-LD file size is
+#       huge. In these circumstances, only the first self.ARTIFACTmax will be inlcuded
+#       in the conversion process
+#        
+        if attrValue == 'Location':
+            self.LOCATIONtotal += 1
+            #if self.ARTIFACTmax > self.LOCATIONtotal:                
+            self.LOCATIONin = True                                                    
+            self.printObservable('LOCATION', self.LOCATIONtotal)
+            self.LOCATIONid.append(LOCATIONid)
+            self.storeTraceStatus(self.LOCATIONstatus, LOCATIONstate,
+                self.LOCATIONdeleted)
+            self.skipLine = True
+            self.Observable = True                
+            self.LOCATIONlongitude.append('')
+            self.LOCATIONlatitude.append('')
+            self.LOCATIONaltitude.append('')
+            self.LOCATIONtimeStamp.append('')
+            self.LOCATIONcategory.append('')      
+
+    def __startElementModelSEARCHED_ITEM(self, attrValue, SEARCHED_ITEMid, SEARCHED_ITEMstate):
+        if attrValue == 'SearchedItem':
+            self.SEARCHED_ITEMin = True
+            self.SEARCHED_ITEMtotal += 1
+            self.printObservable('SEARCHED_ITEM', self.SEARCHED_ITEMtotal)
+            self.SEARCHED_ITEMid.append(SEARCHED_ITEMid)
+            self.storeTraceStatus(self.SEARCHED_ITEMstatus, SEARCHED_ITEMstate, 
+                self.SEARCHED_ITEMdeleted)
+            self.skipLine = True 
+            self.Observable = True 
+            
+            self.SEARCHED_ITEMsource.append('')
+            self.SEARCHED_ITEMtimeStamp.append('')
+            self.SEARCHED_ITEMvalue.append('')
+            self.SEARCHED_ITEMsearchResult.append('')
 
     def __startElementModelSMS(self, attrValue, SMSid, SMSstate):
         if attrValue == 'SMS':                
@@ -780,6 +1486,30 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.skipLine = True 
             self.Observable = True  
 
+    def __startElementModelSOCIAL_MEDIA(self, attrValue, SOCIAL_MEDIAid, SOCIAL_MEDIAstate):
+        if attrValue == 'SocialMediaActivity':
+            self.SOCIAL_MEDIAtotal += 1
+            self.SOCIAL_MEDIAin = True                                                    
+            self.printObservable('SOCIAL_MEDIA', self.SOCIAL_MEDIAtotal)
+            self.SOCIAL_MEDIAid.append(SOCIAL_MEDIAid)
+            self.storeTraceStatus(self.SOCIAL_MEDIAstatus, SOCIAL_MEDIAstate,
+                self.SOCIAL_MEDIAdeleted)
+            self.skipLine = True
+            self.Observable = True
+
+            self.SOCIAL_MEDIAsource.append('')
+            self.SOCIAL_MEDIAtimeStamp.append('')
+            self.SOCIAL_MEDIAbody.append('')
+            self.SOCIAL_MEDIAtitle.append('')
+            self.SOCIAL_MEDIAurl.append('')
+            self.SOCIAL_MEDIAidentifier.append('')
+            self.SOCIAL_MEDIAname.append('')
+            self.SOCIAL_MEDIAreactionsCount.append('')
+            self.SOCIAL_MEDIAsharesCount.append('')
+            self.SOCIAL_MEDIAactivityType.append('')
+            self.SOCIAL_MEDIAcommentCount.append('')
+            self.SOCIAL_MEDIAaccount.append('')
+
     def __startElementModelU_ACCOUNT(self, attrValue):
         if attrValue == 'UserAccount':
             self.U_ACCOUNTin = True
@@ -787,17 +1517,16 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.printObservable('U_ACCOUNT', self.U_ACCOUNTtotal)
             self.skipLine = True  
             self.Observable = True 
-
-        if attrValue == "ContactPhoto":
+        elif attrValue == "ContactPhoto":
             if self.U_ACCOUNTin:
                 self.U_ACCOUNTinContactPhoto = True
-        if attrValue == "ContactEntry":
+        elif attrValue == "ContactEntry":
             if self.U_ACCOUNTin:
                 self.U_ACCOUNTinContactEntry = True
-        if attrValue == "EmailAddress":
+        elif attrValue == "EmailAddress":
             if self.U_ACCOUNTin:
                 self.U_ACCOUNTinEmailAddress = True
-        if attrValue == "UserID":
+        elif attrValue == "UserID":
             if self.U_ACCOUNTin:
                 self.U_ACCOUNTinUserID = True
 
@@ -812,157 +1541,281 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.skipLine = True 
             self.Observable = True  
 
-    def __startElementModelFieldCHAT(self, attrValue):
-        self.CHATinModel = True
-        if self.CHATinMsg:
-            if attrValue == 'From':
-                self.CHATinMsgFrom = True
+    def __startElementModelWIRELESS_NET(self, attrValue, WIRELESS_NETid, WIRELESS_NETstate):
+        if attrValue == 'WirelessNetwork':
+            self.WIRELESS_NETtotal += 1
+            #if self.ARTIFACTmax > self.WIRELESS_NETtotal:                
+            self.WIRELESS_NETin = True                                        
+            self.printObservable('WIRELESS_NET', self.WIRELESS_NETtotal)
+            self.WIRELESS_NETid.append(WIRELESS_NETid)
+            self.storeTraceStatus(self.WIRELESS_NETstatus, WIRELESS_NETstate, 
+                self.WIRELESS_NETdeleted)
+            self.skipLine = True 
+            self.Observable = True 
 
-#---    not always the From/To Identifier and Name are present, so
-#       in order to maintain the same number of items, the current
-#       item is set to empty values 
-#                
-            if attrValue == 'To':
-                self.CHATinMsgTo = True
+            self.WIRELESS_NETlongitude.append('')
+            self.WIRELESS_NETlatitude.append('')
+            self.WIRELESS_NETtimeStamp.append('')
+            self.WIRELESS_NETlastConnection.append('')
+            self.WIRELESS_NETbssid.append('')
+            self.WIRELESS_NETssid.append('')
 
-#---    the element modelField with attribute name=From or To is
-#       always present, but it may occur that there is no descendants
-#       elements below. The ChatmsgNum variable takes trace of the number
-#       of message, within a given Chat, that is being processed
-#               
-    def __startElementModelFieldEMAIL(self, attrValue):
-        if self.EMAILin:
-            if attrValue == 'From':
-                self.EMAILinModelFieldFROM = True
+    def __startElementMultiModelFieldCALENDAR(self, attrValue):
+        if self.CALENDARin:
+            if attrValue == 'Attendees':
+                self.CALENDARinAttendees = True
+            elif attrValue == 'Attachments':
+                self.CALENDARinAttachments = True
+
+    def __startElementMultiModelFieldCONTACT(self, attrValue):
+        if self.CONTACTin:  
+            if attrValue == 'Photos':
+                self.CONTACTinMultiModelFieldPhotos = True
+            elif attrValue == 'Entries':
+                self.CONTACTinMultiModelFieldEntries = True
+
+    def __startElementMultiModelFieldEMAIL(self, attrValue):
+        if self.EMAILin:            
             if attrValue == 'To':
                 self.EMAILinMultiModelFieldTO = True
-            if attrValue == 'Cc':
+                self.EMAILidentifierTO.append('')
+            elif attrValue == 'Cc':
                 self.EMAILinMultiModelFieldCC = True
-            if attrValue == 'Bcc':
+                self.EMAILidentifierCC.append('')
+            elif attrValue == 'Bcc':
                 self.EMAILinMultiModelFieldBCC = True
-            if attrValue == 'Attachments':
+                self.EMAILidentifierBCC.append('')
+            elif attrValue == 'Attachments':
                 self.EMAILinMultiModelFieldAttachments = True
+                self.EMAILattachmentFilename.append('')
 
-    def __startElementModelFieldSMS(self, attrValue):
-        if self.SMSin:
-            if attrValue == 'Parties':
-                self.SMSinParty = True 
+    def __startElementModelFieldCELL_TOWER(self, attrValue):
+        if attrValue == 'Position':
+            self.CELL_TOWERinPosition = True
 
+    def __startElementMultiModelFieldCHAT(self, attrValue):
+        if attrValue == 'Participants':
+            self.CHATinMultiModelFieldParticipants = True
+        elif attrValue == 'Photos':
+            self.CHATinMultiModelFieldPhotos = True
+        elif attrValue == 'Attachments':
+            self.CHATinMultiModelFieldAttachments = True
+        elif attrValue == 'SharedContacts':
+            self.CHATinMultiModelFieldSharedContacts = True
+        elif attrValue == 'MessageExtraData':
+            self.CHATinMultiModelFieldMessageExtraData = True
+        elif attrValue == 'To':
+            self.CHATinMultiModelFieldTo = True
+
+    def __startElementMultiModelFieldINSTANT_MSG(self, attrValue):
+        if self.INSTANT_MSGin:
+            if attrValue == 'To':
+                self.INSTANT_MSGinPartyTo = True
+            elif attrValue == 'Attachments':
+                self.INSTANT_MSGinAttachments = True
+            elif attrValue == 'SharedContacts':
+                self.INSTANT_MSGinSharedContacts = True
+            
+    def __startElementMultiModelFieldSOCIAL_MEDIA(self, attrValue):
+        if self.SOCIAL_MEDIAin:
+            if attrValue == 'Attachments':
+                self.SOCIAL_MEDIAinAttachments = True
+            elif attrValue == 'TaggedParties':
+                self.SOCIAL_MEDIAinTaggedParties = True
+
+    def __startElementModelFieldCHAT(self, attrName): 
+        if self.CHATinInstantMessage:
+            if attrName == 'From':
+                self.CHATinMsgFrom = True
+            if attrName == 'Attachment':
+                self.CHATinModelFieldAttachment = True
+              
+    def __startElementModelFieldEMAIL(self, attrValue):
+        if attrValue == 'From':
+            self.EMAILinModelFieldFROM = True
+
+    def __startElementModelFieldLOCATION(self, attrName):
+        if attrName == 'Position':
+            self.LOCATIONinPosition = True
+
+    def __startElementModelFieldSOCIAL_MEDIA(self, attrValue):
+        if attrValue == 'Author':
+            self.SOCIAL_MEDIAinAuthor = True
+
+    def __startElementModelFieldINSTANT_MSG(self, attrValue):
+        if attrValue == 'From':
+            self.INSTANT_MSGinPartyFrom = True
+        elif attrValue == 'Attachment':
+            self.INSTANT_MSGinAttachment = True
+                
+    def __startElementMultiModelFieldSMS(self, attrValue):
+        if attrValue == 'Parties':
+            self.SMSinParty = True 
+        elif attrValue == 'AllTimeStamps':
+            self.SMSinAllTimeStamps = True 
+
+    def __startElementModelFieldWIRELESS_NET(self, attrValue):
+        if attrValue == 'Position':
+            self.WIRELESS_NETinPosition = True
+    
     def __startElementFieldCALL(self, attrValue):
-        if self.CALLin:
-            if attrValue == 'Source':
-                if self.CALLinParty:
-                    pass
-                else:
-                    self.CALLinSource = True
-            
-            if attrValue == 'Direction':
-                self.CALLinDirection = True
-
-            if attrValue == 'Type':
-                self.CALLinType = True
-
-            if attrValue == 'Status':
-                if self.CALLinParty:
-                    pass
-                else:
-                    self.CALLinOutcome = True
-
-            if attrValue == 'TimeStamp':
-                self.CALLinTimeStamp = True                       
-            
-            if attrValue == 'Duration':
-                self.CALLinDuration = True                        
-
-#---    fields inside the Party element
-#            
-            if attrValue == 'Role':
-                self.CALLinRole = True
-            
-            if attrValue == 'Name':
-                self.CALLinName = True
-            
+        if self.CALLinParty:
             if attrValue == 'Identifier':
                 self.CALLinIdentifier = True
+            elif attrValue == 'Role':
+                self.CALLinRole = True            
+            elif attrValue == 'Name':
+                self.CALLinName = True            
+        else:
+            if attrValue == 'Source':
+                self.CALLinSource = True            
+            elif attrValue == 'Direction':
+                self.CALLinDirection = True
+            elif attrValue == 'Type':
+                self.CALLinType = True
+            elif attrValue == 'Status':                
+                self.CALLinOutcome = True
+            elif attrValue == 'TimeStamp':
+                self.CALLinTimeStamp = True                       
+            elif attrValue == 'Duration':
+                self.CALLinDuration = True
+            
+    def __startElementFieldCALENDAR(self, attrValue):
+        if attrValue == 'Category':
+            self.CALENDARinCategory = True
+        elif attrValue == 'Subject':
+            self.CALENDARinSubject = True               
+        elif attrValue == 'Details':
+            self.CALENDARinDetails = True
+        elif attrValue == 'StartDate':
+            self.CALENDARinStartDate = True
+        elif attrValue == 'EndDate':
+            self.CALENDARinEndDate= True
+        elif attrValue == 'RepeatUntil':
+            self.CALENDARinRepeatUntil = True
+        elif attrValue == 'RepeatDay':
+            self.CALENDARinRepeatDay = True
+        elif attrValue == 'RepeatInterval':
+            self.CALENDARinRepeatUntil = True
+
+    def __startElementFieldCELL_TOWER(self, attrValue):
+        if attrValue == 'Longitude':
+            self.CELL_TOWERinLongitude = True
+        elif attrValue == 'Latitude':
+            self.CELL_TOWERinLatitude = True
+        elif attrValue == 'TimeStamp':
+            self.CELL_TOWERinTimeStamp = True
+        elif attrValue == 'MCC':
+            self.CELL_TOWERinMCC = True
+        elif attrValue == 'LAC':
+            self.CELL_TOWERinLAC = True
+        elif attrValue == 'CID':
+            self.CELL_TOWERinCID = True
+        elif attrValue == 'NID':
+            self.CELL_TOWERinNID = True
+        elif attrValue == 'BID':
+            self.CELL_TOWERinBID = True
+        elif attrValue == 'SID':
+            self.CELL_TOWERinSID = True
+        elif attrValue == 'MCC':
+            self.CELL_TOWERinMCC = True
+
+    def __startElementFieldDEVICE_EVENT(self, attrValue):
+        if attrValue == 'StartTime':
+            self.DEVICE_EVENTinTimeStamp = True
+        elif attrValue == 'EventType':
+            self.DEVICE_EVENTinEventType = True
+        elif attrValue == 'Value':
+            self.DEVICE_EVENTinValue = True
 
     def __startElementFieldCHAT(self, attrValue):
-        if self.CHATinMsg:                                             
+        if self.CHATinModelType:            
             if attrValue == 'Identifier':
                 if self.CHATinMsgFrom:
                     self.CHATinMsgIdentifierFrom = True
-                if self.CHATinMsgTo:
-                    self.CHATinMsgIdentifierTo = True
-            if attrValue == 'Name':
+                elif self.CHATinParty:
+                    self.CHATinPartyIdentifier = True
+            elif attrValue == 'Name':
                 if self.CHATinMsgFrom:
                     self.CHATinMsgNameFrom = True
-                if self.CHATinMsgTo:
-                    self.CHATinMsgNameTo = True
-            if attrValue == 'Body':
+                elif self.CHATinParty:
+                    self.CHATinPartyName = True   
+            elif attrValue == 'Body':
                 self.CHATinMsgBody = True
-            if attrValue == 'TimeStamp':
+            elif attrValue == 'TimeStamp':
                 self.CHATinMsgTimeStamp = True
-            if attrValue == 'Status':
+            elif attrValue == 'Status':
                 self.CHATinMsgOutcome = True
-
-            if self.CHATinMsgAttachment:
-                if attrValue =='Filename':                    
-                    self.CHATinMsgAttachmentFilename = True
-                if attrValue =='URL':
+            elif attrValue =='Filename':
+                if self.CHATinMsgAttachment:
+                    self.CHATinMsgAttachmentFilename = True                
+            elif attrValue =='URL':
+                if self.CHATinMsgAttachment:
                     self.CHATinMsgAttachmentUrl = True
-        else:
-            if self.CHATinParty:
-                if attrValue == 'Name': 
-                    self.CHATinPartyName = True
-                if attrValue == 'Identifier': 
-                    self.CHATinPartyIdentifier = True
-            else:
-                if self.CHATin :
-                        if attrValue == 'Source':
-                            if not self.CHATinModel:
-                                self.CHATinSource = True
+            elif attrValue == 'Source':
+                if not self.CHATinInstantMessage:
+                    self.CHATinSource = True
 
     def __startElementFieldCONTACT(self, attrValue):
-        if self.CONTACTin:
-            if self.CONTACTinPhoneEntries:
-                if attrValue == 'Value':
-                    self.CONTACTinPhoneNum = True 
-            else:
-                if attrValue == 'Name':
-                    self.CONTACTinName = True 
+        if (self.CONTACTinMultiModelFieldPhotos or  
+            self.CONTACTinModelProfilePicture):
+            pass 
+        elif self.CONTACTinModelUserId:
+            if attrValue == 'Value':
+                self.CONTACTinUserId = True 
+        elif self.CONTACTinModelPhoneNumber:
+            if attrValue == 'Value':
+                self.CONTACTinPhoneNum = True
+        else:
+            if attrValue == 'Source':
+                self.CONTACTinSource = True
+            elif attrValue == 'Name':
+                self.CONTACTinName = True                
+            elif attrValue == 'Account':
+                self.CONTACTinAccount = True
+
+    def __startElementFieldCOOKIE(self, attrValue):
+        if attrValue == 'Source':
+            self.COOKIEinSource = True
+        elif attrValue == 'Name':
+            self.COOKIEinName = True
+        elif attrValue == 'Value':
+            self.COOKIEinValue = True
+        elif attrValue == 'Domain':
+            self.COOKIEinDomain = True
+        elif attrValue == 'CreationTime':
+            self.COOKIEinCreationTime = True
+        elif attrValue == 'LastAccessTime':
+            self.COOKIEinLastAccessTime = True
+        elif attrValue == 'Expiry':
+            self.COOKIEinExpiry = True
 
     def __startElementFieldEMAIL(self, attrValue):
-        if self.EMAILin:
-            if attrValue == 'Source':
-                if (self.EMAILinModelFieldFROM or \
-                    self.EMAILinMultiModelFieldTO or \
-                    self.EMAILinMultiModelFieldCC or \
-                    self.EMAILinMultiModelFieldBCC or \
-                    self.EMAILinMultiModelFieldAttachments):
-                    pass
-                else:
-                    self.EMAILinSource = True
-
-            if attrValue == 'Subject':
-                self.EMAILinSubject = True
-            
+        if self.EMAILinModelFieldFROM:
             if attrValue == 'Identifier':
-                if self.EMAILinModelFieldFROM:
-                    self.EMAILinIdentifierFROM = True
-                if self.EMAILinMultiModelFieldTO:
-                    self.EMAILinIdentifierTO = True
-                if self.EMAILinMultiModelFieldCC:
-                    self.EMAILinIdentifierCC = True
-                if self.EMAILinMultiModelFieldBCC:
-                    self.EMAILinIdentifierBCC = True
-
+                self.EMAILinIdentifierFROM = True
+        elif self.EMAILinMultiModelFieldTO:
+            if attrValue == 'Identifier':
+                self.EMAILinIdentifierTO = True
+        elif self.EMAILinMultiModelFieldCC:
+            if attrValue == 'Identifier':
+                self.EMAILinIdentifierCC = True
+        elif self.EMAILinMultiModelFieldBCC:
+            if attrValue == 'Identifier':
+                self.EMAILinIdentifierBCC = True
+        elif self.EMAILinMultiModelFieldAttachments:
             if attrValue == 'Filename':
-                if self.EMAILinMultiModelFieldAttachments:
-                    self.EMAILinAttachmentFilename = True
-            
-            if attrValue == 'Body':
+                self.EMAILinAttachmentFilename = True
+            #if attrValue == 'URL': # not processed so far
+                #pass 
+        else:
+            if attrValue == 'Source':
+                self.EMAILinSource = True
+            elif attrValue == 'Subject':
+                self.EMAILinSubject = True
+            elif attrValue == 'Body':
                 self.EMAILinBody = True
-            
-            if attrValue == 'TimeStamp':
+            elif attrValue == 'TimeStamp':
                 self.EMAILinTimeStamp = True
     
     def __startElementFieldCONTEXT(self, attrValue):
@@ -970,101 +1823,198 @@ class ExtractTraces(xml.sax.ContentHandler):
             if attrValue == 'ExaminerName':
                 self.CONTEXTinExaminerNameValue = True
 
+    def __startElementFieldINSTANT_MSG(self, attrValue):
+        if attrValue == 'Source':
+            self.INSTANT_MSGinSource = True
+        elif attrValue == 'Identifier':
+            if self.INSTANT_MSGinPartyFrom:
+                self.INSTANT_MSGinFromIdentifier = True
+            elif self.INSTANT_MSGinPartyTo:
+                self.INSTANT_MSGinToIdentifier = True
+        elif attrValue == 'Name':
+            if self.INSTANT_MSGinPartyFrom:
+                self.INSTANT_MSGinFromName = True
+            elif self.INSTANT_MSGinPartyTo:
+                self.INSTANT_MSGinToName = True
+        elif attrValue == 'Subject':
+            self.INSTANT_MSGinSubject = True
+        elif attrValue == 'Body':
+            self.INSTANT_MSGinBody = True
+        elif attrValue == 'TimeStamp':
+            self.INSTANT_MSGinTimeStamp = True
+        elif self.INSTANT_MSGinAttachments:
+            pass
+        elif self.INSTANT_MSGinAttachment:
+            pass
+        elif self.INSTANT_MSGinSharedContacts:
+            pass
+        elif attrValue == 'Status':
+            self.INSTANT_MSGinStatusMsg = True
+        elif attrValue == 'Type':
+            self.INSTANT_MSGinType = True
+        elif attrValue == 'Folder':
+            self.INSTANT_MSGinFolder = True
+        elif attrValue == 'SourceApplication':
+            self.INSTANT_MSGinApplication = True
+
+    def __startElementFieldLOCATION(self, attrValue):
+        if attrValue == 'Longitude':
+            self.LOCATIONinLongitude = True
+        elif attrValue == 'Latitude':
+            self.LOCATIONinLatitude = True
+        elif attrValue == 'Elevation':
+            self.LOCATIONinAltitude = True
+        elif attrValue == 'TimeStamp':
+            self.LOCATIONinTimeStamp = True
+        elif attrValue == 'Category':
+            self.LOCATIONinCategory = True
+
+    def __startElementFieldSEARCHED_ITEM(self, attrValue):
+        if attrValue == 'Source':
+            self.SEARCHED_ITEMinSource = True
+        elif attrValue == 'TimeStamp':
+            self.SEARCHED_ITEMinTimeStamp = True
+        elif attrValue == 'Value':
+            self.SEARCHED_ITEMinValue = True
+
     def __startElementFieldSMS(self, attrValue):
-        if self.SMSin:
-            if self.SMSinParty:
-                if attrValue == 'Identifier':
-                    self.SMSinPartyIdentifier = True            
-                if attrValue == 'Role':
-                    self.SMSinPartyRole = True            
-                if attrValue == 'Name':
-                    self.SMSinPartyName = True
-            else:
-                if attrValue == 'Source':
-                    self.SMSinSource = True
-                if attrValue == 'TimeStamp':
-                    self.SMSinTimeStamp = True
-                if attrValue == 'Body':
-                    self.SMSinBody = True
-                if attrValue == 'Folder':
-                    self.SMSinFolder = True
-                if attrValue == 'SMSC':
-                    self.SMSinSmsc = True
+        if self.SMSinParty:
+            if attrValue == 'Identifier':
+                self.SMSinPartyIdentifier = True
+            elif attrValue == 'Role':
+                self.SMSinPartyRole = True      
+            elif attrValue == 'Name':
+                self.SMSinPartyName = True
+        else:
+            if attrValue == 'Source':
+                self.SMSinSource = True
+            elif attrValue == 'TimeStamp':
+                self.SMSinTimeStamp = True
+            elif attrValue == 'Body':
+                self.SMSinBody = True
+            elif attrValue == 'Folder':
+                self.SMSinFolder = True
+            elif attrValue == 'SMSC':
+                self.SMSinSmsc = True
              
+    def __startElementFieldSOCIAL_MEDIA(self, attrValue):
+        if not self.SOCIAL_MEDIAinAttachments:
+            if attrValue == 'Source':
+                self.SOCIAL_MEDIAinSource = True
+            elif attrValue == 'TimeStamp':
+                self.SOCIAL_MEDIAinTimeStamp = True
+            elif attrValue == 'Body':
+                self.SOCIAL_MEDIAinBody = True
+            elif attrValue == 'Title':
+                self.SOCIAL_MEDIAinTitle = True
+            elif attrValue == 'Url':
+                self.SOCIAL_MEDIAinUrl = True
+            elif attrValue == 'ReactionsCount':
+                self.SOCIAL_MEDIAinReactionsCount = True
+            elif attrValue == 'SharesCount':
+                self.SOCIAL_MEDIAinSharesCount = True
+            elif attrValue == 'SocialActivityType':
+                self.SOCIAL_MEDIAinActivityType = True
+            elif attrValue == 'CommentCount':
+                self.SOCIAL_MEDIAinCommentCount = True
+            elif attrValue == 'Account':
+                self.SOCIAL_MEDIAinAccount = True
+            elif self.SOCIAL_MEDIAinAuthor:
+                if attrValue == 'Identifier':
+                    self.SOCIAL_MEDIAinIdentifier = True
+                if attrValue == 'Name':
+                    self.SOCIAL_MEDIAinName = True
 
     def __startElementFieldU_ACCOUNT(self, attrValue):
-        if self.U_ACCOUNTin:
-            if self.U_ACCOUNTinContactPhoto:
-                return(0)
-            if self.U_ACCOUNTinEmailAddress:                
-                return(0)
-            if self.U_ACCOUNTinUserID:
-                return(0)
-            if attrValue == 'Source':
-                self.U_ACCOUNTinSource = True
-            if attrValue == 'Name':
-                self.U_ACCOUNTinName = True
-            if attrValue == 'Username':
-                self.U_ACCOUNTinUsername = True
+        if self.U_ACCOUNTinContactPhoto:
+            return(0)
+        elif self.U_ACCOUNTinEmailAddress:
+            return(0)
+        elif self.U_ACCOUNTinUserID:
+            return(0)
+        elif attrValue == 'Source':
+            self.U_ACCOUNTinSource = True
+        elif attrValue == 'Name':
+            self.U_ACCOUNTinName = True
+        elif attrValue == 'Username':
+            self.U_ACCOUNTinUsername = True
 
-    def __startElementFieldWEB_PAGE(self, attrValue):
-        if self.WEB_PAGEin:
-            if attrValue == 'Source':
-                self.WEB_PAGEinSource = True
-            if attrValue == 'Title':
-                self.WEB_PAGEinTitle = True
-            if attrValue == 'Url':
-                self.WEB_PAGEinUrl = True
-            if attrValue == 'LastVisited':
-                self.WEB_PAGEinLastVisited = True
-            if attrValue == 'VisitCount':
-                self.WEB_PAGEinVisitCount = True
+    def __startElementFieldWEB_PAGE(self, attrName):        
+        if attrName == 'Source':
+            self.WEB_PAGEinSource = True
+        elif attrName == 'Title':
+            self.WEB_PAGEinTitle = True
+        elif attrName == 'Url':
+            self.WEB_PAGEinUrl = True
+        elif attrName == 'LastVisited':
+            self.WEB_PAGEinLastVisited = True
+        elif attrName == 'VisitCount':
+            self.WEB_PAGEinVisitCount = True
+        
+
+    def __startElementFieldWIRELESS_NET(self, attrValue):
+        if attrValue == 'Longitude':
+            self.WIRELESS_NETinLongitude = True
+        elif attrValue == 'Latitude':
+            self.WIRELESS_NETinLatitude = True
+        elif attrValue == 'TimeStamp':
+            self.WIRELESS_NETinTimeStamp = True
+        elif attrValue == 'LastConnection':
+            self.WIRELESS_NETinLastConnection = True
+        elif attrValue == 'BSSId':
+            self.WIRELESS_NETinBssid = True
+        elif attrValue == 'SSId':
+            self.WIRELESS_NETinSsid = True
 
     def __startElementItemCONTEXT(self, attrValue):
         if self.CONTEXTinAdditionalFields:
             if attrValue == 'DeviceInfoCreationTime':
                 self.CONTEXTinDeviceCreationTimeValue = True
-            if attrValue == 'UFED_PA_Version':
+            elif attrValue == 'UFED_PA_Version':
                 self.CONTEXTinUfedVersionValue = True
         
         if self.CONTEXTinExtractionData:
             if attrValue == 'DeviceInfoExtractionStartDateTime':
                 self.CONTEXTinDeviceExtractionStart = True
-            if attrValue == 'DeviceInfoExtractionEndDateTime':
+            elif attrValue == 'DeviceInfoExtractionEndDateTime':
                 self.CONTEXTinDeviceExtractionEnd = True
 
-        if self.CONTEXTinDeviceInfo:
+        if self.CONTEXTinDeviceInfo:            
             if attrValue == 'DeviceInfoOSVersion':
                 self.CONTEXTinDeviceOsVersionValue = True
-            if attrValue == 'DeviceInfoDetectedPhoneVendor':
+            elif attrValue == 'DeviceInfoDetectedPhoneVendor':
                 self.CONTEXTinDevicePhoneVendorValue = True
-            if attrValue == 'DeviceInfoDetectedPhoneModel':
+            elif attrValue == 'DeviceInfoDetectedPhoneModel':
                 self.CONTEXTinDevicePhoneModelValue = True
-            if attrValue in ('DeviceInfoAppleID', 'DeviceInfoAndroidID'):
+            elif attrValue in ('DeviceInfoAppleID', 'DeviceInfoAndroidID'):
                 self.CONTEXTinDeviceIdValue = True
-            if attrValue in ('Indirizzo MAC', 'Mac Address', 'DeviceInfoWiFiMACAddress'):
+            elif attrValue in ('Indirizzo MAC', 'Mac Address', 'DeviceInfoWiFiMACAddress'):
                 self.CONTEXTinDeviceMacAddressValue = True
-            if attrValue == 'ICCID':
+            elif attrValue == 'ICCID':
                 self.CONTEXTinDeviceIccidValue = True
-            if attrValue in ('MSISDN', 'LastUsedMSISDN'):
+            elif attrValue in ('MSISDN', 'LastUsedMSISDN'):
                 self.CONTEXTinDeviceMsisdnValue = True
-            if attrValue in ('Indirizzo MAC Bluetooth', 'Bluetooth MAC Address', 
+            elif attrValue in ('Indirizzo MAC Bluetooth', 'Bluetooth MAC Address', 
                 'DeviceInfoBluetoothDeviceAddress'):
                 self.CONTEXTinDeviceBluetoothAddressValue = True
-            if attrValue == 'DeviceInfoBluetoothDeviceName':
+            elif attrValue == 'DeviceInfoBluetoothDeviceName':
                 self.CONTEXTinDeviceBluetoothName = True 
-            if attrValue == 'IMSI':
+            elif attrValue == 'IMSI':
                 self.CONTEXTinDeviceImsiValue = True
-            if attrValue == 'IMEI':
+            elif attrValue == 'IMEI':
                 self.CONTEXTinDeviceImeiValue = True
-            if attrValue == 'DeviceInfoOSType':
+            elif attrValue == 'DeviceInfoOSType':
                 self.CONTEXTinDeviceOsTypeValue = True
 
         if self.CONTEXTinImageMetadataHash:
             if attrValue == 'SHA256':
                 self.CONTEXTinImageMetadataHashValueSHA = True
-            if attrValue =='MD5':
+            elif attrValue =='MD5':
                 self.CONTEXTinImageMetadataHashValueMD5 = True
+
+    def __startElementMultiFieldSEARCHED_ITEM(self, attrValue):
+        if attrValue == 'SearchResults':
+            self.SEARCHED_ITEMinSearchResult = True
 
     def __startElementItemTAGGED_FILES(self, attrValue):
         if self.TAGGED_FILESinFile:
@@ -1073,9 +2023,9 @@ class ExtractTraces(xml.sax.ContentHandler):
             else:
                 if attrValue == 'MD5':
                     self.TAGGED_FILESinMD5 = True
-                if attrValue == 'Tags':
+                elif attrValue == 'Tags':
                     self.TAGGED_FILESinTags = True
-                if attrValue == 'Local Path':
+                elif attrValue == 'Local Path':
                     self.TAGGED_FILESinLocalPath = True
         
         if self.TAGGED_FILESinMetadata:
@@ -1084,143 +2034,293 @@ class ExtractTraces(xml.sax.ContentHandler):
             else:
                 if attrValue == 'Inode Number':
                     self.TAGGED_FILESinInodeNumber = True
-                if attrValue == 'CoreFileSystemFileSystemNodeModifyTime':
+                elif attrValue == 'CoreFileSystemFileSystemNodeModifyTime':
                     self.TAGGED_FILESinInodeTimeModify = True
-                if attrValue == 'Owner GID':
+                elif attrValue == 'Owner GID':
                     self.TAGGED_FILESinOwnerGID = True
-                if attrValue == 'Owner UID':
+                elif attrValue == 'Owner UID':
                     self.TAGGED_FILESinOwnerUID = True
-                if attrValue == 'ExifEnumGPSLatitudeRef':
+                elif attrValue == 'ExifEnumGPSLatitudeRef':
                     self.TAGGED_FILESinExifLatitudeRef = True 
-                if attrValue == 'ExifEnumGPSLatitude':
+                elif attrValue == 'ExifEnumGPSLatitude':
                     self.TAGGED_FILESinExifLatitude = True
-                if attrValue == 'ExifEnumGPSLongitudeRef':
+                elif attrValue == 'ExifEnumGPSLongitudeRef':
                     self.TAGGED_FILESinExifLongitudeRef = True
-                if attrValue == 'ExifEnumGPSLongitude':
+                elif attrValue == 'ExifEnumGPSLongitude':
                     self.TAGGED_FILESinExifLongitude = True
-                if attrValue == 'ExifEnumGPSAltitude':
+                elif attrValue == 'ExifEnumGPSAltitude':
                     self.TAGGED_FILESinExifAltitude = True
-                if attrValue == 'ExifEnumMake':
+                elif attrValue == 'ExifEnumMake':
                     self.TAGGED_FILESinExifMake = True
-                if attrValue == 'ExifEnumModel':
+                elif attrValue == 'ExifEnumModel':
                     self.TAGGED_FILESinExifModel = True
-
-
 
     def __startElementValueCALL(self):
         if self.CALLinSource:
             self.CALLinSourceValue = True
-        if self.CALLinDirection:
+        elif self.CALLinDirection:
             self.CALLinDirectionValue = True
-        if self.CALLinType:
-            self.CALLinTypeValue = True
-        if self.CALLinDuration:
-            self.CALLinDurationValue = True
-        if self.CALLinOutcome:
-            self.CALLinOutcomeValue = True
-        if self.CALLinTimeStamp:
+        elif self.CALLinTimeStamp:
             self.CALLinTimeStampValue = True
-        if self.CALLinRole:
-            self.CALLinRoleValue = True
-        if self.CALLinName:
-            self.CALLinNameValue = True
-        if self.CALLinIdentifier:
-            #print('CALLinIdentifierValue')
+        elif self.CALLinType:
+            self.CALLinTypeValue = True
+        elif self.CALLinDuration:
+            self.CALLinDurationValue = True
+        elif self.CALLinOutcome:
+            self.CALLinOutcomeValue = True
+        elif self.CALLinIdentifier:
             self.CALLinIdentifierValue = True
+        elif self.CALLinRole:
+            self.CALLinRoleValue = True
+        elif self.CALLinName:
+            self.CALLinNameValue = True            
+
+    def __startElementValueCALENDAR(self):
+        if self.CALENDARinCategory:
+            self.CALENDARinCategoryValue = True
+        elif self.CALENDARinSubject:
+            self.CALENDARinSubjectValue = True
+        elif self.CALENDARinDetails:
+            self.CALENDARinDetailsValue = True
+        elif self.CALENDARinStartDate:
+            self.CALENDARinStartDateValue = True
+        elif self.CALENDARinEndDate:
+            self.CALENDARinEndDateValue = True
+        elif self.CALENDARinRepeatUntil:
+            self.CALENDARinRepeatUntilValue = True
+        elif self.CALENDARinRepeatDay:
+            self.CALENDARinRepeatDayValue = True
+        elif self.CALENDARinRepeatInterval:
+            self.CALENDARinRepeatIntervalValue = True        
+
+    def __startElementValueCELL_TOWER(self):
+        if self.CELL_TOWERinLongitude:
+            self.CELL_TOWERinLongitudeValue = True
+        elif self.CELL_TOWERinLatitude:
+            self.CELL_TOWERinLatitudeValue = True
+        elif self.CELL_TOWERinTimeStamp:
+            self.CELL_TOWERinTimeStampValue = True
+        elif self.CELL_TOWERinMCC:
+            self.CELL_TOWERinMCCValue = True
+        elif self.CELL_TOWERinMNC:
+            self.CELL_TOWERinMNCValue = True
+        elif self.CELL_TOWERinLAC:
+            self.CELL_TOWERinLACValue = True
+        elif self.CELL_TOWERinCID:
+            self.CELL_TOWERinCIDValue = True
+        elif self.CELL_TOWERinNID:
+            self.CELL_TOWERinNIDValue = True
+        elif self.CELL_TOWERinBID:
+            self.CELL_TOWERinBIDValue = True
+        elif self.CELL_TOWERinSID:
+            self.CELL_TOWERinSIDValue = True
 
     def __startElementValueCONTACT(self):
-        if self.CONTACTinName:
-            self.CONTACTinNameValue = True            
-        if self.CONTACTinPhoneNum:
+        if self.CONTACTinSource:
+            self.CONTACTinSourceValue = True
+        elif self.CONTACTinName:
+            self.CONTACTinNameValue = True
+        elif self.CONTACTinUserId:
+            self.CONTACTinUserIdValue = True
+        elif self.CONTACTinPhoneNum:
             self.CONTACTinPhoneNumValue = True
+        elif self.CONTACTinAccount:
+            self.CONTACTinAccountValue = True
 
     def __startElementValueCHAT(self, attrValue):
         if self.CHATinSource:
             self.CHATinSourceValue = True
-        if self.CHATinPartyIdentifier:
+        elif self.CHATinPartyIdentifier:
             self.CHATinPartyIdentifierValue = True
-        if self.CHATinPartyName:
+        elif self.CHATinPartyName:
             self.CHATinPartyNameValue = True
-        if self.CHATinMsgNameFrom:
+        elif self.CHATinMsgNameFrom:
             self.CHATinMsgNameFromValue = True
-        if self.CHATinMsgIdentifierFrom:
+        elif self.CHATinMsgIdentifierFrom:
             self.CHATinMsgIdentifierFromValue = True
-        if self.CHATinMsgNameTo:
-            self.CHATinMsgNameToValue = True
-        if self.CHATinMsgIdentifierTo:
-            self.CHATinMsgIdentifierToValue = True
-        if self.CHATinMsgBody:
+        elif self.CHATinMsgBody:
             self.CHATinMsgBodyValue = True
-        if self.CHATinMsgOutcome:
+        elif self.CHATinMsgOutcome:
             if attrValue == "MessageStatus":
                 self.CHATinMsgOutcomeValue = True
-        if self.CHATinMsgTimeStamp:
+        elif self.CHATinMsgTimeStamp:
             self.CHATinMsgTimeStampValue = True
-        if self.CHATinMsgAttachmentFilename:
+        elif self.CHATinMsgAttachmentFilename:
             self.CHATinMsgAttachmentFilenameValue = True
-        if self.CHATinMsgAttachmentUrl:
+        elif self.CHATinMsgAttachmentUrl:
             self.CHATinMsgAttachmentUrlValue = True
 
+    def __startElementValueCOOKIE(self):
+        if self.COOKIEinSource:
+            self.COOKIEinSourceValue = True
+        elif self.COOKIEinName:
+            self.COOKIEinNameValue = True
+        elif self.COOKIEinValue:
+            self.COOKIEinValueValue = True
+        elif self.COOKIEinDomain:
+            self.COOKIEinDomainValue = True
+        elif self.COOKIEinCreationTime:
+            self.COOKIEinCreationTimeValue = True
+        elif self.COOKIEinLastAccessTime:
+            self.COOKIEinLastAccessTimeValue = True
+        elif self.COOKIEinExpiry:
+            self.COOKIEinExpiryValue = True
+
+    def __startElementValueDEVICE_EVENT(self):
+        if self.DEVICE_EVENTinTimeStamp:
+            self.DEVICE_EVENTinTimeStampValue = True
+        elif self.DEVICE_EVENTinEventType:
+            self.DEVICE_EVENTinEventTypeValue = True
+        elif self.DEVICE_EVENTinValue:
+            self.DEVICE_EVENTinValueValue = True
+        
+
     def __startElementValueEMAIL(self):
-        if self.EMAILin:
-            if self.EMAILinIdentifierFROM:
-                self.EMAILinIdentifierFROMvalue = True
-            if self.EMAILinIdentifierTO:
-                self.EMAILinIdentifierTOvalue = True
-            if self.EMAILinIdentifierCC:
-                self.EMAILinIdentifierCCvalue = True
-            if self.EMAILinIdentifierBCC:
-                self.EMAILinIdentifierBCCvalue = Tru
-            if self.EMAILinSource:
-                self.EMAILinSourceValue = True
-            if self.EMAILinBody:
-                self.EMAILinBodyValue = True
-            if self.EMAILinSubject:
-                self.EMAILinSubjectValue = True
-            if self.EMAILinTimeStamp:
-                self.EMAILinTimeStampValue = True
-            if self.EMAILinAttachmentFilename:
-                self.EMAILinAttachmentFilenameValue = True
+        if self.EMAILinIdentifierFROM:
+            self.EMAILinIdentifierFROMvalue = True
+        elif self.EMAILinIdentifierTO:
+            self.EMAILinIdentifierTOvalue = True
+        elif self.EMAILinIdentifierCC:
+            self.EMAILinIdentifierCCvalue = True
+        elif self.EMAILinIdentifierBCC:
+            self.EMAILinIdentifierBCCvalue = True
+        elif self.EMAILinSource:
+            self.EMAILinSourceValue = True
+        elif self.EMAILinBody:
+            self.EMAILinBodyValue = True
+        elif self.EMAILinSubject:
+            self.EMAILinSubjectValue = True
+        elif self.EMAILinTimeStamp:
+            self.EMAILinTimeStampValue = True
+        elif self.EMAILinAttachmentFilename:
+            self.EMAILinAttachmentFilenameValue = True
+
+    def __startElementValueINSTANT_MSG(self):
+        if self.INSTANT_MSGinSource:
+            self.INSTANT_MSGinSourceValue = True
+        elif self.INSTANT_MSGinFromIdentifier:
+            self.INSTANT_MSGinFromIdentifierValue = True
+        elif self.INSTANT_MSGinFromName:
+            self.INSTANT_MSGinFromNameValue = True
+        elif self.INSTANT_MSGinToIdentifier:
+            self.INSTANT_MSGinToIdentifierValue = True
+        elif self.INSTANT_MSGinToName:
+            self.INSTANT_MSGinToNameValue = True
+        elif self.INSTANT_MSGinSubject:
+            self.INSTANT_MSGinSubjectValue = True
+        elif self.INSTANT_MSGinBody:
+            self.INSTANT_MSGinBodyValue = True
+        elif self.INSTANT_MSGinTimeStamp:
+            self.INSTANT_MSGinTimeStampValue = True
+        elif self.INSTANT_MSGinStatusMsg:
+            self.INSTANT_MSGinStatusMsgValue = True
+        elif self.INSTANT_MSGinType:
+            self.INSTANT_MSGinTypeValue = True
+        elif self.INSTANT_MSGinFolder:
+            self.INSTANT_MSGinFolderValue = True
+        elif self.INSTANT_MSGinApplication:
+            self.INSTANT_MSGinApplicationValue = True
+
+    def __startElementValueLOCATION(self):
+        if self.LOCATIONinLongitude:
+            self.LOCATIONinLongitudeValue = True
+        elif self.LOCATIONinLatitude:
+            self.LOCATIONinLatitudeValue = True
+        elif self.LOCATIONinAltitude:
+            self.LOCATIONinAltitudeValue = True
+        elif self.LOCATIONinTimeStamp:
+            self.LOCATIONinTimeStampValue = True
+        elif self.LOCATIONinCategory:
+            self.LOCATIONinCategoryValue = True
+
+    def __startElementValueSEARCHED_ITEM(self):
+        if self.SEARCHED_ITEMinSource:
+            self.SEARCHED_ITEMinSourceValue = True
+        elif self.SEARCHED_ITEMinTimeStamp:
+            self.SEARCHED_ITEMinTimeStampValue = True
+        elif self.SEARCHED_ITEMinValue:
+            self.SEARCHED_ITEMinValueValue = True
+        elif self.SEARCHED_ITEMinSearchResult:
+            self.SEARCHED_ITEMinSearchResultValue = True
 
     def __startElementValueSMS(self):
         if self.SMSinSource:
             self.SMSinSourceValue = True
-        if self.SMSinTimeStamp:
+        elif self.SMSinTimeStamp:
             self.SMSinTimeStampValue = True
-        if self.SMSinBody:
+        elif self.SMSinBody:
             self.SMSinBodyValue = True
-        if self.SMSinFolder:
+        elif self.SMSinFolder:
             self.SMSinFolderValue = True
-        if self.SMSinSmsc:
-            self.SMSinSmscValue = True
-        
-        if self.SMSinPartyRole:
+        elif self.SMSinSmsc:
+            self.SMSinSmscValue = True        
+        elif self.SMSinPartyRole:
             self.SMSinPartyRoleValue = True            
-        if self.SMSinPartyIdentifier:
+        elif self.SMSinPartyIdentifier:
             self.SMSinPartyIdentifierValue = True        
-        if self.SMSinPartyName:
+        elif self.SMSinPartyName:
             self.SMSinPartyNameValue = True
 
-    def __startElementValueU_ACCOUNT(self):
-        if self.U_ACCOUNTin:                
-            if self.U_ACCOUNTinSource:
-                self.U_ACCOUNTinSourceValue = True
-            if self.U_ACCOUNTinName:
-                self.U_ACCOUNTinNameValue = True
-            if self.U_ACCOUNTinUsername:
-                self.U_ACCOUNTinUsernameValue = True
+    def __startElementValueSOCIAL_MEDIA(self):
+        if self.SOCIAL_MEDIAinSource:
+            self.SOCIAL_MEDIAinSourceValue = True
+        elif self.SOCIAL_MEDIAinTimeStamp:
+            self.SOCIAL_MEDIAinTimeStampValue = True
+        elif self.SOCIAL_MEDIAinBody:
+            self.SOCIAL_MEDIAinBodyValue = True
+        elif self.SOCIAL_MEDIAinTitle:
+            self.SOCIAL_MEDIAinTitleValue = True
+        elif self.SOCIAL_MEDIAinUrl:                
+            self.SOCIAL_MEDIAinUrlValue = True
+        elif self.SOCIAL_MEDIAinIdentifier:
+            self.SOCIAL_MEDIAinIdentifierValue = True
+        elif self.SOCIAL_MEDIAinName:
+            self.SOCIAL_MEDIAinNameValue = True
+        elif self.SOCIAL_MEDIAinReactionsCount:
+            self.SOCIAL_MEDIAinReactionsCountValue = True
+        elif self.SOCIAL_MEDIAinSharesCount:
+            self.SOCIAL_MEDIAinSharesCountValue = True
+        elif self.SOCIAL_MEDIAinActivityType:
+            self.SOCIAL_MEDIAinActivityTypeValue = True
+        elif self.SOCIAL_MEDIAinCommentCount:
+            self.SOCIAL_MEDIAinCommentCountValue = True
+        elif self.SOCIAL_MEDIAinAccount:
+            self.SOCIAL_MEDIAinAccountValue = True
+
+    def __startElementValueU_ACCOUNT(self):        
+        if self.U_ACCOUNTinSource:
+            self.U_ACCOUNTinSourceValue = True
+        elif self.U_ACCOUNTinName:
+            self.U_ACCOUNTinNameValue = True
+        elif self.U_ACCOUNTinUsername:
+            self.U_ACCOUNTinUsernameValue = True
 
     def __startElementValueWEB_PAGE(self):
         if self.WEB_PAGEinSource:
             self.WEB_PAGEinSourceValue = True
-        if self.WEB_PAGEinTitle:
+        elif self.WEB_PAGEinTitle:
             self.WEB_PAGEinTitleValue = True
-        if self.WEB_PAGEinUrl:
-            self.WEB_PAGEinUrlValue = True
-        if self.WEB_PAGEinVisitCount:
+        elif self.WEB_PAGEinUrl:
+            self.WEB_PAGEinUrlValue = True 
+        elif self.WEB_PAGEinVisitCount:
             self.WEB_PAGEinVisitCountValue = True
-        if self.WEB_PAGEinLastVisited:
+        elif self.WEB_PAGEinLastVisited:
             self.WEB_PAGEinLastVisitedValue = True    
+
+    def __startElementValueWIRELESS_NET(self):
+        if self.WIRELESS_NETin:
+            if self.WIRELESS_NETinLongitude:
+                self.WIRELESS_NETinLongitudeValue = True
+            elif self.WIRELESS_NETinLatitude:
+                self.WIRELESS_NETinLatitudeValue = True
+            elif self.WIRELESS_NETinTimeStamp:
+                self.WIRELESS_NETinTimeStampValue = True
+            elif self.WIRELESS_NETinLastConnection:
+                self.WIRELESS_NETinLastConnectionValue = True
+            elif self.WIRELESS_NETinBssid:
+                self.WIRELESS_NETinBssidValue = True
+            elif self.WIRELESS_NETinSsid:
+                self.WIRELESS_NETinSsidValue = True
 
     def __startElementEmptyCALL(self):
         if self.CALLinSourceValue:
@@ -1230,19 +2330,19 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.U_ACCOUNTinSource:
             self.U_ACCOUNTsourceValueText = ''
             self.U_ACCOUNTinSourceValue = False
-        if self.U_ACCOUNTinName:
+        elif self.U_ACCOUNTinName:
             self.U_ACCOUNTnameValueText = ''
             self.U_ACCOUNTinNameValue = False
-        if self.U_ACCOUNTinUsername:
+        elif self.U_ACCOUNTinUsername:
             self.U_ACCOUNTusernameValueText = ''
             self.U_ACCOUNTinUsernameValue = False
 
     def __startElementEmptyWEB_PAGE(self):
         if self.WEB_PAGEinTitleValue:
             self.WEB_PAGEtitleText = ''
-        if self.WEB_PAGEinVisitCountValue:
+        elif self.WEB_PAGEinVisitCountValue:
             self.WEB_PAGEvisitCountText = ''
-        if self.WEB_PAGEinLastVisitedValue:
+        elif self.WEB_PAGEinLastVisitedValue:
             self.WEB_PAGElastVisitedText = ''
 
 #---    It captures each Element when it is opened., the order depends on their 
@@ -1255,65 +2355,183 @@ class ExtractTraces(xml.sax.ContentHandler):
         attrName = attrs.get('name')
         attrSection = attrs.get('section')
         
-        if name == 'model':                                    
+        if name == 'modelType':
+            self.Observable = False
+            if attrType == 'Call':
+                self.CALLinModelType = True
+            elif attrType == 'CalendarEntry':
+                self.CALENDARinModelType = True            
+            elif attrType == 'CellTower':
+                self.CELL_TOWERinModelType = True
+            elif attrType == 'Chat':
+                self.CHATinModelType = True
+            elif attrType == 'Contact':
+                self.CONTACTinModelType = True
+            elif attrType == 'Cookie':
+                self.COOKIEinModelType = True
+            elif attrType == 'DeviceEvent':
+                self.DEVICE_EVENTinModelType = True
+            elif attrType == 'Email':
+                self.EMAILinModelType = True
+            elif attrType == 'InstantMessage':
+                self.INSTANT_MSGinModelType = True
+            elif attrType == 'Location':
+                self.LOCATIONinModelType = True
+            elif attrType == 'SearchedItem':
+                self.SEARCHED_ITEMinModelType = True
+            elif attrType == 'SMS':
+                self.SMSinModelType = True
+            elif attrType == 'SocialMediaActivity':
+                self.SOCIAL_MEDIAinModelType = True
+            elif attrType == 'VisitedPage':
+                self.WEB_PAGEinModelType = True
+            elif attrType == 'WirelessNetwork':
+                self.WIRELESS_NETinModelType = True
+        elif name == 'model':                                    
             traceState = attrs.get('deleted_state')
             id = attrs.get('id')                        
-            self.__startElementModelCALL(attrType, id, traceState) 
-            self.__startElementModelCHAT(attrType, id, traceState)         
-            self.__startElementModelCONTACT(attrType, id, traceState)
-            self.__startElementModelEMAIL(attrType, id, traceState)
-            self.__startElementModelSMS(attrType, id, traceState)
-            self.__startElementModelU_ACCOUNT(attrType)
-            self.__startElementModelWEB_PAGE(attrType, id, traceState)    
-
-            if attrType == 'Party':                
-                
-                if self.CALLin:
-                    self.CALLinParty = True 
-                
-                if self.CHATin:
-                    if self.CHATinMsg: 
-                        self.CHATinMsgParty = True 
-                    else:
-                        self.CHATinParty = True 
-           
-        if name in ('modelField', 'multiModelField'):
-            self.__startElementModelFieldCHAT(attrName)
-            self.__startElementModelFieldEMAIL(attrName)
-            self.__startElementModelFieldSMS(attrName)
-
-        if name == 'field':             
-            self.__startElementFieldCALL(attrName)
-            self.__startElementFieldCHAT(attrName)
-            self.__startElementFieldCONTACT(attrName)
-            self.__startElementFieldEMAIL(attrName)
-            self.__startElementFieldSMS(attrName)
-            self.__startElementFieldU_ACCOUNT(attrName)
-            self.__startElementFieldWEB_PAGE(attrName)
+            if self.CALLinModelType:
+                self.__startElementModelCALL(attrType, id, traceState)
+            elif self.CALENDARinModelType:
+                self.__startElementModelCALENDAR(attrType, id, traceState)
+            elif self.CELL_TOWERinModelType:
+                self.__startElementModelCELL_TOWER(attrType, id, traceState)
+            elif self.CHATinModelType:
+                self.__startElementModelCHAT(attrType, id, traceState)
+            elif self.CONTACTinModelType:
+                self.__startElementModelCONTACT(attrType, id, traceState)
+            elif self.COOKIEinModelType:
+                self.__startElementModelCOOKIE(attrType, id, traceState)
+            elif self.DEVICE_EVENTinModelType:
+                self.__startElementModelDEVICE_EVENT(attrType, id, traceState)
+            elif self.EMAILinModelType:
+                self.__startElementModelEMAIL(attrType, id, traceState)
+            elif self.INSTANT_MSGinModelType:
+                self.__startElementModelINSTANT_MSG(attrType, id, traceState)
+            elif self.LOCATIONinModelType:
+                self.__startElementModelLOCATION(attrType, id, traceState)
+            elif self.SEARCHED_ITEMinModelType:
+                self.__startElementModelSEARCHED_ITEM(attrType, id, traceState)
+            elif self.SMSinModelType:
+                self.__startElementModelSMS(attrType, id, traceState)
+            elif self.SOCIAL_MEDIAinModelType:
+                self.__startElementModelSOCIAL_MEDIA(attrType, id, traceState)
+            elif self.WEB_PAGEinModelType:
+                self.__startElementModelWEB_PAGE(attrType, id, traceState)
+            elif self.WIRELESS_NETinModelType:
+                self.__startElementModelWIRELESS_NET(attrType, id, traceState)                                       
+            self.__startElementModelU_ACCOUNT(attrType)            
+        elif name == 'multiModelField':
+            if self.CHATinModelType:
+                self.__startElementMultiModelFieldCHAT(attrName)
+            elif self.CALENDARinModelType:
+                self.__startElementMultiModelFieldCALENDAR(attrName)
+            elif self.CONTACTinModelType:
+                self.__startElementMultiModelFieldCONTACT(attrName)
+            elif self.EMAILinModelType:
+                self.__startElementMultiModelFieldEMAIL(attrName)
+            elif self.INSTANT_MSGinModelType:
+                self.__startElementMultiModelFieldINSTANT_MSG(attrName)
+            elif self.SMSinModelType:
+                self.__startElementMultiModelFieldSMS(attrName)
+            elif self.SOCIAL_MEDIAinModelType:
+                self.__startElementMultiModelFieldSOCIAL_MEDIA(attrName)
+        elif name == 'modelField':
+            if self.CHATin:
+                self.__startElementModelFieldCHAT(attrName)
+            elif self.CELL_TOWERin:
+                self.__startElementModelFieldCELL_TOWER(attrName)
+            elif self.EMAILin:
+                self.__startElementModelFieldEMAIL(attrName)            
+            elif self.LOCATIONin:
+                self.__startElementModelFieldLOCATION(attrName)
+            elif self.INSTANT_MSGin:
+                self.__startElementModelFieldINSTANT_MSG(attrName)
+            elif self.SOCIAL_MEDIAin:
+                self.__startElementModelFieldSOCIAL_MEDIA(attrName)
+            elif self.WIRELESS_NETin:
+                self.__startElementModelFieldWIRELESS_NET(attrName)
+        elif name == 'multiField':
+            if self.SEARCHED_ITEMin:
+                self.__startElementMultiFieldSEARCHED_ITEM(attrName) 
+        elif name == 'field':
+            if self.CALLin:
+                self.__startElementFieldCALL(attrName)
+            elif self.CALENDARin:
+                self.__startElementFieldCALENDAR(attrName)
+            elif self.CHATin:
+                self.__startElementFieldCHAT(attrName)            
+            elif self.CELL_TOWERin:
+                self.__startElementFieldCELL_TOWER(attrName)
+            elif self.CONTACTin:
+                self.__startElementFieldCONTACT(attrName)
+            elif self.COOKIEin:
+                self.__startElementFieldCOOKIE(attrName)
+            elif self.DEVICE_EVENTin:
+                self.__startElementFieldDEVICE_EVENT(attrName)
+            elif self.EMAILin:
+                self.__startElementFieldEMAIL(attrName)
+            elif self.INSTANT_MSGin:
+                self.__startElementFieldINSTANT_MSG(attrName)
+            elif self.LOCATIONin:
+                self.__startElementFieldLOCATION(attrName)
+            elif self.SEARCHED_ITEMin:
+                self.__startElementFieldSEARCHED_ITEM(attrName)
+            elif self.SMSin:
+                self.__startElementFieldSMS(attrName)
+            elif self.SOCIAL_MEDIAin:
+                self.__startElementFieldSOCIAL_MEDIA(attrName)
+            elif self.U_ACCOUNTin:
+                self.__startElementFieldU_ACCOUNT(attrName)
+            elif self.WEB_PAGEin:
+                self.__startElementFieldWEB_PAGE(attrName)
+            elif self.WIRELESS_NETin:
+                self.__startElementFieldWIRELESS_NET(attrName)
             attrFieldType = attrs.get('fieldType')
-            self.__startElementFieldCONTEXT(attrFieldType)
-
-                                                  
-        if name == 'value':            
-            self.__startElementValueCALL()            
-            self.__startElementValueCHAT(attrType)
-            self.__startElementValueCONTACT()
-            self.__startElementValueEMAIL()
-            self.__startElementValueSMS()
-            self.__startElementValueU_ACCOUNT()
-            self.__startElementValueWEB_PAGE()
-
-        if name == 'empty':
+            self.__startElementFieldCONTEXT(attrFieldType)                                                  
+        elif name == 'value':            
+            if self.CALLin:
+                self.__startElementValueCALL()
+            elif self.CALENDARin:
+                self.__startElementValueCALENDAR()
+            elif self.CELL_TOWERin:
+                self.__startElementValueCELL_TOWER()
+            elif self.CHATin:
+                self.__startElementValueCHAT(attrType)
+            elif self.CONTACTin:
+                self.__startElementValueCONTACT()
+            elif self.COOKIEin:
+                self.__startElementValueCOOKIE()
+            elif self.DEVICE_EVENTin:
+                self.__startElementValueDEVICE_EVENT()
+            elif self.EMAILin:
+                self.__startElementValueEMAIL()
+            elif self.INSTANT_MSGin:
+                self.__startElementValueINSTANT_MSG()
+            elif self.LOCATIONin:
+                self.__startElementValueLOCATION()
+            elif self.SEARCHED_ITEMin:
+                self.__startElementValueSEARCHED_ITEM()
+            elif self.SMSin:
+                self.__startElementValueSMS()
+            elif self.SOCIAL_MEDIAin:
+                self.__startElementValueSOCIAL_MEDIA()
+            elif self.U_ACCOUNTin:
+                self.__startElementValueU_ACCOUNT()
+            elif self.WEB_PAGEin:
+                self.__startElementValueWEB_PAGE()
+            elif self.WIRELESS_NETin:
+                self.__startElementValueWIRELESS_NET()
+        elif name == 'empty':
             self.__startElementEmptyCALL()
             self.__startElementEmptyU_ACCOUNT()
             self.__startElementEmptyWEB_PAGE()
-
-        if name == 'taggedFiles':
+        elif name == 'taggedFiles':
             self.TAGGED_FILESin = True
 
 #---    extraInfo @id is the link with the Trace @id, for any kind of Trace 
 #            
-        if name == 'extraInfo':
+        elif name == 'extraInfo':
             self.EXTRA_INFOin = True
             self.EXTRA_INFOid = attrs.get('id')
             self.EXTRA_INFOlistId.append(self.EXTRA_INFOid)
@@ -1322,9 +2540,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.EXTRA_INFOdictTableName[self.EXTRA_INFOid] = ''
             self.EXTRA_INFOdictOffset[self.EXTRA_INFOid] = ''
             self.EXTRA_INFOdictNodeInfoId[self.EXTRA_INFOid] = ''
-
-
-        if name == 'nodeInfo':
+        elif name == 'nodeInfo':
             if self.EXTRA_INFOin:
                 self.EXTRA_INFOnodeInfoin = True              
 
@@ -1347,10 +2563,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.EXTRA_INFOdictPath[i] += charSep + str(attrs.get('path'))
                 self.EXTRA_INFOdictSize[i] += charSep + str(attrs.get('size'))
                 self.EXTRA_INFOdictTableName[i] += charSep + str(attrs.get('tableName'))
-                self.EXTRA_INFOdictOffset[i] += charSep + str(attrs.get('offset'))
-                    
-
-        if name == 'file':
+                self.EXTRA_INFOdictOffset[i] += charSep + str(attrs.get('offset'))                    
+        elif name == 'file':
             if self.TAGGED_FILESin:                
                 if attrs.get('fs').lower().find('system') > -1:
                     self.TAGGED_FILESsystem = True
@@ -1375,15 +2589,13 @@ class ExtractTraces(xml.sax.ContentHandler):
                     self.FILEexifMake.append('')
                     self.FILEexifModel.append('')
                     self.FILEidx += 1
-
-        if name == 'accessInfo':
+        elif name == 'accessInfo':
             if self.TAGGED_FILESinFile:
                 if self.TAGGED_FILESsystem:
                     pass
                 else:
-                    self.TAGGED_FILESinAccessInfo = True
-                
-        if name == "timestamp":
+                    self.TAGGED_FILESinAccessInfo = True                
+        elif name == "timestamp":
             if self.TAGGED_FILESinAccessInfo:
                 if attrName == 'CreationTime':
                     self.TAGGED_FILESinAccessInfoCreate = True           
@@ -1391,8 +2603,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                     self.TAGGED_FILESinAccessInfoModify = True
                 if attrName == 'AccessTime':
                     self.TAGGED_FILESinAccessInfoAccess = True
-
-        if name == 'metadata':
+        elif name == 'metadata':
             if self.TAGGED_FILESin:
                 if self.TAGGED_FILESsystem:
                     pass
@@ -1414,264 +2625,448 @@ class ExtractTraces(xml.sax.ContentHandler):
                 if attrSection == 'Hashes':
                     if self.CONTEXTinImage:
                         self.CONTEXTinImageMetadataHash = True
-
-        if name == 'item':
+        elif name == 'item':
             self.__startElementItemTAGGED_FILES(attrName)
             self.__startElementItemCONTEXT(attrName)
-
-        if name == 'images':
+        elif name == 'images':
             self.CONTEXTinImages = True
-
-        if name == 'image':
+        elif name == 'image':
             if self.CONTEXTinImages:
                 self.CONTEXTinImage = True
-                #print("attr namme=image, CONTEXTimagePath: " + attrs.get('path'))
                 self.CONTEXTimagePath.append(attrs.get('path'))
                 self.CONTEXTimageSize.append(attrs.get('size'))
-
-        if name == 'caseInformation':
-            self.CONTEXTinCaseInfo = True            
-                         
-
-        if (not self.Observable):
-            line = self.C_grey + '*\tProcessing Element <' + name + '> at line '
-            line += str(self.lineXML) + ' ...'  + self.C_end
-            if self.skipLine:
-                print ('\n' + line , end='\r')
-                self.skipLine = False                  
-            else:
-                print (line , end='\r') 
-
-#---    it captures the value/character inside the Text Elements
-#                
-    def characters(self, ch):
-#---    SMS processing
-#        
-        if self.SMSinSourceValue:
-            self.SMSsourceText += ch
-        if self.SMSinTimeStampValue:
-            self.SMStimeStampText += ch
-        if self.SMSinBodyValue:
-            self.SMSbodyText += ch 
-        if self.SMSinFolderValue:
-            self.SMSfolderText += ch 
-        if self.SMSinSmscValue:
-            self.SMSsmscText += ch   
+        elif name == 'caseInformation':
+            self.CONTEXTinCaseInfo = True                                     
         
-        if self.SMSinPartyIdentifierValue:
-            self.SMSpartyIdentifierText += ch
-        if self.SMSinPartyRoleValue:
-            self.SMSpartyRoleText += ch        
-        if self.SMSinPartyNameValue:
-            self.SMSpartyNameText += ch
+        if (not self.Observable):
+            line = self.C_GREY + '*\tProcessing Element <' + name + '> at line '
+            line += str(self.lineXML) + ' ...'  + self.C_BLACK
+            if self.verbose:
+                if self.skipLine:
+                    print ('\n' + line , end='\r')
+                    self.skipLine = False                  
+                else:
+                    print (line , end='\r') 
 
-#---    CHAT processing
-#            
+    def __charactersCALENDAR(self, ch):
+        if self.CALENDARinCategoryValue:
+            self.CALENDARcategoryText += ch
+        elif self.CALENDARinSubjectValue:
+            self.CALENDARsubjectText += ch
+        elif self.CALENDARinDetailsValue:
+            self.CALENDARdetailsText += ch
+        elif self.CALENDARinStartDateValue:
+            self.CALENDARstartDateText += ch
+        elif self.CALENDARinEndDateValue:
+            self.CALENDARendDateText += ch
+        elif self.CALENDARinRepeatUntilValue:
+            self.CALENDARrepeatUntilText += ch
+        elif self.CALENDARinRepeatDayValue:
+            self.CALENDARrepeatDayText += ch
+        elif self.CALENDARinRepeatIntervalValue:
+            self.CALENDARrepeatIntervalText += ch    
+
+    def __charactersCALL(self, ch):
+        if self.CALLinSourceValue:
+            self.CALLsourceText += ch
+        elif self.CALLinTimeStampValue:
+            self.CALLtimeStampText += ch
+        elif self.CALLinDirectionValue:
+            self.CALLdirectionText += ch
+        elif self.CALLinTypeValue:
+            self.CALLtypeText += ch
+        elif self.CALLinDurationValue:
+            self.CALLdurationText += ch
+        elif self.CALLinOutcomeValue:
+            self.CALLoutcomeText += ch
+        elif self.CALLinRoleValue:
+            self.CALLroleText += ch
+        elif self.CALLinNameValue:
+            self.CALLnameText += ch
+        elif self.CALLinIdentifierValue:
+            self.CALLidentifierText += ch
+
+    def __charactersCELL_TOWER(self, ch):
+        if self.CELL_TOWERinLongitudeValue:
+            self.CELL_TOWERlongitudeText += ch
+        elif self.CELL_TOWERinLatitudeValue:
+            self.CELL_TOWERlatitudeText += ch
+        elif self.CELL_TOWERinTimeStampValue:
+            self.CELL_TOWERtimeStampText += ch
+        elif self.CELL_TOWERinMCCValue:
+            self.CELL_TOWERmccText += ch
+        elif self.CELL_TOWERinMNCValue:
+            self.CELL_TOWERmncText += ch
+        elif self.CELL_TOWERinLACValue:
+            self.CELL_TOWERlacText += ch
+        elif self.CELL_TOWERinCIDValue:
+            self.CELL_TOWERcidText += ch
+        elif self.CELL_TOWERinNIDValue:
+            self.CELL_TOWERnidText += ch
+        elif self.CELL_TOWERinBIDValue:
+            self.CELL_TOWERbidText += ch
+        elif self.CELL_TOWERinSIDValue:
+            self.CELL_TOWERsidText += ch
+
+    def __charactersCONTACT(self, ch):
+        if self.CONTACTinSourceValue:
+            self.CONTACTsourceText += ch
+        if self.CONTACTinNameValue:
+            self.CONTACTnameText += ch        
+        elif self.CONTACTinUserIdValue:
+            if self.CONTACTuserIdText == '':                
+                self.CONTACTuserIdText += ch
+            else:
+                self.CONTACTuserIdText += '###' + ch
+        elif self.CONTACTinPhoneNumValue:
+            if self.CONTACTphoneNumText == '':
+                self.CONTACTphoneNumText += ch
+            else:
+                self.CONTACTphoneNumText += '###' + ch
+        elif self.CONTACTinAccountValue:
+            self.CONTACTaccountText += ch
+
+    def __charactersCHAT(self, ch):
         if self.CHATinSourceValue:
-            self.CHATsourceText += ch        
-        if self.CHATinPartyIdentifierValue:
+            self.CHATsourceText += ch
+        elif self.CHATinPartyIdentifierValue:
             self.CHATpartyIdentifierText += ch 
-        if self.CHATinPartyNameValue:
-            self.CHATpartyNameText += ch        
-        if self.CHATinMsgIdentifierFromValue:
-            self.CHATmsgIdentifierFromText += ch               
-        if self.CHATinMsgNameFromValue:
-            self.CHATmsgNameFromText += ch        
-        if self.CHATinMsgIdentifierToValue:
-            if  self.CHATmsgIdentifierToText == '':
-                self.CHATmsgIdentifierToText += ch
-            else:
-                self.CHATmsgIdentifierToText += '###' + ch
-        if self.CHATinMsgNameToValue:
-            if self.CHATmsgNameToText == '':
-                self.CHATmsgNameToText += ch
-            else:
-                self.CHATmsgNameToText += '###' + ch
-        if self.CHATinMsgBodyValue:
+        elif self.CHATinPartyNameValue:
+            self.CHATpartyNameText += ch 
+        elif self.CHATinMsgIdentifierFromValue:
+            self.CHATmsgIdentifierFromText += ch            
+        elif self.CHATinMsgNameFromValue:
+            self.CHATmsgNameFromText += ch
+        elif self.CHATinMsgBodyValue:
             self.CHATmsgBodyText += ch
-        if self.CHATinMsgOutcomeValue:
+        elif self.CHATinMsgOutcomeValue:
             self.CHATmsgOutcomeText += ch
-        if self.CHATinMsgTimeStampValue:
+        elif self.CHATinMsgTimeStampValue:
             self.CHATmsgTimeStampText += ch
-        if self.CHATinMsgAttachmentFilenameValue:
+        elif self.CHATinMsgAttachmentFilenameValue:
             if self.CHATmsgAttachmentFilenameText == '':
                 self.CHATmsgAttachmentFilenameText += ch
             else:
-
 #---    The separator ### is for dividing more than one attachment to the same msg
 #                
                 self.CHATmsgAttachmentFilenameText += '###' + ch
-        if self.CHATinMsgAttachmentUrlValue:
+        elif self.CHATinMsgAttachmentUrlValue:
             if self.CHATmsgAttachmentUrlText == '':
                 self.CHATmsgAttachmentUrlText += ch
             else:
-                self.CHATmsgAttachmentUrlText += '###' + ch
+                self.CHATmsgAttachmentUrlText += '###' + ch  
 
-#---    CALL processing
-#                
-        if self.CALLinSourceValue:
-            self.CALLsourceText += ch
-        if self.CALLinTimeStampValue:
-            self.CALLtimeStampText += ch
-        if self.CALLinDirectionValue:
-            self.CALLdirectionText += ch
-        if self.CALLinTypeValue:
-            self.CALLtypeText += ch
-        if self.CALLinDurationValue:
-            self.CALLdurationText += ch
-        if self.CALLinOutcomeValue:
-            self.CALLoutcomeText += ch
-        if self.CALLinRoleValue:
-            self.CALLroleText += ch
-        if self.CALLinNameValue:
-            self.CALLnameText += ch
-            #print(f'#call {self.CALLtotal}, name caller {self.CALLnameText}')
-        if self.CALLinIdentifierValue:
-            self.CALLidentifierText += ch
+    def __charactersCOOKIE(self, ch):
+        if self.COOKIEinSourceValue:
+            self.COOKIEsourceText += ch
+        elif self.COOKIEinNameValue:
+            self.COOKIEnameText += ch
+        elif self.COOKIEinValueValue:
+            self.COOKIEvalueText += ch
+        elif self.COOKIEinDomainValue:
+            self.COOKIEdomainText += ch
+        elif self.COOKIEinCreationTimeValue:
+            self.COOKIEcreationTimeText += ch
+        elif self.COOKIEinLastAccessTimeValue:
+            self.COOKIElastAccessTimeText += ch
+        elif self.COOKIEinExpiryValue:
+            self.COOKIEexpiryText += ch
 
-#---    CONTACT processing
-#            
-        if self.CONTACTinNameValue:
-            self.CONTACTnameText += ch        
-        if self.CONTACTinPhoneNumValue:
-            self.CONTACTphoneNumText += ch
+    def __charactersDEVICE_EVENT(self, ch):
+        if self.DEVICE_EVENTinTimeStampValue:
+            self.DEVICE_EVENTtimeStampText += ch
+        elif self.DEVICE_EVENTinEventTypeValue:
+            self.DEVICE_EVENTeventTypeText += ch
+        elif self.DEVICE_EVENTinValueValue:
+            self.DEVICE_EVENTvalueText += ch
 
-#---    EMAIL processing
-#            
+    def __charactersEMAIL(self, ch):
         if self.EMAILinSourceValue:
             self.EMAILsourceText += ch
-        if self.EMAILinIdentifierFROMvalue:
+        elif self.EMAILinIdentifierFROMvalue:
             self.EMAILidentifierFROMtext += ch
-        if self.EMAILinIdentifierTOvalue:
+        elif self.EMAILinIdentifierTOvalue:
             self.EMAILidentifierTOtext += ch
-        if self.EMAILinIdentifierCCvalue:
+        elif self.EMAILinIdentifierCCvalue:
             self.EMAILidentifierCCtext += ch
-        if self.EMAILinIdentifierBCCvalue:
+        elif self.EMAILinIdentifierBCCvalue:
             self.EMAILidentifierBCCtext += ch
-        if self.EMAILinBodyValue:
+        elif self.EMAILinBodyValue:
             self.EMAILbodyText += ch
-        if self.EMAILinSubjectValue:
+        elif self.EMAILinSubjectValue:
             self.EMAILsubjectText += ch
-        if self.EMAILinTimeStampValue:
+        elif self.EMAILinTimeStampValue:
             self.EMAILtimeStampText += ch
-        if self.EMAILinAttachmentFilenameValue:
+        elif self.EMAILinAttachmentFilenameValue:
             self.EMAILattachmentFilenameText += ch
-        
-#---    WEB_PAGE processing
-#            
-        if self.WEB_PAGEinSourceValue:
-            self.WEB_PAGEsourceText += ch
-        if self.WEB_PAGEinUrlValue:
-            self.WEB_PAGEurlText += ch
-        if self.WEB_PAGEinTitleValue:
-            self.WEB_PAGEtitleText += ch
-        if self.WEB_PAGEinVisitCountValue:
-            self.WEB_PAGEvisitCountText += ch
-        if self.WEB_PAGEinLastVisitedValue:
-            self.WEB_PAGElastVisitedText += ch
-        
+
+    def __charactersINSTANT_MSG(self, ch):
+        if self.INSTANT_MSGinSourceValue:
+            self.INSTANT_MSGsourceText += ch
+        elif self.INSTANT_MSGinFromIdentifierValue:            
+            self.INSTANT_MSGfromIdentifierText += ch
+        elif self.INSTANT_MSGinFromNameValue:
+            self.INSTANT_MSGfromNameText += ch
+        elif self.INSTANT_MSGinToIdentifierValue:
+            if self.INSTANT_MSGtoIdentifierText != '':
+                self.INSTANT_MSGtoIdentifierText += '@@@' + ch
+            else:
+                self.INSTANT_MSGtoIdentifierText += ch
+        elif self.INSTANT_MSGinToNameValue:
+            if self.INSTANT_MSGtoNameText != '':
+                self.INSTANT_MSGtoNameText += '@@@' + ch
+            else:
+                self.INSTANT_MSGtoNameText += ch
+
+        elif self.INSTANT_MSGinSubjectValue:
+            self.INSTANT_MSGsubjectText += ch
+        elif self.INSTANT_MSGinBodyValue:
+            self.INSTANT_MSGbodyText += ch
+        elif self.INSTANT_MSGinTimeStampValue:
+            self.INSTANT_MSGtimeStampText += ch
+        elif self.INSTANT_MSGinStatusMsgValue:
+            self.INSTANT_MSGstatusMsgText += ch
+        elif self.INSTANT_MSGinTypeValue:
+            self.INSTANT_MSGtypeText += ch
+        elif self.INSTANT_MSGinFolderValue:
+            self.INSTANT_MSGfolderText += ch
+        elif self.INSTANT_MSGinApplicationValue:
+            self.INSTANT_MSGapplicationText += ch
+
+    def __charactersLOCATION(self, ch):
+        if self.LOCATIONinLongitudeValue:
+            self.LOCATIONlongitudeText += ch
+        elif self.LOCATIONinLatitudeValue:
+            self.LOCATIONlatitudeText += ch
+        elif self.LOCATIONinAltitudeValue:
+            self.LOCATIONaltitudeText += ch
+        elif self.LOCATIONinTimeStampValue:
+            self.LOCATIONtimeStampText += ch
+        elif self.LOCATIONinCategoryValue:
+            self.LOCATIONcategoryText += ch
+
+    def __charactersSEARCHED_ITEM(self, ch):
+        if self.SEARCHED_ITEMinSourceValue:
+            self.SEARCHED_ITEMsourceText += ch
+        elif self.SEARCHED_ITEMinTimeStampValue:
+            self.SEARCHED_ITEMtimeStampText += ch
+        elif self.SEARCHED_ITEMinValue:
+            self.SEARCHED_ITEMvalueText += ch
+        elif self.SEARCHED_ITEMinSearchResultValue:
+            self.SEARCHED_ITEMsearchResultText += ch
+
+    def __charactersSMS(self, ch):
+        if self.SMSinSourceValue:
+            self.SMSsourceText += ch
+        elif self.SMSinTimeStampValue:
+            self.SMStimeStampText += ch
+        elif self.SMSinBodyValue:
+            self.SMSbodyText += ch 
+        elif self.SMSinFolderValue:
+            self.SMSfolderText += ch 
+        elif self.SMSinSmscValue:
+            self.SMSsmscText += ch           
+        elif self.SMSinPartyIdentifierValue:
+            self.SMSpartyIdentifierText += ch
+        elif self.SMSinPartyRoleValue:
+            self.SMSpartyRoleText += ch        
+        elif self.SMSinPartyNameValue:
+            self.SMSpartyNameText += ch
+
+    def __charactersSOCIAL_MEDIA(self, ch):
+        if self.SOCIAL_MEDIAinSourceValue:
+            self.SOCIAL_MEDIAsourceText += ch
+        elif self.SOCIAL_MEDIAinTimeStampValue:
+            self.SOCIAL_MEDIAtimeStampText += ch
+        elif self.SOCIAL_MEDIAinBodyValue:
+            self.SOCIAL_MEDIAbodyText += ch
+        elif self.SOCIAL_MEDIAinTitleValue:
+            self.SOCIAL_MEDIAtitleText += ch
+        elif self.SOCIAL_MEDIAinUrlValue:
+            self.SOCIAL_MEDIAurlText += ch               
+        elif self.SOCIAL_MEDIAinIdentifierValue:
+            self.SOCIAL_MEDIAidentifierText += ch
+        elif self.SOCIAL_MEDIAinNameValue:
+            self.SOCIAL_MEDIAnameText += ch
+        elif self.SOCIAL_MEDIAinReactionsCountValue:
+            self.SOCIAL_MEDIAreactionsCountText += ch
+        elif self.SOCIAL_MEDIAinSharesCountValue:
+            self.SOCIAL_MEDIAsharesCountText += ch
+        elif self.SOCIAL_MEDIAinActivityTypeValue:
+            self.SOCIAL_MEDIAactivityTypeText += ch
+        elif self.SOCIAL_MEDIAinCommentCountValue:
+            self.SOCIAL_MEDIAcommentCountText += ch
+        elif self.SOCIAL_MEDIAinAccountValue:
+            self.SOCIAL_MEDIAaccountText += ch
+
+    def __charactersU_ACCOUNT(self, ch):
 #---    U_ACCOUNT processing for the owner phone number
 #            
         if self.U_ACCOUNTinSourceValue:
             self.U_ACCOUNTsourceValueText += ch
-        if self.U_ACCOUNTinNameValue:
+        elif self.U_ACCOUNTinNameValue:
             self.U_ACCOUNTnameValueText += ch
-        if self.U_ACCOUNTinUsernameValue:
+        elif self.U_ACCOUNTinUsernameValue:
             self.U_ACCOUNTusernameValueText += ch
-        
+
+    def __charactersWEB_PAGE(self, ch):
+        if self.WEB_PAGEinSourceValue:
+            self.WEB_PAGEsourceText += ch
+        elif self.WEB_PAGEinUrlValue:
+            self.WEB_PAGEurlText += ch
+        elif self.WEB_PAGEinTitleValue:
+            self.WEB_PAGEtitleText += ch
+        elif self.WEB_PAGEinVisitCountValue:
+            self.WEB_PAGEvisitCountText += ch
+        elif self.WEB_PAGEinLastVisitedValue:
+            self.WEB_PAGElastVisitedText += ch
+
+    def __charactersWIRELESS_NET(self, ch):
+        if self.WIRELESS_NETinLongitudeValue:
+            self.WIRELESS_NETlongitudeText += ch
+        elif self.WIRELESS_NETinLatitudeValue:
+            self.WIRELESS_NETlatitudeText += ch
+        elif self.WIRELESS_NETinTimeStampValue:
+            self.WIRELESS_NETtimeStampText += ch
+        elif self.WIRELESS_NETinLastConnectionValue:
+            self.WIRELESS_NETlastConnectionText += ch
+        elif self.WIRELESS_NETinBssidValue:
+            self.WIRELESS_NETbssidText += ch
+        elif self.WIRELESS_NETinSsidValue:
+            self.WIRELESS_NETssidText += ch
+
+
+    def __charactersTAGGED_FILES(self, ch):
 #---    TAGGED_FILES processing for Chain of Evidence
 #            
         if self.TAGGED_FILESinAccessInfoCreate:
             self.TAGGED_FILESCreateText += ch
-        if self.TAGGED_FILESinAccessInfoModify:
+        elif self.TAGGED_FILESinAccessInfoModify:
             self.TAGGED_FILESModifyText += ch
-        if self.TAGGED_FILESinAccessInfoAccess:
+        elif self.TAGGED_FILESinAccessInfoAccess:
             self.TAGGED_FILESAccessText += ch
-        if self.TAGGED_FILESinMD5:
+        elif self.TAGGED_FILESinMD5:
             self.TAGGED_FILESmd5Text += ch
-        if self.TAGGED_FILESinTags:
+        elif self.TAGGED_FILESinTags:
             self.TAGGED_FILEStagsText += ch
-        if self.TAGGED_FILESinLocalPath:
+        elif self.TAGGED_FILESinLocalPath:
             self.TAGGED_FILESlocalPathText += ch
-        if self.TAGGED_FILESinInodeNumber:
+        elif self.TAGGED_FILESinInodeNumber:
             self.TAGGED_FILESiNodeNumberText += ch
-        if self.TAGGED_FILESinInodeTimeModify:
+        elif self.TAGGED_FILESinInodeTimeModify:
             self.TAGGED_FILESiNodeTimeModifyText += ch
-        if self.TAGGED_FILESinOwnerGID:
+        elif self.TAGGED_FILESinOwnerGID:
             self.TAGGED_FILESownerGIDText += ch
-        if self.TAGGED_FILESinOwnerUID:
+        elif self.TAGGED_FILESinOwnerUID:
             self.TAGGED_FILESownerUIDText += ch
-        if self.TAGGED_FILESinExifLatitudeRef:
+        elif self.TAGGED_FILESinExifLatitudeRef:
             self.TAGGED_FILESexifLatitudeRef += ch
-        if self.TAGGED_FILESinExifLatitude:
+        elif self.TAGGED_FILESinExifLatitude:
             self.TAGGED_FILESexifLatitude += ch
-        if self.TAGGED_FILESinExifLongitudeRef:
+        elif self.TAGGED_FILESinExifLongitudeRef:
             self.TAGGED_FILESexifLongitudeRef += ch
-        if self.TAGGED_FILESinExifLongitude:
+        elif self.TAGGED_FILESinExifLongitude:
             self.TAGGED_FILESexifLongitude += ch
-        if self.TAGGED_FILESinExifAltitude:
+        elif self.TAGGED_FILESinExifAltitude:
             self.TAGGED_FILESexifAltitude += ch
-        if self.TAGGED_FILESinExifMake:
+        elif self.TAGGED_FILESinExifMake:
             self.TAGGED_FILESexifMake += ch
-        if self.TAGGED_FILESinExifModel:
-            self.TAGGED_FILESexifModel += ch
+        elif self.TAGGED_FILESinExifModel:
+            self.TAGGED_FILESexifModel += ch  
 
+    def __charactersCONTEXT(self, ch): 
 #---    CONTEXT for the information about device, tool, 
 #       acquisition/extrtaction actions
 #
         if self.CONTEXTinDeviceCreationTimeValue:
             if self.CONTEXTdeviceCreationTimeText == '':
                 self.CONTEXTdeviceCreationTimeText += ch
-        if self.CONTEXTinUfedVersionValue:
-            self.CONTEXTufedVersionText += ch
-        
-        if self.CONTEXTinExaminerNameValue:
-            self.CONTEXTexaminerNameText += ch
-        
-        if self.CONTEXTinDeviceExtractionStart:
+        elif self.CONTEXTinUfedVersionValue:
+            self.CONTEXTufedVersionText += ch        
+        elif self.CONTEXTinExaminerNameValue:
+            self.CONTEXTexaminerNameText += ch        
+        elif self.CONTEXTinDeviceExtractionStart:
             if self.CONTEXTdeviceExtractionStartText == '':
                 self.CONTEXTdeviceExtractionStartText += ch
-        if self.CONTEXTinDeviceExtractionEnd:
+        elif self.CONTEXTinDeviceExtractionEnd:
             if self.CONTEXTdeviceExtractionEndText == '':
                 self.CONTEXTdeviceExtractionEndText += ch
-        if self.CONTEXTinDeviceOsVersionValue:
+        elif self.CONTEXTinDeviceOsVersionValue:
             self.CONTEXTdeviceOsVersionText  += ch
-        if self.CONTEXTinDevicePhoneVendorValue:
+        elif self.CONTEXTinDevicePhoneVendorValue:
             self.CONTEXTdevicePhoneVendorText  += ch
-        if self.CONTEXTinDevicePhoneModelValue:
+        elif self.CONTEXTinDevicePhoneModelValue:
             self.CONTEXTdevicePhoneModelText  += ch
-        if self.CONTEXTinDeviceIdValue:
+        elif self.CONTEXTinDeviceIdValue:
             if self.CONTEXTdeviceIdText.strip() == '':
                 self.CONTEXTdeviceIdText  += ch
-        if self.CONTEXTinDeviceMacAddressValue:
+        elif self.CONTEXTinDeviceMacAddressValue:
             self.CONTEXTdeviceMacAddressText  += ch
-        if self.CONTEXTinDeviceIccidValue:
+        elif self.CONTEXTinDeviceIccidValue:
             self.CONTEXTdeviceIccidText  += ch
-        if self.CONTEXTinDeviceMsisdnValue:
+        elif self.CONTEXTinDeviceMsisdnValue:
             if self.CONTEXTdeviceMsisdnText.strip() == '':
                 self.CONTEXTdeviceMsisdnText  += ch
             else:
                 self.CONTEXTdeviceMsisdnText  += '/' + ch
-        if self.CONTEXTinDeviceBluetoothAddressValue:
+        elif self.CONTEXTinDeviceBluetoothAddressValue:
             if self.CONTEXTdeviceBluetoothAddressText == '':
                 self.CONTEXTdeviceBluetoothAddressText  += ch
-        if self.CONTEXTinDeviceBluetoothName:
+        elif self.CONTEXTinDeviceBluetoothName:
             self.CONTEXTdeviceBluetoothNameText  += ch
-        if self.CONTEXTinDeviceImsiValue:
+        elif self.CONTEXTinDeviceImsiValue:
             self.CONTEXTdeviceImsiText  += ch
-        if self.CONTEXTinDeviceImeiValue:
+        elif self.CONTEXTinDeviceImeiValue:
             self.CONTEXTdeviceImeiText  += ch
-        if self.CONTEXTinDeviceOsTypeValue:
+        elif self.CONTEXTinDeviceOsTypeValue:
             self.CONTEXTdeviceOsTypeText  += ch  
-
-        if self.CONTEXTinImageMetadataHashValueSHA:
+        elif self.CONTEXTinImageMetadataHashValueSHA:
             self.CONTEXTimageMetadataHashTextSHA += ch          
+        elif self.CONTEXTinImageMetadataHashValueMD5:
+            self.CONTEXTimageMetadataHashTextMD5 += ch           
 
-        if self.CONTEXTinImageMetadataHashValueMD5:
-            self.CONTEXTimageMetadataHashTextMD5 += ch          
+#---    it captures the value/character inside the Text Elements
+#                
+    def characters(self, ch):        
+        self.__charactersCONTEXT(ch)
+        if self.CALENDARin:
+            self.__charactersCALENDAR(ch)
+        elif self.CALLin:
+            self.__charactersCALL(ch)
+        elif self.CELL_TOWERin:
+            self.__charactersCELL_TOWER(ch)
+        elif self.CONTACTin:
+            self.__charactersCONTACT(ch)
+        elif self.CHATin:
+            self.__charactersCHAT(ch)
+        elif self.COOKIEin:
+            self.__charactersCOOKIE(ch)
+        elif self.DEVICE_EVENTin:
+            self.__charactersDEVICE_EVENT(ch)
+        elif self.EMAILin:
+            self.__charactersEMAIL(ch)
+        elif self.INSTANT_MSGin:
+            self.__charactersINSTANT_MSG(ch)
+        elif self.LOCATIONin:
+            self.__charactersLOCATION(ch)
+        elif self.SEARCHED_ITEMin:
+            self.__charactersSEARCHED_ITEM(ch)
+        elif self.SMSin:
+            self.__charactersSMS(ch)
+        elif self.SOCIAL_MEDIAin:
+            self.__charactersSOCIAL_MEDIA(ch)
+        elif self.U_ACCOUNTin:
+            self.__charactersU_ACCOUNT(ch)
+        elif self.WEB_PAGEin:
+            self.__charactersWEB_PAGE(ch)
+        elif self.WIRELESS_NETin:
+            self.__charactersWIRELESS_NET(ch)
+        self.__charactersTAGGED_FILES(ch)
 
     def __endElementModelSMS(self):
-        if self.SMSinParty:
+        if self.SMSinAllTimeStamps:
+            pass
+        elif self.SMSinParty:
                 self.SMSpartyIdentifier.append(self.SMSpartyIdentifierText)
                 self.SMSpartyRole.append(self.SMSpartyRoleText)
                 self.SMSpartyName.append(self.SMSpartyNameText)
@@ -1679,32 +3074,79 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.SMSpartyIdentifierText = ''
                 self.SMSpartyNameText = ''
         else:
-            if self.SMSin:                                   
-                self.SMSsource.append(self.SMSsourceText)
-                self.SMStimeStamp.append(self.SMStimeStampText)
-                self.SMSbodyText = self.__cleanText(self.SMSbodyText)
-                self.SMSbody.append(self.SMSbodyText)
-                self.SMSfolder.append(self.SMSfolderText)
-                self.SMSsmsc.append(self.SMSsmscText)
-                
-                self.SMSpartyIdentifiers.append(self.SMSpartyIdentifier[:])
-                self.SMSpartyRoles.append(self.SMSpartyRole[:])                  
-                self.SMSpartyNames.append(self.SMSpartyName[:])
-                
-                
-                self.SMSsourceText = ''
-                self.SMStimeStampText = ''
-                self.SMSbodyText = ''
-                self.SMSfolderText = ''
-                self.SMSsmscText = ''
-                
-                
-                self.SMSpartyIdentifier.clear()
-                self.SMSpartyRole.clear()
-                self.SMSpartyName.clear()
-                self.SMSin = False
+            self.SMSsource.append(self.SMSsourceText)
+            self.SMStimeStamp.append(self.SMStimeStampText)
+            self.SMSbodyText = self.__cleanText(self.SMSbodyText)
+            self.SMSbody.append(self.SMSbodyText)
+            self.SMSfolder.append(self.SMSfolderText)
+            self.SMSsmsc.append(self.SMSsmscText)
+            self.SMSpartyIdentifiers.append(self.SMSpartyIdentifier[:])
+            self.SMSpartyRoles.append(self.SMSpartyRole[:])
+            self.SMSpartyNames.append(self.SMSpartyName[:])            
+            self.SMSsourceText = ''
+            self.SMStimeStampText = ''
+            self.SMSbodyText = ''
+            self.SMSfolderText = ''
+            self.SMSsmscText = ''  
+            self.SMSpartyIdentifier.clear()
+            self.SMSpartyRole.clear()
+            self.SMSpartyName.clear()
+            self.SMSin = False
     
-    def __endElementModelCALL(self):
+    def __endElementModelCALENDAR(self):
+        if self.CALENDARin:
+
+            if (not self.CALENDARinAttendees) and (not self.CALENDARinAttachments):
+                idx = self.CALENDARtotal - 1
+                self.CALENDARcategory[idx] = self.CALENDARcategoryText
+                self.CALENDARsubject[idx] = self.CALENDARsubjectText
+                self.CALENDARdetails[idx] = self.CALENDARdetailsText
+                self.CALENDARstartDate[idx] = self.CALENDARstartDateText
+                self.CALENDARendDate[idx] = self.CALENDARendDateText
+                self.CALENDARrepeatUntil[idx] = self.CALENDARrepeatUntilText
+                self.CALENDARrepeatDay[idx] = self.CALENDARrepeatDayText
+                self.CALENDARrepeatInterval[idx] = self.CALENDARrepeatIntervalText
+                self.CALENDARcategoryText = ''
+                self.CALENDARsubjectText = ''
+                self.CALENDARdetailsText = ''                
+                self.CALENDARstartDateText = ''
+                self.CALENDARendDateText = ''
+                self.CALENDARrepeatUntilText = ''
+                self.CALENDARrepeatDayText = ''
+                self.CALENDARrepeatIntervalText = ''
+                self.CALENDARin = False
+                self.CALENDARinAttendees = False 
+                self.CALENDARinAttachments = False 
+
+
+    def __endElementModelCELL_TOWER(self):
+        if self.CELL_TOWERin:
+
+            if not self.CELL_TOWERinPosition:
+                idx = self.CELL_TOWERtotal - 1
+                self.CELL_TOWERlongitude[idx] = self.CELL_TOWERlongitudeText
+                self.CELL_TOWERlatitude[idx] = self.CELL_TOWERlatitudeText
+                self.CELL_TOWERtimeStamp[idx] = self.CELL_TOWERtimeStampText
+                self.CELL_TOWERmcc[idx] = self.CELL_TOWERmccText
+                self.CELL_TOWERmnc[idx] = self.CELL_TOWERmncText
+                self.CELL_TOWERlac[idx] = self.CELL_TOWERlacText
+                self.CELL_TOWERcid[idx] = self.CELL_TOWERcidText
+                self.CELL_TOWERnid[idx] = self.CELL_TOWERnidText
+                self.CELL_TOWERbid[idx] = self.CELL_TOWERbidText
+                self.CELL_TOWERsid[idx] = self.CELL_TOWERsidText
+                self.CELL_TOWERlongitudeText = ''
+                self.CELL_TOWERlatitudeText = ''
+                self.CELL_TOWERtimeStampText = ''                
+                self.CELL_TOWERmccText = ''
+                self.CELL_TOWERmncText = ''
+                self.CELL_TOWERlacText = ''
+                self.CELL_TOWERcidText = ''
+                self.CELL_TOWERnidText = ''
+                self.CELL_TOWERbidText = ''
+                self.CELL_TOWERsidText = ''
+                self.CELL_TOWERin = False                
+
+    def __endElementModelCALL(self):        
         if self.CALLinParty:
             self.CALLinParty = False
             if self.CALLroleText.upper() == 'TO':
@@ -1726,209 +3168,205 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALLroleText = ''
             self.CALLnameText = ''
         
-        else:
-            if self.CALLin:                                   
-                self.CALLsource.append(self.CALLsourceText)
-                self.CALLtimeStamp.append(self.CALLtimeStampText)
-                
-                if self.CALLdirectionText.strip() == '':
-                    self.CALLdirectionText = self.CALLtypeText
+        elif self.CALLin:                                   
+            self.CALLsource.append(self.CALLsourceText)
+            self.CALLtimeStamp.append(self.CALLtimeStampText)
+            
+            if self.CALLdirectionText.strip() == '':
+                self.CALLdirectionText = self.CALLtypeText
 
-                self.CALLdirection.append(self.CALLdirectionText)
-                self.CALLduration.append(self.CALLdurationText)
-                self.CALLoutcome.append(self.CALLoutcomeText)
-                self.CALLrolesTO.append(self.CALLroleTO[:])
-                self.CALLrolesFROM.append(self.CALLroleFROM[:])  
-                self.CALLidentifiersTO.append(self.CALLidentifierTO[:])
-                self.CALLidentifiersFROM.append(self.CALLidentifierFROM[:])
-                self.CALLnamesFROM.append(self.CALLnameFROM[:])  
-                self.CALLnamesTO.append(self.CALLnameTO[:])  
-
-                
-                self.CALLsourceText = ''
-                self.CALLtimeStampText = ''
-                self.CALLdirectionText = ''
-                self.CALLdurationText = ''
-                self.CALLtypeText = ''
-                self.CALLoutcomeText = ''
-                self.CALLroleText = ''
-                self.CALLnameText = ''
-                self.CALLidentifierText = ''
-                self.CALLroleTO.clear()
-                self.CALLroleFROM.clear()
-                self.CALLidentifierTO.clear()
-                self.CALLidentifierFROM.clear()
-                self.CALLnameTO.clear()
-                self.CALLnameFROM.clear()
-                self.CALLin = False
+            self.CALLdirection.append(self.CALLdirectionText)
+            self.CALLduration.append(self.CALLdurationText)
+            self.CALLoutcome.append(self.CALLoutcomeText)
+            self.CALLrolesTO.append(self.CALLroleTO[:])
+            self.CALLrolesFROM.append(self.CALLroleFROM[:])  
+            self.CALLidentifiersTO.append(self.CALLidentifierTO[:])
+            self.CALLidentifiersFROM.append(self.CALLidentifierFROM[:])
+            self.CALLnamesFROM.append(self.CALLnameFROM[:])  
+            self.CALLnamesTO.append(self.CALLnameTO[:])                  
+            self.CALLsourceText = ''
+            self.CALLtimeStampText = ''
+            self.CALLdirectionText = ''
+            self.CALLdurationText = ''
+            self.CALLtypeText = ''
+            self.CALLoutcomeText = ''
+            self.CALLroleText = ''
+            self.CALLnameText = ''
+            self.CALLidentifierText = ''
+            self.CALLroleTO.clear()
+            self.CALLroleFROM.clear()
+            self.CALLidentifierTO.clear()
+            self.CALLidentifierFROM.clear()
+            self.CALLnameTO.clear()
+            self.CALLnameFROM.clear()
+            self.CALLin = False
 
     def __endElementModelCONTACT(self):
-        if self.CONTACTinPhoneEntries:
-                self.CONTACTinPhoneEntries = False        
-        else:
-            if self.CONTACTinElementModelIgnore:
-                self.CONTACTinElementModelIgnore = False
-            else:
-                if self.CONTACTin:
-                    self.CONTACTphoneNums.append(self.CONTACTphoneNum[:])
-                    self.CONTACTname.append(self.CONTACTnameText)                    
-                    self.CONTACTnameText = ''
-                    self.CONTACTphoneNumText = ''
-                    self.CONTACTphoneNum.clear()
-                    self.CONTACTin = False
+        if self.CONTACTinModelUserId:
+            self.CONTACTinModelUserId = False
+        elif self.CONTACTinModelPhoneNumber:
+                self.CONTACTinModelPhoneNumber = False
+        elif self.CONTACTinModelProfilePicture:
+                self.CONTACTinModelProfilePicture = False
+        elif self.CONTACTinMultiModelFieldPhotos:
+                pass
+        elif self.CONTACTin:            
+            self.CONTACTsource[self.CONTACTtotal - 1] = self.CONTACTsourceText
+            self.CONTACTname[self.CONTACTtotal - 1] = self.CONTACTnameText
+            self.CONTACTphoneNum = self.CONTACTphoneNumText.split('###')
+            self.CONTACTuserId = self.CONTACTuserIdText.split('###')
+            
+            lenPhoneNums  = len(self.CONTACTphoneNum)
+            lenUserIds = len(self.CONTACTuserId)
+            for i in range(0, lenPhoneNums - lenUserIds):
+                self.CONTACTuserId.append('')
+            for i in range(0, lenUserIds - lenPhoneNums):
+                self.CONTACTphoneNum.append('')
+
+            self.CONTACTuserIds.append(self.CONTACTuserId[:])            
+            self.CONTACTphoneNums.append(self.CONTACTphoneNum[:])
+            self.CONTACTaccount[self.CONTACTtotal - 1] = self.CONTACTaccountText                        
+            
+            self.CONTACTsourceText = ''
+            self.CONTACTnameText = ''
+            self.CONTACTuserIdText = ''
+            self.CONTACTphoneNumText = ''
+            self.CONTACTaccountText = ''
+            self.CONTACTuserId.clear()
+            self.CONTACTphoneNum.clear()
+            self.CONTACTin = False
 
     def __endElementModelCHAT(self):
-        # The element Party contains the two (or more?) subjects 
-        # (identifier and name) involved in the Chat.   
-        self.CHATinModel = False          
-        if self.CHATinParty:
-            if self.CHATpartyIdentifierText.strip() == '':
-                pass
-            else:
-                self.CHATpartyIdentifier.append(self.CHATpartyIdentifierText)
-                self.CHATpartyName.append(self.CHATpartyNameText)
+        if self.CHATinMultiModelFieldPhotos:            
+            pass
+        elif self.CHATinParty:
+            self.CHATpartyIdentifier.append(self.CHATpartyIdentifierText)
+            self.CHATpartyName.append(self.CHATpartyNameText) 
             self.CHATpartyIdentifierText = ''
             self.CHATpartyNameText = ''               
-            self.CHATinParty = False                
-        else:
-            if self.CHATinMsgParty:
-                self.CHATinMsgParty = False
-            # This corresponds to the end of the element model (type="InstantMessage") that
-            # occurs when a message has been processed
-            else:
-                if (self.CHATinMsgAttachment or self.CHATinMsgContactPhoto or \
-                        self.CHATinMsgCoordinate or self.CHATinMsgExtraData or \
-                        self.CHATinMsgSharedContacts):
-                        if self.CHATinMsgAttachment:
-                            self.CHATinMsgAttachment = False
-                        else:
-                            if self.CHATinMsgContactPhoto:
-                                self.CHATinMsgContactPhoto = False
-                            else:
-                                if self.CHATinMsgCoordinate:
-                                    self.CHATinMsgCoordinate = False
-                                else:
-                                    if self.CHATinMsgExtraData:
-                                        self.CHATinMsgExtraData = False
-                                    else:
-                                        if self.CHATinMsgSharedContacts:
-                                            self.CHATinMsgSharedContacts = False
-                else:
-                    if self.CHATinMsg:
-                        self.CHATmsgIdentifierFrom.append(self.CHATmsgIdentifierFromText.strip())
-                        self.CHATmsgIdentifierTo.append(self.CHATmsgIdentifierToText.strip())
-                        self.CHATmsgNameFrom.append(self.CHATmsgNameFromText.strip())
-                        self.CHATmsgNameTo.append(self.CHATmsgNameToText.strip())
-                        self.CHATmsgBody.append(self.CHATmsgBodyText.strip())
-                        self.CHATmsgOutcome.append(self.CHATmsgOutcomeText.strip())
-                        self.CHATmsgTimeStamp.append(self.CHATmsgTimeStampText)
-                        self.CHATmsgAttachmentFilename.append(self.CHATmsgAttachmentFilenameText.strip())
-                        self.CHATmsgAttachmentUrl.append(self.CHATmsgAttachmentUrlText.strip())
-                        
-                        #print('CHAT n.:' + str(self.CHATtotal))
-                        #print('\tCHATmsgIdentifierFrom:' + str(self.CHATmsgIdentifierFromText))
-                        #print('\tCHATmsgIdentifierTo:' + str(self.CHATmsgIdentifierToText))
-                        self.CHATmsgIdentifierFromText = ''
-                        self.CHATmsgIdentifierToText = ''
-                        self.CHATmsgNameFromText = ''
-                        self.CHATmsgNameToText = ''
-                        self.CHATmsgBodyText = ''
-                        self.CHATmsgOutcomeText = ''
-                        self.CHATmsgTimeStampText = ''
-                        self.CHATmsgAttachmentFilenameText = ''
-                        self.CHATmsgAttachmentUrlText = ''
-                        self.CHATinMsg = False
-#---    This corresponds to the end of the element model (type="Chat") that
-#       occurs when a Chat has been processed 
-#                        
-                    else: 
-                        if self.CHATin:                    
-#---    the notation msg[:] creates a copy of the list, otherwise the 
-#       next clear would empty both instances: clearing the CHAT.msgBody
-#       would empty the same item in the container list CHAT.msgBodies
+            self.CHATinParty = False                        
+        elif self.CHATinInstantMessage:            
+            if self.CHATinMultiModelFieldTo or \
+                self.CHATinMultiModelFieldAttachments or \
+                self.CHATinMultiModelFieldSharedContacts or \
+                self.CHATinMultiModelFieldMessageExtraData or \
+                self.CHATinModelFieldAttachment or \
+                self.CHATinMsgFrom:
+                pass
+            else:                
+                self.CHATmsgIdentifierFrom[self.CHATmsgNum] = self.CHATmsgIdentifierFromText.strip()
+                self.CHATmsgNameFrom[self.CHATmsgNum] = self.CHATmsgNameFromText.strip()
+                self.CHATmsgBody[self.CHATmsgNum] = self.CHATmsgBodyText.strip()
+                self.CHATmsgOutcome[self.CHATmsgNum] = self.CHATmsgOutcomeText.strip()
+                self.CHATmsgTimeStamp[self.CHATmsgNum] = self.CHATmsgTimeStampText
+                self.CHATmsgAttachmentFilename[self.CHATmsgNum] = self.CHATmsgAttachmentFilenameText.strip()
+                self.CHATmsgAttachmentUrl[self.CHATmsgNum] = self.CHATmsgAttachmentUrlText.strip()
+                self.CHATmsgIdentifierFromText = ''
+                self.CHATmsgNameFromText = ''
+                self.CHATmsgBodyText = ''
+                self.CHATmsgOutcomeText = ''
+                self.CHATmsgTimeStampText = ''
+                self.CHATmsgAttachmentFilenameText = ''
+                self.CHATmsgAttachmentUrlText = ''
+                self.CHATinInstantMessage = False
+        elif self.CHATin:                    
+#---    the notation msg[:] creates a copy of the list, otherwise the next clear would 
+#       empty both instances: clearing the CHAT.msgBody would empty the same item in the 
+#       container list CHAT.msgBodies
 #                            
-                            if len(self.CHATmsgBody) == 0:
-                                self.CHATmsgBody.append("")
-                            if len(self.CHATmsgIdentifierTo) == 0:
-                                self.CHATmsgIdentifierTo.append("")
-                            if len(self.CHATmsgIdentifierFrom) == 0:
-                                self.CHATmsgIdentifierFrom.append("")
-                            if len(self.CHATmsgTimeStamp) == 0:
-                                self.CHATmsgTimeStamp.append("")
-                            if len(self.CHATmsgOutcome) == 0:
-                                self.CHATmsgOutcome.append("")
-                            if len(self.CHATmsgStatus) == 0:
-                                self.CHATmsgStatus.append("")
-                            if len(self.CHATmsgAttachmentFilename) == 0:
-                                self.CHATmsgAttachmentFilename.append("")
-                            if len(self.CHATmsgAttachmentUrl) == 0:
-                                self.CHATmsgAttachmentUrl.append("")
-                            if len(self.CHATmsgNameFrom) == 0:
-                                self.CHATmsgNameFrom.append("")
-                            if len(self.CHATmsgNameTo) == 0:
-                                self.CHATmsgNameTo.append("")
+            
+            self.CHATsource[self.CHATtotal - 1] = self.CHATsourceText
+            self.CHATsourceText = ''
+            self.CHATpartyIdentifiers.append(self.CHATpartyIdentifier[:])
+            self.CHATpartyNames.append(self.CHATpartyName[:])
+            self.CHATmsgIdentifiersFrom.append(self.CHATmsgIdentifierFrom[:])
+            self.CHATmsgNamesFrom.append(self.CHATmsgNameFrom[:])
+            self.CHATmsgBodies.append(self.CHATmsgBody[:])
+            self.CHATmsgStatuses.append(self.CHATmsgStatus[:])
+            self.CHATmsgOutcomes.append(self.CHATmsgOutcome[:])
+            self.CHATmsgTimeStamps.append(self.CHATmsgTimeStamp[:])
+            self.CHATmsgAttachmentFilenames.append(self.CHATmsgAttachmentFilename[:])
+            self.CHATmsgAttachmentUrls.append(self.CHATmsgAttachmentUrl[:])
+            
+            self.CHATpartyIdentifier.clear()
+            self.CHATpartyName.clear()
+            self.CHATmsgIdentifierFrom.clear()
+            self.CHATmsgNameFrom.clear()
+            self.CHATmsgBody.clear()
+            self.CHATmsgOutcome.clear()
+            self.CHATmsgStatus.clear()
+            self.CHATmsgTimeStamp.clear()
+            self.CHATmsgAttachmentFilename.clear()
+            self.CHATmsgAttachmentUrl.clear()
+            self.CHATmsgNum = -1
+            self.CHATin = False
+                                
+    def __endElementModelCOOKIE(self):
+        if self.COOKIEin:
+            idx = self.COOKIEtotal - 1
+            self.COOKIEsource[idx] = self.COOKIEsourceText
+            self.COOKIEname[idx] = self.COOKIEnameText
+            self.COOKIEvalue[idx] = self.COOKIEvalueText
+            self.COOKIEdomain[idx] = self.COOKIEdomainText
+            self.COOKIEcreationTime[idx] = self.COOKIEcreationTimeText
+            self.COOKIElastAccessTime[idx] = self.COOKIElastAccessTimeText
+            self.COOKIEexpiry[idx] = self.COOKIEexpiryText
+            self.COOKIEsourceText = ''
+            self.COOKIEnameText = ''
+            self.COOKIEvalueText = ''                
+            self.COOKIEdomainText = ''
+            self.COOKIEcreationTimeText = ''
+            self.COOKIElastAccessTimeText = ''
+            self.COOKIEexpiryText = ''
+            self.COOKIEin = False
 
-                            self.CHATpartyIdentifiers.append(self.CHATpartyIdentifier[:])
-                            self.CHATpartyNames.append(self.CHATpartyName[:])
-                            self.CHATmsgIdentifiersFrom.append(self.CHATmsgIdentifierFrom[:])
-                            self.CHATmsgIdentifiersTo.append(self.CHATmsgIdentifierTo[:])
-                            self.CHATmsgNamesFrom.append(self.CHATmsgNameFrom[:])
-                            self.CHATmsgNamesTo.append(self.CHATmsgNameTo[:])
-                            self.CHATmsgBodies.append(self.CHATmsgBody[:])
-                            self.CHATmsgStatuses.append(self.CHATmsgStatus[:])
-                            self.CHATmsgOutcomes.append(self.CHATmsgOutcome[:])
-                            self.CHATmsgTimeStamps.append(self.CHATmsgTimeStamp[:])
-                            self.CHATmsgAttachmentFilenames.append(self.CHATmsgAttachmentFilename[:])
-                            self.CHATmsgAttachmentUrls.append(self.CHATmsgAttachmentUrl[:])
-                            self.CHATpartyIdentifier.clear()
-                            self.CHATpartyName.clear()
-                            self.CHATmsgIdentifierFrom.clear()
-                            self.CHATmsgIdentifierTo.clear()
-                            self.CHATmsgNameFrom.clear()
-                            self.CHATmsgNameTo.clear()
-                            self.CHATmsgBody.clear()
-                            self.CHATmsgOutcome.clear()
-                            self.CHATmsgStatus.clear()
-                            self.CHATmsgTimeStamp.clear()
-                            self.CHATmsgAttachmentFilename.clear()
-                            self.CHATmsgAttachmentUrl.clear()
-                            self.CHATmsgNum = -1
-                            self.CHATin = False
-                            
+    def __endElementModelDEVICE_EVENT(self):
+        if self.DEVICE_EVENTin:
+            idx = self.DEVICE_EVENTtotal - 1
+            self.DEVICE_EVENTtimeStamp[idx] = self.DEVICE_EVENTtimeStampText
+            self.DEVICE_EVENTeventType[idx] = self.DEVICE_EVENTeventTypeText
+            self.DEVICE_EVENTvalue[idx] = self.DEVICE_EVENTvalueText
+            self.DEVICE_EVENTtimeStampText = ''
+            self.DEVICE_EVENTeventTypeText = ''
+            self.DEVICE_EVENTvalueText = ''                
+            self.DEVICE_EVENTin = False
+
     def __endElementModelEMAIL(self):
-        if (self.EMAILinModelFieldFROM or self.EMAILinMultiModelFieldTO or \
-            self.EMAILinMultiModelFieldCC or self.EMAILinMultiModelFieldBCC or \
-            self.EMAILinMultiModelFieldAttachments):
-            if self.EMAILinModelFieldFROM:
-                self.EMAILinModelFieldFROM = False
-            if self.EMAILinMultiModelFieldTO:
-                self.EMAILinMultiModelFieldTO = False
-                self.EMAILidentifierTO.append(self.EMAILidentifierTOtext)
-                self.EMAILidentifierTOtext = ''
-            if self.EMAILinMultiModelFieldCC:
-                self.EMAILinMultiModelFieldCC = False
-                self.EMAILidentifierCC.append(self.EMAILidentifierCCtext)
-                self.EMAILidentifierCCtext = ''
-            if self.EMAILinMultiModelFieldBCC:
-                self.EMAILinMultiModelFieldBCC = False
-                self.EMAILidentifierBCC.append(self.EMAILidentifierBCCtext)
-                self.EMAILidentifierBCCtext = ''
-            if self.EMAILinMultiModelFieldAttachments:
-                self.EMAILinMultiModelFieldAttachments = False
-                self.EMAILattachmentFilename.append(self.EMAILattachmentFilenameText)
-                self.EMAILattachmentFilenameText = ''
-        else:
-            if self.EMAILin:
-                self.EMAILsource.append(self.EMAILsourceText)
-                self.EMAILidentifierFROM.append(self.EMAILidentifierFROMtext)
+        if self.EMAILinModelFieldFROM:
+            self.EMAILinModelFieldFROM = False
+        elif self.EMAILinMultiModelFieldTO:
+            #self.EMAILinMultiModelFieldTO = False
+            idx = len(self.EMAILidentifierTO)
+            self.EMAILidentifierTO[idx - 1] = self.EMAILidentifierTOtext
+            self.EMAILidentifierTOtext = ''
+        elif self.EMAILinMultiModelFieldCC:
+            #self.EMAILinMultiModelFieldCC = False
+            idx = len(self.EMAILidentifierCC)
+            self.EMAILidentifierCC[idx - 1] = self.EMAILidentifierCCtext
+            self.EMAILidentifierCCtext = ''
+        elif self.EMAILinMultiModelFieldBCC:
+            #self.EMAILinMultiModelFieldBCC = False
+            idx = len(self.EMAILidentifierBCC)
+            self.EMAILidentifierBCC[idx - 1] = self.EMAILidentifierBCCtext
+            self.EMAILidentifierBCCtext = ''
+        elif self.EMAILinMultiModelFieldAttachments:
+            idx = len(self.EMAILattachmentFilename)
+            self.EMAILattachmentFilename[idx - 1] = self.EMAILattachmentFilenameText
+            self.EMAILattachmentFilenameText = ''            
+        elif self.EMAILin:                                
+                self.EMAILsource[self.EMAILtotal - 1] = self.EMAILsourceText
+                self.EMAILidentifierFROM[self.EMAILtotal - 1] = self.EMAILidentifierFROMtext
+                if self.EMAILidentifierTO:
+                    self.EMAILidentifierTO.append('')
+
                 self.EMAILidentifiersTO.append(self.EMAILidentifierTO[:])
                 self.EMAILidentifiersCC.append(self.EMAILidentifierCC[:])
                 self.EMAILidentifiersBCC.append(self.EMAILidentifierBCC[:])
                 self.EMAILattachmentsFilename.append(self.EMAILattachmentFilename[:])
-                bodyClean = self.__cleanText(self.EMAILbodyText)                
-                self.EMAILbody.append(bodyClean)
-                self.EMAILsubject.append(self.EMAILsubjectText)
-                self.EMAILtimeStamp.append(self.EMAILtimeStampText)
+                bodyClean = self.__cleanText(self.EMAILbodyText)
+                self.EMAILbody[self.EMAILtotal - 1] = bodyClean
+                self.EMAILsubject[self.EMAILtotal - 1] = self.EMAILsubjectText
+                self.EMAILtimeStamp[self.EMAILtotal - 1] = self.EMAILtimeStampText
                 self.EMAILsourceText = ''
                 self.EMAILidentifierFROMtext = ''
                 self.EMAILidentifierTO.clear()
@@ -1941,13 +3379,58 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.EMAILattachmentFilenameText = ''
                 self.EMAILin = False
                 self.EMAILinSource = False
-                self.EMAILinPartyTO = False
-                self.EMAILinPartyCC = False
-                self.EMAILinPartyBCC = False
-                self.EMAILinMultiModelFieldTO = False
-                self.EMAILinMultiModelFieldCC = False
-                self.EMAILinMultiModelFieldBCC = False
 
+    def __endElementModelINSTANT_MSG(self):
+        if self.INSTANT_MSGin:
+            if  not self.INSTANT_MSGinPartyFrom and \
+                not self.INSTANT_MSGinPartyTo and \
+                not self.INSTANT_MSGinAttachments and \
+                not self.INSTANT_MSGinAttachment and \
+                not self.INSTANT_MSGinSharedContacts:
+
+                idx = self.INSTANT_MSGtotal - 1
+                self.INSTANT_MSGsource[idx] = self.INSTANT_MSGsourceText
+                self.INSTANT_MSGfromIdentifier[idx] = self.INSTANT_MSGfromIdentifierText
+                self.INSTANT_MSGfromName[idx] = self.INSTANT_MSGfromNameText
+                self.INSTANT_MSGtoIdentifier[idx] = self.INSTANT_MSGtoIdentifierText
+                self.INSTANT_MSGtoName[idx] = self.INSTANT_MSGtoNameText
+                self.INSTANT_MSGsubject[idx] = self.INSTANT_MSGsubjectText
+                self.INSTANT_MSGbody[idx] = self.INSTANT_MSGbodyText
+                self.INSTANT_MSGtimeStamp[idx] = self.INSTANT_MSGtimeStampText
+                self.INSTANT_MSGstatusMsg[idx] = self.INSTANT_MSGstatusMsgText
+                self.INSTANT_MSGtype[idx] = self.INSTANT_MSGtypeText
+                self.INSTANT_MSGfolder[idx] = self.INSTANT_MSGfolderText
+                self.INSTANT_MSGapplication [idx] = self.INSTANT_MSGapplicationText
+                self.INSTANT_MSGsourceText = ''
+                self.INSTANT_MSGfromIdentifierText = ''                
+                self.INSTANT_MSGfromNameText = ''
+                self.INSTANT_MSGtoIdentifierText = ''
+                self.INSTANT_MSGtoNameText = ''
+                self.INSTANT_MSGsubjectText = ''
+                self.INSTANT_MSGbodyText = ''
+                self.INSTANT_MSGtimeStampText = ''
+                self.INSTANT_MSGstatusMsgText = ''
+                self.INSTANT_MSGtypeText = ''
+                self.INSTANT_MSGfolderText = ''
+                self.INSTANT_MSGapplicationText = ''
+                self.INSTANT_MSGin = False                
+            
+    def __endElementModelLOCATION(self):
+        if self.LOCATIONin:
+
+            if not self.LOCATIONinPosition:
+                idx = self.LOCATIONtotal - 1
+                self.LOCATIONlongitude[idx] = self.LOCATIONlongitudeText
+                self.LOCATIONlatitude[idx] = self.LOCATIONlatitudeText
+                self.LOCATIONaltitude[idx] = self.LOCATIONaltitudeText
+                self.LOCATIONtimeStamp[idx] = self.LOCATIONtimeStampText
+                self.LOCATIONcategory[idx] = self.LOCATIONcategoryText
+                self.LOCATIONlongitudeText = ''
+                self.LOCATIONlatitudeText = ''
+                self.LOCATIONaltitudeText = ''                
+                self.LOCATIONtimeStampText = ''
+                self.LOCATIONcategoryText = ''
+                self.LOCATIONin = False
 
     def __endElementModelU_ACCOUNT(self):
         if self.U_ACCOUNTinContactEntry:
@@ -1997,14 +3480,59 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.U_ACCOUNTusernameValueText = ''
             self.U_ACCOUNTin = False
 
+    def __endElementModelSEARCHED_ITEM(self):
+        if self.SEARCHED_ITEMin:
+            idx = self.SEARCHED_ITEMtotal - 1
+            self.SEARCHED_ITEMsource[idx] = self.SEARCHED_ITEMsourceText
+            self.SEARCHED_ITEMtimeStamp[idx] = self.SEARCHED_ITEMtimeStampText
+            self.SEARCHED_ITEMvalue[idx] = self.SEARCHED_ITEMvalueText
+            self.SEARCHED_ITEMsearchResult[idx] = self.SEARCHED_ITEMsearchResultText
+            self.SEARCHED_ITEMsourceText = ''
+            self.SEARCHED_ITEMtimeStampText = ''
+            self.SEARCHED_ITEMvalueText = ''
+            self.SEARCHED_ITEMsearchResultText = ''               
+            self.SEARCHED_ITEMin = False
+
+    def __endElementModelSOCIAL_MEDIA(self):
+        if self.SOCIAL_MEDIAin:
+
+            if not self.SOCIAL_MEDIAinAttachments and \
+                not self.SOCIAL_MEDIAinTaggedParties and \
+                not self.SOCIAL_MEDIAinAuthor:
+                idx = self.SOCIAL_MEDIAtotal - 1
+                self.SOCIAL_MEDIAsource[idx] = self.SOCIAL_MEDIAsourceText
+                self.SOCIAL_MEDIAtimeStamp[idx] = self.SOCIAL_MEDIAtimeStampText
+                self.SOCIAL_MEDIAbody[idx] = self.SOCIAL_MEDIAbodyText
+                self.SOCIAL_MEDIAtitle[idx] = self.SOCIAL_MEDIAtitleText
+                self.SOCIAL_MEDIAurl[idx] = self.SOCIAL_MEDIAurlText
+                self.SOCIAL_MEDIAidentifier[idx] = self.SOCIAL_MEDIAidentifierText
+                self.SOCIAL_MEDIAname[idx] = self.SOCIAL_MEDIAnameText
+                self.SOCIAL_MEDIAreactionsCount[idx] = self.SOCIAL_MEDIAreactionsCountText
+                self.SOCIAL_MEDIAsharesCount[idx] = self.SOCIAL_MEDIAsharesCountText
+                self.SOCIAL_MEDIAactivityType[idx] = self.SOCIAL_MEDIAactivityTypeText
+                self.SOCIAL_MEDIAcommentCount[idx] = self.SOCIAL_MEDIAcommentCountText
+                self.SOCIAL_MEDIAaccount[idx] = self.SOCIAL_MEDIAaccountText
+                self.SOCIAL_MEDIAsourceText = ''
+                self.SOCIAL_MEDIAtimeStampText = ''
+                self.SOCIAL_MEDIAbodyText = ''                
+                self.SOCIAL_MEDIAtitleText = ''                
+                self.SOCIAL_MEDIAurlText = ''
+                self.SOCIAL_MEDIAidentifierText = ''
+                self.SOCIAL_MEDIAnameText = ''
+                self.SOCIAL_MEDIAreactionsCountText = ''
+                self.SOCIAL_MEDIAsharesCountText = ''
+                self.SOCIAL_MEDIAactivityTypeText = ''
+                self.SOCIAL_MEDIAcommentCountText = ''
+                self.SOCIAL_MEDIAaccountText = ''
+                self.SOCIAL_MEDIAin = False
+
     def __endElementModelWEB_PAGE(self):
-        if self.WEB_PAGEin:                                                       
+        if self.WEB_PAGEin:             
             self.WEB_PAGEsource.append(self.WEB_PAGEsourceText)
             self.WEB_PAGEurl.append(self.WEB_PAGEurlText)
             self.WEB_PAGEtitle.append(self.WEB_PAGEtitleText)
             self.WEB_PAGEvisitCount.append(self.WEB_PAGEvisitCountText)
-            self.WEB_PAGElastVisited.append(self.WEB_PAGElastVisitedText)
-                                    
+            self.WEB_PAGElastVisited.append(self.WEB_PAGElastVisitedText)                                    
             self.WEB_PAGEsourceText = ''
             self.WEB_PAGEurlText = ''
             self.WEB_PAGEtitleText = ''
@@ -2012,107 +3540,273 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.WEB_PAGElastVisitedText = ''
             self.WEB_PAGEin = False
 
+    def __endElementModelWIRELESS_NET(self):
+        if self.WIRELESS_NETin:
+            if not self.WIRELESS_NETinPosition:
+                idx = self.WIRELESS_NETtotal - 1
+                self.WIRELESS_NETlongitude[idx] = self.WIRELESS_NETlongitudeText
+                self.WIRELESS_NETlatitude[idx] = self.WIRELESS_NETlatitudeText
+                self.WIRELESS_NETtimeStamp[idx] = self.WIRELESS_NETtimeStampText
+                self.WIRELESS_NETlastConnection[idx] = self.WIRELESS_NETlastConnectionText
+                self.WIRELESS_NETbssid[idx] = self.WIRELESS_NETbssidText
+                self.WIRELESS_NETssid[idx] = self.WIRELESS_NETssidText
+                self.WIRELESS_NETlongitudeText = ''
+                self.WIRELESS_NETlatitudeText = ''
+                self.WIRELESS_NETtimeStampText = ''                
+                self.WIRELESS_NETlastConnectionText = ''
+                self.WIRELESS_NETbssidText = ''
+                self.WIRELESS_NETssidText = ''
+                self.WIRELESS_NETin = False
+
     def __endElementFieldCALL(self):
         if self.CALLinSource:
             self.CALLinSource = False
-        if self.CALLinDirection:
+        elif self.CALLinDirection:
             self.CALLinDirection = False
-        if self.CALLinType:
+        elif self.CALLinType:
             self.CALLinType = False
-        if self.CALLinOutcome:
+        elif self.CALLinOutcome:
             self.CALLinOutcome = False
-        if self.CALLinTimeStamp:
+        elif self.CALLinTimeStamp:
             self.CALLinTimeStamp = False        
-        if self.CALLinDuration:
-            self.CALLinDuration = False
-        
-        if self.CALLinIdentifier:
+        elif self.CALLinDuration:
+            self.CALLinDuration = False        
+        elif self.CALLinIdentifier:
             self.CALLinIdentifier = False         
-        if self.CALLinRole:
+        elif self.CALLinRole:
             self.CALLinRole = False
-        if self.CALLinName:
-            self.CALLinName = False                                
-        
+        elif self.CALLinName:
+            self.CALLinName = False                                        
+
+    def __endElementFieldCALENDAR(self):
+        if self.CALENDARinCategory:
+            self.CALENDARinCategory = False
+        elif self.CALENDARinSubject:
+            self.CALENDARinSubject = False
+        elif self.CALENDARinDetails:
+            self.CALENDARinDetails = False
+        elif self.CALENDARinStartDate:
+            self.CALENDARinStartDate = False
+        elif self.CALENDARinEndDate:
+            self.CALENDARinEndDate = False
+        elif self.CALENDARinRepeatUntil:
+            self.CALENDARinRepeatUntil = False
+        elif self.CALENDARinRepeatDay:
+            self.CALENDARinRepeatDay = False
+        elif self.CALENDARinRepeatInterval:
+            self.CALENDARinRepeatInterval = False
+
+    def __endElementFieldCELL_TOWER(self):
+        if self.CELL_TOWERinLongitude:
+            self.CELL_TOWERinLongitude = False
+        elif self.CELL_TOWERinLatitude:
+            self.CELL_TOWERinLatitude = False
+        elif self.CELL_TOWERinTimeStamp:
+            self.CELL_TOWERinTimeStamp = False
+        elif self.CELL_TOWERinMCC:
+            self.CELL_TOWERinMCC = False
+        elif self.CELL_TOWERinMNC:
+            self.CELL_TOWERinMNC = False
+        elif self.CELL_TOWERinLAC:
+            self.CELL_TOWERinLAC = False
+        elif self.CELL_TOWERinCID:
+            self.CELL_TOWERinCID = False
+        elif self.CELL_TOWERinNID:
+            self.CELL_TOWERinNID = False
+        elif self.CELL_TOWERinBID:
+            self.CELL_TOWERinBID = False
+        elif self.CELL_TOWERinSID:
+            self.CELL_TOWERinSID = False  
+
+    def __endElementFieldWIRELESS_NET(self):
+        if self.WIRELESS_NETinLongitude:
+            self.WIRELESS_NETinLongitude = False
+        elif self.WIRELESS_NETinLatitude:
+            self.WIRELESS_NETinLatitude = False
+        elif self.WIRELESS_NETinTimeStamp:
+            self.WIRELESS_NETinTimeStamp = False
+        elif self.WIRELESS_NETinLastConnection:
+            self.WIRELESS_NETinLastConnection = False
+        elif self.WIRELESS_NETinBssid:
+            self.WIRELESS_NETinBssid = False
+        elif self.WIRELESS_NETinSsid:
+            self.WIRELESS_NETinSsid = False
+
+    def __endElementFieldCOOKIE(self):
+        if self.COOKIEinSource:
+            self.COOKIEinSource = False
+        elif self.COOKIEinName:
+            self.COOKIEinName = False
+        elif self.COOKIEinValue:
+            self.COOKIEinValue = False
+        elif self.COOKIEinDomain:
+            self.COOKIEinDomain = False
+        elif self.COOKIEinCreationTime:
+            self.COOKIEinCreationTime = False
+        elif self.COOKIEinLastAccessTime:
+            self.COOKIEinLastAccessTime = False
+        elif self.COOKIEinExpiry:
+            self.COOKIEinExpiry = False
 
     def __endElementFieldCONTACT(self):
-        if self.CONTACTinName:
+        if self.CONTACTinSource:
+            self.CONTACTinSource = False
+        elif self.CONTACTinName:
             self.CONTACTinName = False
-        if self.CONTACTinPhoneNum:
-            self.CONTACTinPhoneNum = False
+        elif self.CONTACTinModelUserId:
+            if self.CONTACTinUserId:
+                self.CONTACTinUserId = False 
+        elif self.CONTACTinModelPhoneNumber:
+            if self.CONTACTinPhoneNum:
+                self.CONTACTinPhoneNum = False      
+        elif self.CONTACTinAccount:
+            self.CONTACTinAccount = False
     
     def __endElementFieldCHAT(self):
         if self.CHATinSource:
             self.CHATinSource = False
-        if self.CHATinPartyIdentifier:
+        elif self.CHATinPartyIdentifier:
             self.CHATinPartyIdentifier = False
-        if self.CHATinPartyName:
+        elif self.CHATinPartyName:
             self.CHATinPartyName = False
-        if self.CHATinMsgIdentifierFrom:
+        elif self.CHATinMsgIdentifierFrom:
             self.CHATinMsgIdentifierFrom = False
-        if self.CHATinMsgNameFrom:
+        elif self.CHATinMsgNameFrom:
             self.CHATinMsgNameFrom = False
-        if self.CHATinMsgIdentifierTo:
-            self.CHATinMsgIdentifierTo = False
-        if self.CHATinMsgNameTo:
-            self.CHATinMsgNameTo = False
-        if self.CHATinMsgBody:
+        elif self.CHATinMsgBody:
             self.CHATinMsgBody = False
-        if self.CHATinMsgOutcome:
+        elif self.CHATinMsgOutcome:
             self.CHATinMsgOutcome = False
-        if self.CHATinMsgTimeStamp:
+        elif self.CHATinMsgTimeStamp:
             self.CHATinMsgTimeStamp = False
-        if self.CHATinMsgAttachmentFilename:
+        elif self.CHATinMsgAttachmentFilename:
             self.CHATinMsgAttachmentFilename = False
-        if self.CHATinMsgAttachmentUrl:
+        elif self.CHATinMsgAttachmentUrl:
             self.CHATinMsgAttachmentUrl = False
         
+    def __endElementFieldDEVICE_EVENT(self):
+        if self.DEVICE_EVENTinTimeStamp:
+            self.DEVICE_EVENTinTimeStamp = False
+        elif self.DEVICE_EVENTinEventType:
+            self.DEVICE_EVENTinEventType = False
+        elif self.DEVICE_EVENTinValue:
+            self.DEVICE_EVENTinValue = False
+
     def __endElementFieldEMAIL(self):
         if self.EMAILin:
             if self.EMAILinSource:
                 self.EMAILinSource = False
-            if self.EMAILinIdentifierFROM:
+            elif self.EMAILinIdentifierFROM:
                 self.EMAILinIdentifierFROM = False
-            if self.EMAILinIdentifierTO:
+            elif self.EMAILinIdentifierTO:
                 self.EMAILinIdentifierTO = False
-            if self.EMAILinIdentifierCC:
+            elif self.EMAILinIdentifierCC:
                 self.EMAILinIdentifierCC = False
-            if self.EMAILinIdentifierBCC:
+            elif self.EMAILinIdentifierBCC:
                 self.EMAILinIdentifierBCC = False
-            if self.EMAILinBody:
+            elif self.EMAILinBody:
                 self.EMAILinBody = False
-            if self.EMAILinSubject:
+            elif self.EMAILinSubject:
                 self.EMAILinSubject = False
-            if self.EMAILinTimeStamp:
+            elif self.EMAILinTimeStamp:
                 self.EMAILinTimeStamp = False
-            if self.EMAILinAttachmentFilename:
+            elif self.EMAILinAttachmentFilename:
                 self.EMAILinAttachmentFilename = False
+
+    def __endElementFieldINSTANT_MSG(self):
+        if self.INSTANT_MSGinSource:
+            self.INSTANT_MSGinSource = False
+        elif self.INSTANT_MSGinFromIdentifier:
+            self.INSTANT_MSGinFromIdentifier = False
+        elif self.INSTANT_MSGinFromName:
+            self.INSTANT_MSGinFromName = False
+        elif self.INSTANT_MSGinToIdentifier:
+            self.INSTANT_MSGinToIdentifier = False
+        elif self.INSTANT_MSGinToName:
+            self.INSTANT_MSGinToName = False
+        elif self.INSTANT_MSGinSubject:
+            self.INSTANT_MSGinSubject = False
+        elif self.INSTANT_MSGinBody:
+            self.INSTANT_MSGinBody = False
+        elif self.INSTANT_MSGinTimeStamp:
+            self.INSTANT_MSGinTimeStamp = False
+        elif self.INSTANT_MSGinType:
+            self.INSTANT_MSGinType = False
+        elif self.INSTANT_MSGinFolder:
+            self.INSTANT_MSGinFolder = False
+        elif self.INSTANT_MSGinApplication:
+            self.INSTANT_MSGinApplication = False
+
+    def __endElementFieldLOCATION(self):
+        if self.LOCATIONinLongitude:
+            self.LOCATIONinLongitude = False
+        elif self.LOCATIONinLatitude:
+            self.LOCATIONinLatitude = False
+        elif self.LOCATIONinAltitude:
+            self.LOCATIONinAltitude = False
+        elif self.LOCATIONinTimeStamp:
+            self.LOCATIONinTimeStamp = False
+        elif self.LOCATIONinCategory:
+            self.LOCATIONinCategory = False
+
+    def __endElementFieldSEARCHED_ITEM(self):
+        if self.SEARCHED_ITEMinSource:
+            self.SEARCHED_ITEMinSource = False
+        elif self.SEARCHED_ITEMinTimeStamp:
+            self.SEARCHED_ITEMinTimeStamp = False
+        elif self.SEARCHED_ITEMinValue:
+            self.SEARCHED_ITEMinValue = False
 
     def __endElementFieldSMS(self):
         if self.SMSinSource:
             self.SMSinSource = False 
-        if self.SMSinTimeStamp:
+        elif self.SMSinTimeStamp:
             self.SMSinTimeStamp = False
-        if self.SMSinBody:
+        elif self.SMSinBody:
             self.SMSinBody = False
-        if self.SMSinFolder:
+        elif self.SMSinFolder:
             self.SMSinFolder = False
-        if self.SMSinSmsc:
+        elif self.SMSinSmsc:
             self.SMSinSmsc = False
-
-        if self.SMSinPartyRole:
+        elif self.SMSinPartyRole:
             self.SMSinPartyRole = False
-        if self.SMSinPartyIdentifier:
+        elif self.SMSinPartyIdentifier:
             self.SMSinPartyIdentifier = False         
-        if self.SMSinPartyName:
+        elif self.SMSinPartyName:
             self.SMSinPartyName = False 
         
+    def __endElementFieldSOCIAL_MEDIA(self):
+        if self.SOCIAL_MEDIAinSource:
+            self.SOCIAL_MEDIAinSource = False
+        elif self.SOCIAL_MEDIAinTimeStamp:
+            self.SOCIAL_MEDIAinTimeStamp = False
+        elif self.SOCIAL_MEDIAinBody:
+            self.SOCIAL_MEDIAinBody = False
+        elif self.SOCIAL_MEDIAinTitle:
+            self.SOCIAL_MEDIAinTitle = False
+        elif self.SOCIAL_MEDIAinUrl:
+            self.SOCIAL_MEDIAinUrl = False            
+        elif self.SOCIAL_MEDIAinIdentifier:
+            self.SOCIAL_MEDIAinIdentifier = False
+        elif self.SOCIAL_MEDIAinName:
+            self.SOCIAL_MEDIAinName = False
+        elif self.SOCIAL_MEDIAinReactionsCount:
+            self.SOCIAL_MEDIAinReactionsCount = False
+        elif self.SOCIAL_MEDIAinSharesCount:
+            self.SOCIAL_MEDIAinSharesCount = False
+        elif self.SOCIAL_MEDIAinActivityType:
+            self.SOCIAL_MEDIAinActivityType = False
+        elif self.SOCIAL_MEDIAinCommentCount:
+            self.SOCIAL_MEDIAinCommentCount = False
+        elif self.SOCIAL_MEDIAinAccount:
+            self.SOCIAL_MEDIAinAccount = False
 
     def __endElementFieldU_ACCOUNT(self):        
         if self.U_ACCOUNTinSource:
                 self.U_ACCOUNTinSource = False
-        if self.U_ACCOUNTinName:
+        elif self.U_ACCOUNTinName:
             self.U_ACCOUNTinName = False
-        if self.U_ACCOUNTinUsername:
+        elif self.U_ACCOUNTinUsername:
                 self.U_ACCOUNTinUsername = False    
 
     def __endElementFieldCONTEXT(self):
@@ -2121,155 +3815,296 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CONTEXTinExaminerNameValue = False
 
     def __endElementFieldWEB_PAGE(self):
-        if self.WEB_PAGEinSource:
-            self.WEB_PAGEinSource = False
-        if self.WEB_PAGEinUrl:
-            self.WEB_PAGEinUrl = False
-        if self.WEB_PAGEinTitle:
-            self.WEB_PAGEinTitle = False
-        if self.WEB_PAGEinVisitCount:
-            self.WEB_PAGEinVisitCount = False
-        if self.WEB_PAGEinLastVisited:
-            self.WEB_PAGEinLastVisited = False
+        if self.WEB_PAGEin:
+            if self.WEB_PAGEinSource:
+                self.WEB_PAGEinSource = False
+            elif self.WEB_PAGEinUrl:
+                self.WEB_PAGEinUrl = False
+            elif self.WEB_PAGEinTitle:
+                self.WEB_PAGEinTitle = False
+            elif self.WEB_PAGEinVisitCount:
+                self.WEB_PAGEinVisitCount = False
+            elif self.WEB_PAGEinLastVisited:
+                self.WEB_PAGEinLastVisited = False
 
     def __endElementValueCALL(self):
         if self.CALLinSourceValue:
             self.CALLinSourceValue = False
-        if self.CALLinDirectionValue:
+        elif self.CALLinDirectionValue:
             self.CALLinDirectionValue = False
-        if self.CALLinTypeValue:
+        elif self.CALLinTypeValue:
             self.CALLinTypeValue = False
-        if self.CALLinOutcomeValue:
+        elif self.CALLinOutcomeValue:
             self.CALLinOutcomeValue = False
-        if self.CALLinTimeStampValue:
+        elif self.CALLinTimeStampValue:
             self.CALLinTimeStampValue = False        
-        if self.CALLinDurationValue:
-            self.CALLinDurationValue = False
-        
-        if self.CALLinIdentifierValue:
+        elif self.CALLinDurationValue:
+            self.CALLinDurationValue = False        
+        elif self.CALLinIdentifierValue:
             self.CALLinIdentifierValue = False
-        if self.CALLinRoleValue:
+        elif self.CALLinRoleValue:
             self.CALLinRoleValue = False
-        if self.CALLinNameValue:            
+        elif self.CALLinNameValue:            
             self.CALLinNameValue = False                
 
+    def __endElementValueCALENDAR(self):
+        if self.CALENDARinCategoryValue:
+            self.CALENDARinCategoryValue = False
+        elif self.CALENDARinSubjectValue:
+            self.CALENDARinSubjectValue = False
+        elif self.CALENDARinDetailsValue:
+            self.CALENDARinDetailsValue = False
+        elif self.CALENDARinStartDateValue:
+            self.CALENDARinStartDateValue = False
+        elif self.CALENDARinEndDateValue:
+            self.CALENDARinEndDateValue = False
+        elif self.CALENDARinRepeatUntilValue:
+            self.CALENDARinRepeatUntilValue = False
+        elif self.CALENDARinRepeatDayValue:
+            self.CALENDARinRepeatDayValue = False
+        elif self.CALENDARinRepeatIntervalValue:
+            self.CALENDARinRepeatIntervalValue = False
+
+    def __endElementValueCELL_TOWER(self):
+        if self.CELL_TOWERinLongitudeValue:
+            self.CELL_TOWERinLongitudeValue = False
+        elif self.CELL_TOWERinLatitudeValue:
+            self.CELL_TOWERinLatitudeValue = False
+        elif self.CELL_TOWERinTimeStampValue:
+            self.CELL_TOWERinTimeStampValue = False
+        elif self.CELL_TOWERinMCCValue:
+            self.CELL_TOWERinMCCValue = False
+        elif self.CELL_TOWERinMNCValue:
+            self.CELL_TOWERinMNCValue = False
+        elif self.CELL_TOWERinLACValue:
+            self.CELL_TOWERinLACValue = False
+        elif self.CELL_TOWERinCIDValue:
+            self.CELL_TOWERinCIDValue = False
+        elif self.CELL_TOWERinNIDValue:
+            self.CELL_TOWERinNIDValue = False
+        elif self.CELL_TOWERinBIDValue:
+            self.CELL_TOWERinBIDValue = False
+        elif self.CELL_TOWERinSIDValue:
+            self.CELL_TOWERinSIDValue = False
+
+    def __endElementValueDEVICE_EVENT(self):
+        if self.DEVICE_EVENTinTimeStampValue:
+            self.DEVICE_EVENTinTimeStampValue = False
+        elif self.DEVICE_EVENTinEventTypeValue:
+            self.DEVICE_EVENTinEventTypeValue = False
+        elif self.DEVICE_EVENTinValueValue:
+            self.DEVICE_EVENTinValueValue = False
+        
+
+    def __endElementValueCOOKIE(self):
+        if self.COOKIEinSourceValue:
+            self.COOKIEinSourceValue = False
+        elif self.COOKIEinNameValue:
+            self.COOKIEinNameValue = False
+        elif self.COOKIEinValueValue:
+            self.COOKIEinValueValue = False
+        elif self.COOKIEinDomainValue:
+            self.COOKIEinDomainValue = False
+        elif self.COOKIEinCreationTimeValue:
+            self.COOKIEinCreationTimeValue = False
+        elif self.COOKIEinLastAccessTimeValue:
+            self.COOKIEinLastAccessTimeValue = False
+        elif self.COOKIEinExpiryValue:
+            self.COOKIEinExpiryValue = False
+
     def __endElementValueCHAT(self):
-        if self.CHATinSourceValue:
-            self.CHATsource.append(self.CHATsourceText)
-            self.CHATinSourceValue = False
-            self.CHATsourceText = ''
-        if self.CHATinPartyIdentifierValue:
-            self.CHATinPartyIdentifierValue = False
-        if self.CHATinPartyNameValue:
-            self.CHATinPartyNameValue = False
-        if self.CHATinMsgIdentifierFromValue:
-            self.CHATinMsgIdentifierFromValue = False
-        if self.CHATinMsgIdentifierToValue:
-            self.CHATinMsgIdentifierToValue = False
-        if self.CHATinMsgNameFromValue:                
-            self.CHATinMsgNameFromValue = False
-        if self.CHATinMsgNameToValue:
-            self.CHATinMsgNameToValue = False
-        if self.CHATinMsgBodyValue:
-            self.CHATinMsgBodyValue = False
-        if self.CHATinMsgOutcomeValue:
-            self.CHATinMsgOutcomeValue = False
-        if self.CHATinMsgTimeStampValue:
-            self.CHATinMsgTimeStampValue = False
-        if self.CHATinMsgAttachmentFilenameValue:
-            self.CHATinMsgAttachmentFilenameValue = False
-        if self.CHATinMsgAttachmentUrlValue:
-            self.CHATinMsgAttachmentUrlValue = False
+        if self.CHATin:
+            if self.CHATinSourceValue:            
+                self.CHATinSourceValue = False
+            elif self.CHATinPartyIdentifierValue:
+                self.CHATinPartyIdentifierValue = False
+            elif self.CHATinPartyNameValue:
+                self.CHATinPartyNameValue = False
+            elif self.CHATinMsgIdentifierFromValue:
+                self.CHATinMsgIdentifierFromValue = False
+            elif self.CHATinMsgNameFromValue:                
+                self.CHATinMsgNameFromValue = False
+            elif self.CHATinMsgBodyValue:
+                self.CHATinMsgBodyValue = False
+            elif self.CHATinMsgOutcomeValue:
+                self.CHATinMsgOutcomeValue = False
+            elif self.CHATinMsgTimeStampValue:
+                self.CHATinMsgTimeStampValue = False
+            elif self.CHATinMsgAttachmentFilenameValue:
+                self.CHATinMsgAttachmentFilenameValue = False
+            elif self.CHATinMsgAttachmentUrlValue:
+                self.CHATinMsgAttachmentUrlValue = False
 
     def __endElementValueCONTACT(self):
-        if self.CONTACTinNameValue:
+        if self.CONTACTinSourceValue:
+            self.CONTACTinSourceValue = False
+        elif self.CONTACTinNameValue:
             self.CONTACTinNameValue = False
-        if self.CONTACTinPhoneNumValue:            
-            if self.CONTACTphoneNumText == '':
-                pass
-            else:
-                phonePattern = '([0-9]+)'
-                phoneNum = self.CONTACTphoneNumText.replace(' ', '')
-                phoneNum = phoneNum.replace('+', '00')
-                phoneMatch = re.search(phonePattern, phoneNum) 
-                if phoneMatch:
-                    phoneNum = phoneMatch.group()
-                    self.CONTACTphoneNum.append(phoneNum) 
-                self.CONTACTphoneNumText = ''
+        elif self.CONTACTinUserIdValue:
+            self.CONTACTinUserIdValue = False 
+        elif self.CONTACTinPhoneNumValue:            
+            self.CONTACTphoneNumText = self.CONTACTphoneNumText.strip().replace(' ', '')
             self.CONTACTinPhoneNumValue = False
+        elif self.CONTACTinAccountValue:
+            self.CONTACTinAccountValue = False 
 
     def __endElementValueEMAIL(self):
         if self.EMAILinSourceValue:
             self.EMAILinSourceValue = False
-        if self.EMAILinIdentifierFROMvalue:
+        elif self.EMAILinIdentifierFROMvalue:
            self.EMAILinIdentifierFROMvalue = False
-        if self.EMAILinIdentifierTOvalue:
+        elif self.EMAILinIdentifierTOvalue:
            self.EMAILinIdentifierTOvalue = False
-        if self.EMAILinIdentifierCCvalue:
+        elif self.EMAILinIdentifierCCvalue:
            self.EMAILinIdentifierCCvalue = False
-        if self.EMAILinIdentifierBCCvalue:
+        elif self.EMAILinIdentifierBCCvalue:
            self.EMAILinIdentifierBCCvalue = False
-        if self.EMAILinBodyValue:
+        elif self.EMAILinBodyValue:
             self.EMAILinBodyValue = False
-        if self.EMAILinSubjectValue:
+        elif self.EMAILinSubjectValue:
             self.EMAILinSubjectValue = False
-        if self.EMAILinTimeStampValue:
+        elif self.EMAILinTimeStampValue:
             self.EMAILinTimeStampValue = False
-        if self.EMAILinAttachmentFilenameValue:
+        elif self.EMAILinAttachmentFilenameValue:
             self.EMAILinAttachmentFilenameValue = False
+
+    def __endElementValueINSTANT_MSG(self):
+        if self.INSTANT_MSGinSourceValue:
+            self.INSTANT_MSGinSourceValue = False
+        elif self.INSTANT_MSGinFromIdentifierValue:
+            self.INSTANT_MSGinFromIdentifierValue = False
+        elif self.INSTANT_MSGinFromNameValue:
+            self.INSTANT_MSGinFromNameValue = False
+        elif self.INSTANT_MSGinToIdentifierValue:
+            self.INSTANT_MSGinToIdentifierValue = False
+        elif self.INSTANT_MSGinToNameValue:
+            self.INSTANT_MSGinToNameValue = False
+        elif self.INSTANT_MSGinSubjectValue:
+            self.INSTANT_MSGinSubjectValue = False
+        elif self.INSTANT_MSGinBodyValue:
+            self.INSTANT_MSGinBodyValue = False
+        elif self.INSTANT_MSGinTimeStampValue:
+            self.INSTANT_MSGinTimeStampValue = False
+        elif self.INSTANT_MSGinStatusMsgValue:
+            self.INSTANT_MSGinStatusMsgValue = False
+        elif self.INSTANT_MSGinTypeValue:
+            self.INSTANT_MSGinTypeValue = False
+        elif self.INSTANT_MSGinFolderValue:
+            self.INSTANT_MSGinFolderValue = False
+        elif self.INSTANT_MSGinApplicationValue:
+            self.INSTANT_MSGinApplicationValue = False
+
+
+    def __endElementValueLOCATION(self):
+        if self.LOCATIONinLongitudeValue:
+            self.LOCATIONinLongitudeValue = False
+        elif self.LOCATIONinLatitudeValue:
+            self.LOCATIONinLatitudeValue = False
+        elif self.LOCATIONinAltitudeValue:
+            self.LOCATIONinAltitudeValue = False
+        elif self.LOCATIONinTimeStampValue:
+            self.LOCATIONinTimeStampValue = False
+        elif self.LOCATIONinCategoryValue:
+            self.LOCATIONinCategoryValue = False
+
+    def __endElementValueSEARCHED_ITEM(self):
+        if self.SEARCHED_ITEMinSourceValue:
+            self.SEARCHED_ITEMinSourceValue = False
+        elif self.SEARCHED_ITEMinTimeStampValue:
+            self.SEARCHED_ITEMinTimeStampValue = False
+        elif self.SEARCHED_ITEMinValueValue:
+            self.SEARCHED_ITEMinValueValue = False
 
     def __endElementValueSMS(self):
         if self.SMSinSourceValue:
             self.SMSinSourceValue = False 
-        if self.SMSinTimeStampValue:
+        elif self.SMSinTimeStampValue:
             self.SMSinTimeStampValue = False
-        if self.SMSinBodyValue:
+        elif self.SMSinBodyValue:
             self.SMSinBodyValue = False
-        if self.SMSinFolderValue:
+        elif self.SMSinFolderValue:
             self.SMSinFolderValue = False
-        if self.SMSinSmscValue:
+        elif self.SMSinSmscValue:
             self.SMSinSmscValue = False
-
-        if self.SMSinPartyIdentifierValue:
+        elif self.SMSinPartyIdentifierValue:
             self.SMSinPartyIdentifierValue = False
-        if self.SMSinPartyRoleValue:            
+        elif self.SMSinPartyRoleValue:            
             self.SMSinPartyRoleValue = False                
-        if self.SMSinPartyNameValue:
+        elif self.SMSinPartyNameValue:
             self.SMSinPartyNameValue = False 
+
+    def __endElementValueSOCIAL_MEDIA(self):
+        if self.SOCIAL_MEDIAinSourceValue:
+            self.SOCIAL_MEDIAinSourceValue = False
+        elif self.SOCIAL_MEDIAinTimeStampValue:
+            self.SOCIAL_MEDIAinTimeStampValue= False
+        elif self.SOCIAL_MEDIAinBodyValue:
+            self.SOCIAL_MEDIAinBodyValue = False
+        elif self.SOCIAL_MEDIAinTitleValue:
+            self.SOCIAL_MEDIAinTitleValue = False
+        elif self.SOCIAL_MEDIAinUrlValue:
+            self.SOCIAL_MEDIAinUrlValue = False
+        elif self.SOCIAL_MEDIAinIdentifierValue:
+            self.SOCIAL_MEDIAinIdentifierValue = False
+        elif self.SOCIAL_MEDIAinNameValue:
+            self.SOCIAL_MEDIAinNameValue = False
+        elif self.SOCIAL_MEDIAinReactionsCountValue:
+            self.SOCIAL_MEDIAinReactionsCountValue = False
+        elif self.SOCIAL_MEDIAinSharesCountValue:
+            self.SOCIAL_MEDIAinSharesCountValue = False
+        elif self.SOCIAL_MEDIAinActivityTypeValue:
+            self.SOCIAL_MEDIAinActivityTypeValue = False
+        elif self.SOCIAL_MEDIAinCommentCountValue:
+            self.SOCIAL_MEDIAinCommentCountValue = False
+        elif self.SOCIAL_MEDIAinAccountValue:
+            self.SOCIAL_MEDIAinAccountValue = False
 
     def __endElementValueU_ACCOUNT(self):
         if self.U_ACCOUNTinSourceValue:
             self.U_ACCOUNTinSourceValue = False
-
-        if self.U_ACCOUNTinNameValue:
-            self.U_ACCOUNTinNameValue = False
-            
-        if self.U_ACCOUNTinUsernameValue:
+        elif self.U_ACCOUNTinNameValue:
+            self.U_ACCOUNTinNameValue = False            
+        elif self.U_ACCOUNTinUsernameValue:
             self.U_ACCOUNTinUsernameValue = False
 
 
     def __endElementValueWEB_PAGE(self):
-        if self.WEB_PAGEinSourceValue:
-            self.WEB_PAGEinSourceValue = False 
-        if self.WEB_PAGEinUrlValue:
-            self.WEB_PAGEinUrlValue = False 
-        if self.WEB_PAGEinTitleValue:
-            self.WEB_PAGEinTitleValue = False 
-        if self.WEB_PAGEinVisitCountValue:
-            self.WEB_PAGEinVisitCountValue = False 
-        if self.WEB_PAGEinLastVisitedValue:
-            self.WEB_PAGEinLastVisitedValue = False 
+        if self.WEB_PAGEin:
+            if self.WEB_PAGEinSourceValue:
+                self.WEB_PAGEinSourceValue = False 
+            elif self.WEB_PAGEinUrlValue:
+                self.WEB_PAGEinUrlValue = False 
+            elif self.WEB_PAGEinTitleValue:
+                self.WEB_PAGEinTitleValue = False 
+            elif self.WEB_PAGEinVisitCountValue:
+                self.WEB_PAGEinVisitCountValue = False 
+            elif self.WEB_PAGEinLastVisitedValue:
+                self.WEB_PAGEinLastVisitedValue = False 
+
+    def __endElementValueWIRELESS_NET(self):
+        if self.WIRELESS_NETinLongitudeValue:
+            self.WIRELESS_NETinLongitudeValue = False
+        elif self.WIRELESS_NETinLatitudeValue:
+            self.WIRELESS_NETinLatitudeValue = False
+        elif self.WIRELESS_NETinTimeStampValue:
+            self.WIRELESS_NETinTimeStampValue = False
+        elif self.WIRELESS_NETinLastConnectionValue:
+            self.WIRELESS_NETinLastConnectionValue = False
+        elif self.WIRELESS_NETinBssidValue:
+            self.WIRELESS_NETinBssidValue = False
+        elif self.WIRELESS_NETinSsidValue:
+            self.WIRELESS_NETinSsidValue = False
 
     def __endElementTimeStampTAGGED_FILE(self):
         if self.TAGGED_FILESinAccessInfoCreate:
             self.FILEtimeCreate[self.FILEidx] = self.TAGGED_FILESCreateText
             self.TAGGED_FILESCreateText = ''
             self.TAGGED_FILESinAccessInfoCreate = False
-        if self.TAGGED_FILESinAccessInfoModify:
+        elif self.TAGGED_FILESinAccessInfoModify:
             self.FILEtimeModify[self.FILEidx] = self.TAGGED_FILESModifyText
             self.TAGGED_FILESModifyText = ''
             self.TAGGED_FILESinAccessInfoModify = False
-        if self.TAGGED_FILESinAccessInfoAccess:
+        elif self.TAGGED_FILESinAccessInfoAccess:
             self.FILEtimeAccess[self.FILEidx] = self.TAGGED_FILESAccessText
             self.TAGGED_FILESAccessText = ''
             self.TAGGED_FILESinAccessInfoAccess = False
@@ -2279,56 +4114,56 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.FILEmd5.append(self.TAGGED_FILESmd5Text)
             self.TAGGED_FILESmd5Text = ''
             self.TAGGED_FILESinMD5 = False
-        if self.TAGGED_FILESinTags:
+        elif self.TAGGED_FILESinTags:
             self.FILEtags.append(self.TAGGED_FILEStagsText)
             self.TAGGED_FILEStagsText = ''
             self.TAGGED_FILESinTags = False
-        if self.TAGGED_FILESinLocalPath:
+        elif self.TAGGED_FILESinLocalPath:
             self.FILElocalPath.append(os.path.join(self.TAGGED_FILESbaseLocalPath, 
                 self.TAGGED_FILESlocalPathText))
             self.TAGGED_FILESlocalPathText = ''
             self.TAGGED_FILESinLocalPath = False
-        if self.TAGGED_FILESinInodeNumber:
+        elif self.TAGGED_FILESinInodeNumber:
             self.FILEiNodeNumber[self.FILEidx] = self.TAGGED_FILESiNodeNumberText
             self.TAGGED_FILESiNodeNumberText = ''
             self.TAGGED_FILESinInodeNumber = False
-        if self.TAGGED_FILESinInodeTimeModify:
+        elif self.TAGGED_FILESinInodeTimeModify:
             self.FILEiNodeTimeModify[self.FILEidx] = self.TAGGED_FILESiNodeTimeModifyText
             self.TAGGED_FILESiNodeTimeModifyText = ''
             self.TAGGED_FILESinInodeTimeModify = False
-        if self.TAGGED_FILESinExifLatitudeRef:
+        elif self.TAGGED_FILESinExifLatitudeRef:
             self.FILEexifLatitudeRef[self.FILEidx] = self.TAGGED_FILESexifLatitudeRef
             self.TAGGED_FILESexifLatitudeRef = ''
             self.TAGGED_FILESinExifLatitudeRef = False
-        if self.TAGGED_FILESinExifLatitude:
+        elif self.TAGGED_FILESinExifLatitude:
             self.FILEexifLatitude[self.FILEidx] = self.TAGGED_FILESexifLatitude
             self.TAGGED_FILESexifLatitude = ''
             self.TAGGED_FILESinExifLatitude = False
-        if self.TAGGED_FILESinExifLongitudeRef:
+        elif self.TAGGED_FILESinExifLongitudeRef:
             self.FILEexifLongitudeRef[self.FILEidx] = self.TAGGED_FILESexifLongitudeRef
             self.TAGGED_FILESexifLongitudeRef = ''
             self.TAGGED_FILESinExifLongitudeRef = False
-        if self.TAGGED_FILESinExifLongitude:
+        elif self.TAGGED_FILESinExifLongitude:
             self.FILEexifLongitude[self.FILEidx] = self.TAGGED_FILESexifLongitude
             self.TAGGED_FILESexifLongitude = ''
             self.TAGGED_FILESinExifLongitude = False
-        if self.TAGGED_FILESinExifAltitude:
+        elif self.TAGGED_FILESinExifAltitude:
             self.FILEexifAltitude[self.FILEidx] = self.TAGGED_FILESexifAltitude
             self.TAGGED_FILESexifAltitude = ''
             self.TAGGED_FILESinExifAltitude = False
-        if self.TAGGED_FILESinExifMake:
+        elif self.TAGGED_FILESinExifMake:
             self.FILEexifMake[self.FILEidx] = self.TAGGED_FILESexifMake
             self.TAGGED_FILESexifMake = ''
             self.TAGGED_FILESinExifMake = False
-        if self.TAGGED_FILESinExifModel:
+        elif self.TAGGED_FILESinExifModel:
             self.FILEexifModel[self.FILEidx] = self.TAGGED_FILESexifModel
             self.TAGGED_FILESexifModel = ''
             self.TAGGED_FILESinExifModel = False
-        if self.TAGGED_FILESinOwnerGID:
+        elif self.TAGGED_FILESinOwnerGID:
             self.FILEownerGID[self.FILEidx] = self.TAGGED_FILESownerGIDText
             self.TAGGED_FILESownerGIDText = ''
             self.TAGGED_FILESinOwnerGID = False
-        if self.TAGGED_FILESinOwnerUID:
+        elif self.TAGGED_FILESinOwnerUID:
             self.FILEownerUID[self.FILEidx] = self.TAGGED_FILESownerUIDText
             self.TAGGED_FILESownerUIDText = ''
             self.TAGGED_FILESinOwnerUID = False
@@ -2337,41 +4172,39 @@ class ExtractTraces(xml.sax.ContentHandler):
         
         if self.CONTEXTinDeviceExtractionStart:
             self.CONTEXTinDeviceExtractionStart = False
-        if self.CONTEXTinDeviceExtractionEnd:
+        elif self.CONTEXTinDeviceExtractionEnd:
             self.CONTEXTinDeviceExtractionEnd = False
-
-        if self.CONTEXTinUfedVersionValue:
+        elif self.CONTEXTinUfedVersionValue:
             self.CONTEXTinUfedVersionValue = False
-        if self.CONTEXTinDeviceCreationTimeValue:
+        elif self.CONTEXTinDeviceCreationTimeValue:
             self.CONTEXTinDeviceCreationTimeValue = False
-        if self.CONTEXTinDeviceBluetoothAddressValue:
+        elif self.CONTEXTinDeviceBluetoothAddressValue:
             self.CONTEXTinDeviceBluetoothAddressValue = False
-        if self.CONTEXTinDeviceBluetoothName:
+        elif self.CONTEXTinDeviceBluetoothName:
             self.CONTEXTinDeviceBluetoothName = False
-        if self.CONTEXTinDeviceIdValue:
+        elif self.CONTEXTinDeviceIdValue:
             self.CONTEXTinDeviceIdValue = False
-        if self.CONTEXTinDevicePhoneModelValue:
+        elif self.CONTEXTinDevicePhoneModelValue:
             self.CONTEXTinDevicePhoneModelValue = False
-        if self.CONTEXTinDeviceOsTypeValue:
+        elif self.CONTEXTinDeviceOsTypeValue:
             self.CONTEXTinDeviceOsTypeValue = False
-        if self.CONTEXTinDeviceOsVersionValue:
+        elif self.CONTEXTinDeviceOsVersionValue:
             self.CONTEXTinDeviceOsVersionValue = False
-        if self.CONTEXTinDevicePhoneVendorValue:
+        elif self.CONTEXTinDevicePhoneVendorValue:
             self.CONTEXTinDevicePhoneVendorValue = False
-        if self.CONTEXTinDeviceMacAddressValue:
+        elif self.CONTEXTinDeviceMacAddressValue:
             self.CONTEXTinDeviceMacAddressValue = False
-        if self.CONTEXTinDeviceIccidValue:
+        elif self.CONTEXTinDeviceIccidValue:
             self.CONTEXTinDeviceIccidValue = False
-        if self.CONTEXTinDeviceMsisdnValue:
+        elif self.CONTEXTinDeviceMsisdnValue:
             self.CONTEXTinDeviceMsisdnValue = False
-        if self.CONTEXTinDeviceImsiValue:
+        elif self.CONTEXTinDeviceImsiValue:
             self.CONTEXTinDeviceImsiValue = False
-        if self.CONTEXTinDeviceImeiValue:
-            self.CONTEXTinDeviceImeiValue = False
-        
-        if self.CONTEXTinImageMetadataHashValueSHA:
+        elif self.CONTEXTinDeviceImeiValue:
+            self.CONTEXTinDeviceImeiValue = False        
+        elif self.CONTEXTinImageMetadataHashValueSHA:
             self.CONTEXTinImageMetadataHashValueSHA = False
-        if self.CONTEXTinImageMetadataHashValueMD5:
+        elif self.CONTEXTinImageMetadataHashValueMD5:
             self.CONTEXTinImageMetadataHashValueMD5 = False
 
 
@@ -2381,102 +4214,249 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.lineXML +=1
 
         if name == 'model':
-            self.__endElementModelCALL()
-            self.__endElementModelCONTACT()
-            self.__endElementModelCHAT()
-            self.__endElementModelEMAIL()
-            self.__endElementModelSMS()
+            if self.CALLinModelType:
+                self.__endElementModelCALL()
+            elif self.CALENDARinModelType:
+                self.__endElementModelCALENDAR()
+            elif self.CELL_TOWERinModelType:
+                self.__endElementModelCELL_TOWER()
+            elif self.CONTACTinModelType:
+                self.__endElementModelCONTACT()
+            elif self.CHATinModelType:
+                self.__endElementModelCHAT()
+            elif self.COOKIEinModelType:
+                self.__endElementModelCOOKIE()
+            elif self.DEVICE_EVENTinModelType:
+                self.__endElementModelDEVICE_EVENT()
+            elif self.EMAILinModelType:
+                self.__endElementModelEMAIL()
+            elif self.INSTANT_MSGinModelType:
+                self.__endElementModelINSTANT_MSG()
+            elif self.LOCATIONinModelType:
+                self.__endElementModelLOCATION()
+            elif self.SEARCHED_ITEMinModelType:
+                self.__endElementModelSEARCHED_ITEM()
+            elif self.SMSinModelType:
+                self.__endElementModelSMS()
+            elif self.SOCIAL_MEDIAinModelType:
+                self.__endElementModelSOCIAL_MEDIA()            
+            elif self.WEB_PAGEinModelType:
+                self.__endElementModelWEB_PAGE()
+            elif self.WIRELESS_NETinModelType:
+                self.__endElementModelWIRELESS_NET()            
             self.__endElementModelU_ACCOUNT()
-            self.__endElementModelWEB_PAGE()            
-
-        if name in ('modelField', 'multiModelField'):
-            if self.CHATinMsgFrom:
-                self.CHATinMsgFrom = False
-            if self.CHATinMsgTo:
-                self.CHATinMsgTo = False
-            
-            if self.SMSinParty:
-                self.SMSinParty = False
-            
-#---    this works when a <multiModelField> element is followed by 
-#       an <empty> element
-#                
-            if self.EMAILinModelFieldFROM:
-                self.EMAILinModelFieldFROM = False
-            if self.EMAILinMultiModelFieldTO:
-                self.EMAILinMultiModelFieldTO = False
-            if self.EMAILinMultiModelFieldCC:
-                self.EMAILinMultiModelFieldCC = False
-            if self.EMAILinMultiModelFieldBCC:
-                self.EMAILinMultiModelFieldBCC = False
-            if self.EMAILinMultiModelFieldAttachments:
-                self.EMAILinMultiModelFieldAttachments = False
-
-        if name == 'field':        
-            self.__endElementFieldCALL()
-            self.__endElementFieldCONTACT()
+        elif name == 'modelType':
+            if self.CALLinModelType:
+                self.CALLinModelType = False
+            elif self.CALENDARinModelType:
+                self.CALENDARinModelType = False
+            elif self.CELL_TOWERinModelType:
+                self.CELL_TOWERinModelType = False
+            elif self.COOKIEinModelType:
+                self.COOKIEinModelType = False
+            elif self.CHATinModelType:
+                self.CHATinModelType = False
+            elif self.CONTACTinModelType:
+                self.CONTACTinModelType = False                
+            elif self.DEVICE_EVENTinModelType:
+                self.DEVICE_EVENTinModelType = False
+            elif self.EMAILinModelType:
+                self.EMAILinModelType = False
+            elif self.INSTANT_MSGinModelType:
+                self.INSTANT_MSGinModelType = False
+            elif self.LOCATIONinModelType:
+                self.LOCATIONinModelType = False
+            elif self.SEARCHED_ITEMinModelType:
+                self.SEARCHED_ITEMinModelType = False
+            elif self.SMSinModelType:
+                self.SMSinModelType = False
+            elif self.SOCIAL_MEDIAinModelType:
+                self.SOCIAL_MEDIAinModelType = False
+            elif self.WEB_PAGEinModelType:
+                self.WEB_PAGEinModelType = False
+            elif self.WIRELESS_NETinModelType:
+                self.WIRELESS_NETinModelType = False
+        elif name == 'modelField':
+            if self.CELL_TOWERinPosition:
+                self.CELL_TOWERinPosition = False  
+            if self.CHATinModelFieldAttachment:
+                self.CHATinModelFieldAttachment = False
+            elif self.CHATinMsgFrom:
+                self.CHATinMsgFrom = False            
+            elif self.INSTANT_MSGin:      
+                if self.INSTANT_MSGinPartyFrom:
+                    self.INSTANT_MSGinPartyFrom = False                                 
+                elif self.INSTANT_MSGinAttachment:
+                    self.INSTANT_MSGinAttachment = False 
+            elif self.LOCATIONin:
+                if self.LOCATIONinPosition:
+                    self.LOCATIONinPosition = False
+            elif self.SOCIAL_MEDIAin:
+                if self.SOCIAL_MEDIAinAuthor:
+                    self.SOCIAL_MEDIAinAuthor = False
+            elif self.EMAILinModelType: 
+                if self.EMAILinModelFieldFROM:
+                    self.EMAILinModelFieldFROM = False
+            elif self.WIRELESS_NETinModelType:
+                if self.WIRELESS_NETinPosition:
+                    self.WIRELESS_NETinPosition = False 
+        elif name == 'multiModelField':
+            if self.CALENDARinModelType:
+                if self.CALENDARinAttendees:
+                    self.CALENDARinAttendees = False
+                elif self.CALENDARinAttachments:
+                    self.CALENDARinAttachments = False  
+            elif self.INSTANT_MSGinModelType:
+                if self.INSTANT_MSGinPartyTo:
+                        self.INSTANT_MSGinPartyTo = False
+                elif self.INSTANT_MSGinAttachments:
+                    self.INSTANT_MSGinAttachments = False
+                elif self.INSTANT_MSGinSharedContacts:
+                    self.INSTANT_MSGinSharedContacts = False          
+            elif self.CONTACTinModelType:                
+                if self.CONTACTinMultiModelFieldEntries:
+                    self.CONTACTinMultiModelFieldEntries = False                
+                elif self.CONTACTinMultiModelFieldPhotos: 
+                    self.CONTACTinMultiModelFieldPhotos = False
+            elif self.CHATinModelType:
+                if self.CHATinMultiModelFieldParticipants:
+                    self.CHATinMultiModelFieldParticipants = False                    
+                elif self.CHATinMultiModelFieldPhotos:
+                    self.CHATinMultiModelFieldPhotos = False
+                elif self.CHATinMultiModelFieldTo:
+                    self.CHATinMultiModelFieldTo = False                
+                elif self.CHATinMultiModelFieldSharedContacts:
+                    self.CHATinMultiModelFieldSharedContacts = False
+                elif self.CHATinMultiModelFieldMessageExtraData:
+                    self.CHATinMultiModelFieldMessageExtraData = False
+                elif self.CHATinMultiModelFieldAttachments:
+                    self.CHATinMultiModelFieldAttachments = False
+                elif self.CHATinParty:
+                    self.CHATinParty = False            
+            elif self.SMSinModelType:
+                if self.SMSinParty:
+                    self.SMSinParty = False
+                elif self.SMSinAllTimeStamps:
+                    self.SMSinAllTimeStamps = False
+            elif self.SOCIAL_MEDIAinModelType:                
+                if self.SOCIAL_MEDIAinAttachments:
+                    self.SOCIAL_MEDIAinAttachments = False
+                elif self.SOCIAL_MEDIAinTaggedParties:
+                    self.SOCIAL_MEDIAinTaggedParties = False
+            elif self.EMAILinModelType:                
+                if self.EMAILinMultiModelFieldTO:
+                    self.EMAILinMultiModelFieldTO = False
+                elif self.EMAILinMultiModelFieldCC:
+                    self.EMAILinMultiModelFieldCC = False
+                elif self.EMAILinMultiModelFieldBCC:
+                    self.EMAILinMultiModelFieldBCC = False
+                elif self.EMAILinMultiModelFieldAttachments:
+                    self.EMAILinMultiModelFieldAttachments = False
+        elif name == 'field':
+            if self.CALLin:
+                self.__endElementFieldCALL()
+            elif self.CALENDARin:
+                self.__endElementFieldCALENDAR()
+            elif self.CELL_TOWERin:
+                self.__endElementFieldCELL_TOWER()
+            elif self.CONTACTin:
+                self.__endElementFieldCONTACT()            
+            elif self.COOKIEin:
+                self.__endElementFieldCOOKIE()
+            elif self.DEVICE_EVENTin:
+                self.__endElementFieldDEVICE_EVENT()
+            elif self.EMAILin:
+                self.__endElementFieldEMAIL()
+            elif self.INSTANT_MSGin:
+                self.__endElementFieldINSTANT_MSG()
+            elif self.LOCATIONin:
+                self.__endElementFieldLOCATION()
+            elif self.SEARCHED_ITEMin:
+                self.__endElementFieldSEARCHED_ITEM()
+            elif self.SMSin:
+                self.__endElementFieldSMS()
+            elif self.SOCIAL_MEDIAin:
+                self.__endElementFieldSOCIAL_MEDIA()
+            elif self.U_ACCOUNTin:
+                self.__endElementFieldU_ACCOUNT()
+            #elif self.WEB_PAGEin:
+                #self.__endElementFieldWEB_PAGE()
+            elif self.WIRELESS_NETin:
+                self.__endElementFieldWIRELESS_NET()
             self.__endElementFieldCHAT()
-            self.__endElementFieldEMAIL()
-            self.__endElementFieldSMS()
-            self.__endElementFieldU_ACCOUNT()
-            self.__endElementFieldWEB_PAGE()
             self.__endElementFieldCONTEXT()
-
-        if name == 'value':
-            self.__endElementValueCALL()
+            self.__endElementFieldWEB_PAGE()
+        elif name == 'value':
+            if self.CALLin:
+                self.__endElementValueCALL()
+            elif self.CALENDARin:
+                self.__endElementValueCALENDAR()
+            elif self.CELL_TOWERin:
+                self.__endElementValueCELL_TOWER()            
+            elif self.CONTACTin:
+                self.__endElementValueCONTACT()
+            elif self.COOKIEin:
+                self.__endElementValueCOOKIE()
+            elif self.DEVICE_EVENTin:
+                self.__endElementValueDEVICE_EVENT()
+            elif self.EMAILin:
+                self.__endElementValueEMAIL()
+            elif self.INSTANT_MSGin:
+                self.__endElementValueINSTANT_MSG()
+            elif self.LOCATIONin:
+                self.__endElementValueLOCATION()
+            elif self.SEARCHED_ITEMin:
+                self.__endElementValueSEARCHED_ITEM()
+            elif self.SMSin:
+                self.__endElementValueSMS()
+            elif self.SOCIAL_MEDIAin:
+                self.__endElementValueSOCIAL_MEDIA()
+            elif self.U_ACCOUNTin:
+                self.__endElementValueU_ACCOUNT()
+            elif self.WIRELESS_NETin:
+                self.__endElementValueWIRELESS_NET()
             self.__endElementValueCHAT()
-            self.__endElementValueCONTACT()
-            self.__endElementValueEMAIL()
-            self.__endElementValueSMS()
-            self.__endElementValueU_ACCOUNT()
             self.__endElementValueWEB_PAGE()
-
-        if name == 'timestamp':
-            self.__endElementTimeStampTAGGED_FILE()
-            
-        if name == 'nodeInfo':
+        elif name == 'timestamp':
+            self.__endElementTimeStampTAGGED_FILE()            
+        elif name == 'nodeInfo':
            if self.EXTRA_INFOin:
-                self.EXTRA_INFOnodeInfoin = False  
-            
-        if name == 'extraInfo':
+                self.EXTRA_INFOnodeInfoin = False              
+        elif name == 'extraInfo':
             self.EXTRA_INFOin = False
-
-        if name =='taggedFiles':
+        elif name =='taggedFiles':
             self.TAGGED_FILESin = False
-
-        if name =='item':
+        elif name =='item':
             self.__endElementItemTAGGED_FILE()
             self.__endElementItemCONTEXT()
-
-        if name == "metadata":
+        elif name == "metadata":
             if self.CONTEXTinAdditionalFields:
                 self.CONTEXTinAdditionalFields = False
                 self.CONTEXTinUfedVersionValue = False
                 self.CONTEXTinDeviceCreationTimeValue = False
-            if self.CONTEXTinDeviceInfo:                                
+            elif self.CONTEXTinDeviceInfo:                                
                 self.CONTEXTinDeviceInfo = False
-            if self.CONTEXTinImageMetadataHash:
+            elif self.CONTEXTinImageMetadataHash:
                 self.CONTEXTinImageMetadata = False
-
-        if name == 'caseInformation':
+        elif name == 'caseInformation':
             self.CONTEXTinCaseInfo = False
             self.CONTEXTinExaminerNameValue = False
-
-        if name == 'image':
+        elif name == 'image':
             if self.CONTEXTinImages:
                 self.CONTEXTinImage = False                
                 self.CONTEXTimageMetadataHashSHA.append(self.CONTEXTimageMetadataHashTextSHA)
                 self.CONTEXTimageMetadataHashMD5.append(self.CONTEXTimageMetadataHashTextMD5)
                 self.CONTEXTimageMetadataHashText = ''
-
-        if name == 'images':
+        elif name == 'images':
             self.CONTEXTinImages = False
 
 if __name__ == '__main__':
 
 #---    debug: ctime processing
 #
-    tic=timeit.default_timer()
+    C_CYAN = '\033[36m'
+    C_BLACK = '\033[0m'   
+    verbose = True 
 
     parserArgs = argparse.ArgumentParser(description='Parser to convert XML Report from UFED PA into CASE-JSON-LD standard.')
 
@@ -2496,25 +4476,28 @@ if __name__ == '__main__':
         path, name = os.path.split(args.inFileXML[0:-3] + 'JSON')
         args.output_CASE_JSON = name
 
-    print('*--- Input paramaters start \n')
-    print('\tFile XML:\t\t' + args.inFileXML)
-
     head, tail = os.path.split(args.output_CASE_JSON)
-    print('\tFile Output:\t\t' + args.output_CASE_JSON)
+    
+    if verbose:
+        print('*--- Input paramaters start \n')
+        print('\tFile XML:\t\t' + args.inFileXML)
+        print('\tFile Output:\t\t' + args.output_CASE_JSON)
 
     if args.output_DEBUG is None:
         pass
     else:
-        print('\tFile Debug:\t\t' + args.output_DEBUG)
+        if verbose:
+            print('\tFile Debug:\t\t' + args.output_DEBUG)
 
-    print('\n*--- Input paramaters end')
-    print('\n\n*** Start processing\n')
+    if verbose:
+        print('\n*--- Input paramaters end')
+        print('\n\n' + C_CYAN + '*** Start processing: ' + strftime("%Y-%m-%d %H:%M:%S", localtime()) + C_BLACK + '\n')
 
 #---    baseLocalPath is for setting the fileLocalPath property of FileFacet 
 #       Observable. 
 #    
     baseLocalPath = ''
-    gadget = UFEDgadget(args.inFileXML, args.output_CASE_JSON, baseLocalPath)    
+    gadget = UFEDgadget(args.inFileXML, args.output_CASE_JSON, baseLocalPath, verbose=verbose)    
     
     Handler = gadget.processXmlReport()
 
@@ -2535,23 +4518,4 @@ if __name__ == '__main__':
         #debug.writeDebugWEB_PAGE(Handler)     
         debug.closeDebug() 
             
-
-    toc=timeit.default_timer()
-    elapsedTime = round(toc - tic, 2)
-    (ss, ms) = divmod(elapsedTime, 1)
-    elapsedMm = str(int(ss) // 60)
-    elapsedSs = str(int(ss) % 60)
-    elapsedMs = str(round(ms, 2))[2:]
-    elapsedTime = elapsedMm + ' min. ' +  elapsedSs + ' sec. and ' + \
-        elapsedMs + ' hundredths'
-    print(Handler.C_green + '\n*** End processing, elapsed time: ' + elapsedTime + \
-        '\n\n' + Handler.C_end)
-
-# else:
-# #---    
-#     xmlFile = '../CASE-dataset.xml.reports/UFED/ANDROID/19_UFED_ANDROID_CROSSOVER.xml'
-#     jsonFile = './_19gadget.json'   
-#     gadget = UFEDgadget(xmlFile, jsonFile)
-#     gadget.processXmlReport()
-#     print("end XML processing, created " + jsonFile) 
-
+    gadget.show_elapsed_time(gadget.tic_start, 'End processing')
