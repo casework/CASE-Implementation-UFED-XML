@@ -392,7 +392,7 @@ class UFEDtoJSON:
 		line = "".join(['{ \n', \
 				UFEDtoJSON.TAB + '"@context": { \n', \
 				UFEDtoJSON.TAB*2 + '"@vocabulary":"http://caseontology.org/core#", \n', \
-				UFEDtoJSON.TAB*2 + '"not-in-ontology":"https://not-in/ontology#", \n', \
+				UFEDtoJSON.TAB*2 + '":":"https://not-in/ontology#", \n', \
 				UFEDtoJSON.TAB*2 + '"draft":"http://example.org/draft#", \n', \
 				UFEDtoJSON.TAB*2 + '"case-investigation":"https://ontology.caseontology.org/case/investigation#", \n', \
 				UFEDtoJSON.TAB*2 + '"rdf":"http://www.w3.org/1999/02/22-rdf-syntax-ns#", \n', \
