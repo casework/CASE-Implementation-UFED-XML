@@ -642,9 +642,9 @@ class UFEDtoJSON:
 			"uco-core:hasFacet":[
 				{
 					"@type":"uco-observable:CalendarEntryFacet", 
-					"draft:group":group,
+					"not-in-ontology:group":group,
 					"uco-observable:subject":subject,
-					"draft:details":details,
+					"not-in-ontology:details":details,
 					"uco-observable:startTime":{
 						"@type":"xsd:dateTime",
 						"@value":startDate
@@ -653,8 +653,8 @@ class UFEDtoJSON:
 						"@type":"xsd:dateTime",
 						"@value":endDate
 					},					
-					"draft:repeatUntil":repeatUntil,
-					"draft:repeatInterval":repeatInterval
+					"not-in-ontology:repeatUntil":repeatUntil,
+					"not-in-ontology:repeatInterval":repeatInterval
 				}
 			]
 		}
@@ -696,14 +696,14 @@ class UFEDtoJSON:
 					"uco-observable:hasChanged":True,
 					"uco-core:hasFacet":[
 						{
-							"@type":"draft:CellTowerFacet", 
-							"draft:mcc":cell_mcc,
-							"draft:mnc":cell_mnc,
-							"draft:lac":cell_lac,
-							"draft:cid":cell_cid,
-							#"draft:nid":cell_nid,
-							#"draft:bid":cell_bid,
-							#"draft:sid":cell_sid,
+							"@type":"not-in-ontology:CellTowerFacet", 
+							"not-in-ontology:mcc":cell_mcc,
+							"not-in-ontology:mnc":cell_mnc,
+							"not-in-ontology:lac":cell_lac,
+							"not-in-ontology:cid":cell_cid,
+							#"not-in-ontology:nid":cell_nid,
+							#"not-in-ontology:bid":cell_bid,
+							#"not-in-ontology:sid":cell_sid,
 							"uco-observable:location":{
 								"@id":uuidLocation
 							}
@@ -867,7 +867,7 @@ class UFEDtoJSON:
 			"uco-core:hasFacet":[
 				{
 					"@type":"uco-observable:BrowserCookieFacet",
-					"draft:source":cookie_source,
+					"not-in-ontology:source":cookie_source,
 					"uco-observable:cookieName":cookie_name,
 					"uco-observable:cookiePath":cookie_value,
 					"uco-observable:cookieDomain":cookie_domain,
@@ -1629,7 +1629,7 @@ class UFEDtoJSON:
 				"uco-observable:hasChanged":True,
 				"uco-core:hasFacet":[
 					{
-						"@type":"draft:SocialMediaActivityFacet",
+						"@type":"not-in-ontology:SocialMediaActivityFacet",
 						"uco-observable:application":sm_app_str,
 						"uco-observable:observableCreatedTime":{
 							"@type":"xsd:dateTime",
@@ -1638,12 +1638,12 @@ class UFEDtoJSON:
 						"uco-observable:body":sm_body,
 						"uco-observable:pageTitle":sm_title,
 						"uco-observable:url":sm_url_str,
-						"draft:authorIdentifier":sm_identifier,
-						"draft:authorName":sm_name,
-						"draft:reactionsCount":sm_reactionsCount,
-						"draft:sharesCount":sm_sharesCount,
-						"draft:activityType":sm_activityType,
-						"draft:commentCount":sm_commentCount,
+						"not-in-ontology:authorIdentifier":sm_identifier,
+						"not-in-ontology:authorName":sm_name,
+						"not-in-ontology:reactionsCount":sm_reactionsCount,
+						"not-in-ontology:sharesCount":sm_sharesCount,
+						"not-in-ontology:activityType":sm_activityType,
+						"not-in-ontology:commentCount":sm_commentCount,
 						"uco-observable:accountIdentifier":sm_account
 					}
 				]
@@ -1674,14 +1674,14 @@ class UFEDtoJSON:
 				"uco-observable:hasChanged":True,
 				"uco-core:hasFacet":[
 					{
-						"@type":"draft:SearchedItemFacet", 
-						"draft:searchSource":search_source,
-						"draft:searchLaunchedTime":{
+						"@type":"not-in-ontology:SearchedItemFacet", 
+						"not-in-ontology:searchSource":search_source,
+						"not-in-ontology:searchLaunchedTime":{
 							"@type":"xsd:dateTime",
 							"@value":search_timestamp
 						},
-					"draft:searchValue":search_value,
-					"draft:searchResult":search_result
+					"not-in-ontology:searchValue":search_value,
+					"not-in-ontology:searchResult":search_result
 					}
 				]				
 			}
@@ -1713,33 +1713,33 @@ class UFEDtoJSON:
 				uuid = "kb:" + UFEDtoJSON.__createUUID()
 				self.WIRELESS_NET_ACCESS[wnet_id] = uuid
 			
-			uuid = "kb:" + UFEDtoJSON.__createUUID()
-			object_dict = {			
-				"@id":uuid,
-				"@type":"uco-observable:ObservableObject",
-				"uco-observable:hasChanged":True,
-				"uco-core:hasFacet":[
-					{
-						"@type":"uco-observable:WirelessNetworkConnectionFacet",
-						"uco-observable:ssid":wnet_ssid,
-						"draft:bssid":wnet_bssid,
-						"draft:timeConnection":{
+				uuid = "kb:" + UFEDtoJSON.__createUUID()
+				object_dict = {			
+					"@id":uuid,
+					"@type":"uco-observable:ObservableObject",
+					"uco-observable:hasChanged":True,
+					"uco-core:hasFacet":[
+						{
+							"@type":"uco-observable:WirelessNetworkConnectionFacet",
+							"uco-observable:ssid":wnet_ssid,
+							"not-in-ontology:bssid":wnet_bssid,
+							"not-in-ontology:timeConnection":{
+								"@type":"xsd:dateTime",
+								"@value":wnet_timeStamp
+							},
+						"not-in-ontology:lastConnection":{
 							"@type":"xsd:dateTime",
-							"@value":wnet_timeStamp
-						},
-					"draft:lastConnection":{
-						"@type":"xsd:dateTime",
-						"@value":wnet_last_connection
-						},
-						"uco-observable:location":{
-							"@id":uuidLocation
+							"@value":wnet_last_connection
+							},
+							"uco-observable:location":{
+								"@id":uuidLocation
+							}
 						}
-					}
-				]
-			}
-			
-			object_str = json.dumps(object_dict, indent = 4)
-			self.FileOut.write(object_str + ',\n')
+					]
+				}
+				
+				object_str = json.dumps(object_dict, indent = 4)
+				self.FileOut.write(object_str + ',\n')
 			return uuid
 
 	def __generateTraceMessageFacet(self, body, id_app, phone_uuid_from, phone_uuid_to, 
@@ -2000,7 +2000,7 @@ class UFEDtoJSON:
 					"uco-location:altitude":altitude,
 					"uco-location:latitude":latitude,
 					"uco-location:longitude":longitude,
-					"draft:locationType":type
+					"not-in-ontology:locationType":type
 				}
 			]
 		}
@@ -2036,36 +2036,33 @@ class UFEDtoJSON:
 						"uco-observable:browserInformation":
 							{
 								"@id":idAppIdentity
-							},
-						"uco-observable:urlHistoryEntry": [
-							{
-								"@type":"uco-observable:URLHistoryEntry",
-								"uco-observable:firstVisit":{
-									"@type":"xsd:dateTime",
-									"@value":"1900-01-01T08:00:00"
-								},
-								"uco-observable:lastVisit":{
-									"@type":"xsd:dateTime",
-									"@value":WEB_PAGElastVisited[i]
-								},
-								"uco-observable:expirationTime":{
-									"@type":"xsd:dateTime",
-									"@value":"1900-01-01T08:00:00"
-								},
-								"uco-observable:userProfile":"",			
-								"uco-observable:url":{
-									"@id":uuidUrl
-								},
-								"uco-observable:pageTitle":title,
-								"uco-observable:visitCount":visit_count, 			
-								"uco-observable:manuallyEnteredCount":{
-									"@type":"xsd:nonNegativeInteger",
-									"@value":"0"
-								},
-								"uco-observable:keywordSearchTerm":"NULL",
-								"uco-observable:allocationStatus":WEB_PAGEstatus[i]					
 							}
-						]
+					},
+					{	
+						"@type":"uco-observable:urlHistoryEntry",
+						"uco-observable:firstVisit":{
+							"@type":"xsd:dateTime",
+							"@value":"1900-01-01T08:00:00"
+						},
+						"uco-observable:lastVisit":{
+							"@type":"xsd:dateTime",
+							"@value":WEB_PAGElastVisited[i]
+						},
+						"uco-observable:expirationTime":{
+							"@type":"xsd:dateTime",
+							"@value":"1900-01-01T08:00:00"
+						},
+						"uco-observable:url":{
+							"@id":uuidUrl
+						},
+						"uco-observable:pageTitle":title,
+						"uco-observable:visitCount":visit_count, 			
+						"uco-observable:manuallyEnteredCount":{
+							"@type":"xsd:nonNegativeInteger",
+							"@value":"0"
+						},
+						"uco-observable:keywordSearchTerm":"NULL",
+						"uco-observable:allocationStatus":WEB_PAGEstatus[i]					
 					}
 				]
 			}

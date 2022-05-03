@@ -68,6 +68,10 @@ All the XML reports have been processed to generate the corresponding CASE repre
   * Investigative Extraction
 
 
+## XML reports
+
+The repo also includes the XMLreports folder containing examples of reports from Cellebrite UFED PA.
+
 ## Development status
 
 This repository follows [CASE community guidance on describing development status](https://caseontology.org/resources/github_policies.html#development-statuses), by adherence to noted support requirements.
