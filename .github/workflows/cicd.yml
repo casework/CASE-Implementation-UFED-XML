@@ -1,0 +1,27 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: 
+      - main
+      - develop
+  pull_request:
+    branches: 
+      - main
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository for processing
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    # Test the output files to confirm they're both conformant to the CASE Ontology
+    - name: CASE Validation
+      uses: kchason/case-validation-action@v2.3
+      with:
+        case-path: ./json/
+        case-version: "case-1.0.0"
