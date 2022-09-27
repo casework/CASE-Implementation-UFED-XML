@@ -394,18 +394,18 @@ class UFEDtoJSON:
 				UFEDtoJSON.TAB*2 + '"@vocabulary":"http://caseontology.org/core#", \n', \
 				UFEDtoJSON.TAB*2 + '"not-in-ontology":"https://not-in/ontology#", \n', \
 				UFEDtoJSON.TAB*2 + '"draft":"http://example.org/draft#", \n', \
-				UFEDtoJSON.TAB*2 + '"case-investigation":"https://ontology.caseontology.org/case/investigation#", \n', \
+				UFEDtoJSON.TAB*2 + '"case-investigation":"https://ontology.caseontology.org/case/investigation/", \n', \
 				UFEDtoJSON.TAB*2 + '"rdf":"http://www.w3.org/1999/02/22-rdf-syntax-ns#", \n', \
 				UFEDtoJSON.TAB*2 + '"rdfs":"http://www.w3.org/2000/01/rdf-schema#", \n', \
-				UFEDtoJSON.TAB*2 + '"uco-action":"https://unifiedcyberontology.org/ontology/uco/action#", \n', \
-				UFEDtoJSON.TAB*2 + '"uco-core":"https://unifiedcyberontology.org/ontology/uco/core#", \n', \
-				UFEDtoJSON.TAB*2 + '"uco-identity":"https://unifiedcyberontology.org/ontology/uco/identity#",\n', \
-				UFEDtoJSON.TAB*2 + '"uco-role":"https://unifiedcyberontology.org/ontology/uco/role#",\n', \
-				UFEDtoJSON.TAB*2 + '"uco-location":"https://unifiedcyberontology.org/ontology/uco/location#",\n', \
-				UFEDtoJSON.TAB*2 + '"uco-observable":"https://unifiedcyberontology.org/ontology/uco/observable#", \n', \
-				UFEDtoJSON.TAB*2 + '"uco-tool":"https://unifiedcyberontology.org/ontology/uco/tool#", \n', \
-				UFEDtoJSON.TAB*2 + '"uco-types":"https://unifiedcyberontology.org/ontology/uco/types#", \n', \
-				UFEDtoJSON.TAB*2 + '"uco-vocabulary":"https://unifiedcyberontology.org/ontology/uco/vocabulary#", \n', \
+				UFEDtoJSON.TAB*2 + '"uco-action":"https://ontology.unifiedcyberontology.org/uco/action/", \n', \
+				UFEDtoJSON.TAB*2 + '"uco-core":"https://ontology.unifiedcyberontology.org/uco/core/", \n', \
+				UFEDtoJSON.TAB*2 + '"uco-identity":"https://ontology.unifiedcyberontology.org/uco/identity/",\n', \
+				UFEDtoJSON.TAB*2 + '"uco-role":"https://ontology.unifiedcyberontology.org/uco/role/",\n', \
+				UFEDtoJSON.TAB*2 + '"uco-location":"https://ontology.unifiedcyberontology.org/uco/location/",\n', \
+				UFEDtoJSON.TAB*2 + '"uco-observable":"https://ontology.unifiedcyberontology.org/uco/observable/", \n', \
+				UFEDtoJSON.TAB*2 + '"uco-tool":"https://ontology.unifiedcyberontology.org/uco/tool/", \n', \
+				UFEDtoJSON.TAB*2 + '"uco-types":"https://ontology.unifiedcyberontology.org/uco/types/", \n', \
+				UFEDtoJSON.TAB*2 + '"uco-vocabulary":"https://ontology.unifiedcyberontology.org/uco/vocabulary/", \n', \
 #---	OLO is a method for representing lists, CASE doesn't really need to 
 #		implement itself, implementing ordered lists in an OWL 2 DL compliant syntax.				
 #				
