@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 #---
 #       parser_UFEDtoCASE:    
 #               SAX parser for extracrtiong the main Artifacts from a UFED XML report
@@ -18,17 +17,19 @@ from time import localtime, strftime
 #import logging
 
 
-class UFEDgadget():         
-    def __init__(self, xmlReport, jsonCASE, baseLocalPath, verbose=False):
-        self.xmlReport = xmlReport
-        self.jsonCASE = jsonCASE
-        self.baseLocalPath = os.path.join(baseLocalPath, '') 
+class UFEDparser():         
+    def __init__(self, report_xml=None, json_output=None, 
+        base_local_path="", case_bundle=None, mode_verbose=False):
+        self.xmlReport = report_xml
+        self.jsonCASE = json_output
+        self.baseLocalPath = os.path.join(base_local_path, '') 
         # logging.basicConfig(filename='_ufed_chat.txt', level=logging.INFO,
         #     filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
         # #logging.basicConfig(filename='_ufed_log.txt', level=logging.INFO,
         #    filemode='w', format='%(message)s')
+        self.bundle = case_bundle
         self.tic_start = timeit.default_timer()
-        self.verbose = verbose
+        self.verbose = mode_verbose
 
     def show_elapsed_time(self, tic, message):
         toc = timeit.default_timer()
@@ -74,8 +75,9 @@ class UFEDgadget():
         if self.verbose:
             print(Handler.C_CYAN + "owner's phone number: " + phoneNumber + '\n' + Handler.C_BLACK)
 
-        caseTrace = CJ.UFEDtoJSON(Handler.fOut, Handler.U_ACCOUNTsource, 
-        Handler.U_ACCOUNTname, Handler.U_ACCOUNTusername)
+        caseTrace = CJ.UFEDtoJSON(json_output=Handler.fOut, app_name=Handler.U_ACCOUNTsource, 
+            app_user_name=Handler.U_ACCOUNTname, app_user_account=Handler.U_ACCOUNTusername, 
+            case_bundle=self.bundle)
 
 #---    caseTrace.storeUserAccount(Handler.U_ACCOUNTsource, Handler.U_ACCOUNTname,
 #       Handler.U_ACCOUNTusername)        
@@ -4497,9 +4499,10 @@ if __name__ == '__main__':
 #       Observable. 
 #    
     baseLocalPath = ''
-    gadget = UFEDgadget(args.inFileXML, args.output_CASE_JSON, baseLocalPath, verbose=verbose)    
+    sax_parser = UFEDparser(report_xml=args.inFileXML, json_output=args.output_CASE_JSON, 
+        base_local_path=baseLocalPath, mode_verbose=verbose)
     
-    Handler = gadget.processXmlReport()
+    Handler = sax_parser.processXmlReport()
 
     if args.output_DEBUG is None:
         pass
@@ -4518,4 +4521,4 @@ if __name__ == '__main__':
         #debug.writeDebugWEB_PAGE(Handler)     
         debug.closeDebug() 
             
-    gadget.show_elapsed_time(gadget.tic_start, 'End processing')
+    sax_parser.show_elapsed_time(sax_parser.tic_start, 'End processing')
