@@ -22,7 +22,7 @@
     "@graph": [
         {
             "@id": "kb:315510df-c981-432a-9205-b746054bf353",
-            "@type": "case-investigation:Investigation",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:description": "Email Messages - Extraction from UFED PA XML report",
             "uco-core:specVersion": "CASE 1.0.0"
 
