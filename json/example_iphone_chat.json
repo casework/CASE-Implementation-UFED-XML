@@ -143,6 +143,15 @@
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:MessageThreadFacet",
+                    "uco-observable:message": [
+                        {
+                            "@id": "kb:ffdc3b3e-1146-4f62-9fcf-196034eebe37"
+                        },
+                        {
+                            "@id": "kb:56420734-a019-4b89-939c-ee1dee84c48b"
+                        }
+
+                    ],
                     "uco-observable:participant": [
                         {
                             "@id": "kb:8933d37f-6864-4bb1-8ad2-4303035cdb8e"
@@ -150,24 +159,7 @@
                         {
                             "@id": "kb:2352193a-d2e2-4362-b921-0fb9a1c6d085"
                         }
-                    ],
-                    "uco-observable:message": {
-                        "olo:length": "2",
-                        "olo:slot": [
-                            {
-                                "olo:index": "1",
-                                "olo:item": {
-                                    "@id": "kb:ffdc3b3e-1146-4f62-9fcf-196034eebe37"
-                                }
-                            },
-                            {
-                                "olo:index": "2",
-                                "olo:item": {
-                                    "@id": "kb:56420734-a019-4b89-939c-ee1dee84c48b"
-                                }
-                            }
-                        ]
-                    }
+                    ]                                        
                 }
             ]
         }

@@ -63,14 +63,6 @@
             "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
-                    "@type": "uco-observable:AccountFacet",
-                    "uco-observable:accountIdentifier": "",
-                    "uco-observable:isActive": {
-                        "@type": "xsd:boolean",
-                        "@value": true
-                    }
-                },
-                {
                     "@type": "uco-observable:EmailAccountFacet",
                     "uco-observable:emailAddress": {
                         "@id": "kb:52118be5-ea76-45f1-8c47-343bdebf3631"
@@ -83,14 +75,6 @@
             "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
-                    "@type": "uco-observable:AccountFacet",
-                    "uco-observable:accountIdentifier": "",
-                    "uco-observable:isActive": {
-                        "@type": "xsd:boolean",
-                        "@value": true
-                    }
-                },
-                {
                     "@type": "uco-observable:EmailAccountFacet",
                     "uco-observable:emailAddress": {
                         "@id": "kb:345048fe-a773-409a-8700-f0c835caf546"
@@ -102,14 +86,6 @@
             "@id": "kb:f85e6601-fdb3-40d5-96d1-467f6d55fa68",
             "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
-                {
-                    "@type": "uco-observable:AccountFacet",
-                    "uco-observable:accountIdentifier": "",
-                    "uco-observable:isActive": {
-                        "@type": "xsd:boolean",
-                        "@value": true
-                    }
-                },
                 {
                     "@type": "uco-observable:EmailAccountFacet",
                     "uco-observable:emailAddress": {
@@ -129,6 +105,14 @@
                     "uco-observable:sentTime": {
                         "@type": "xsd:dateTime",
                         "@value": "2021-03-13T15:50:59+00:00"
+                    },
+                    "uco-observable:isMimeEncoded": {
+                        "@type": "xsd:boolean",
+                        "@value": true
+                    },
+                    "uco-observable:isMultipart": {
+                        "@type": "xsd:boolean",
+                        "@value": false
                     },
                     "uco-observable:from": {
                         "@id": "kb:c30c27db-0bf2-4a24-9efb-ef9ac9845375"

@@ -24,7 +24,7 @@
         {
             "@id": "kb:315510df-c981-432a-9205-b746054bf353",
             "@type": "case-investigation:Investigation",
-            "uco-core:description": "Phone Call - Extraction from UFED PA XML report",
+            "uco-core:description": "Phone Call - Extraction from UFED PA XML report",            
             "uco-core:specVersion": "CASE 1.0.0"
 
         },
@@ -74,15 +74,7 @@
         {
             "@id": "kb:2613c021-ff3f-4ec0-9532-58bf334cd230",
             "@type": "uco-observable:ObservableObject",
-            "uco-core:hasFacet": [
-                {
-                    "@type": "uco-observable:AccountFacet",
-                    "uco-observable:accountIdentifier": "_",
-                    "uco-observable:isActive": {
-                        "@type": "xsd:boolean",
-                        "@value": true
-                    }
-                },
+            "uco-core:hasFacet": [                
                 {
                     "@type": "uco-observable:PhoneAccountFacet",
                     "uco-observable:phoneNumber": "16104572655",
@@ -93,16 +85,7 @@
         {
             "@id": "kb:df3bd8ab-550c-41e1-bec4-62c320b90447",
             "@type": "uco-observable:ObservableObject",
-            "uco-core:hasFacet": [
-                {
-                    "@type": "uco-observable:AccountFacet",
-                    "uco-observable:accountIdentifier": "_",
-                    "uco-observable:accountIssuer": "",
-                    "uco-observable:isActive": {
-                        "@type": "xsd:boolean",
-                        "@value": true
-                    }
-                },
+            "uco-core:hasFacet": [                
                 {
                     "@type": "uco-observable:PhoneAccountFacet",
                     "uco-observable:phoneNumber": "+19174080962",
@@ -115,7 +98,7 @@
             "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
-                    "@type": "uco-observable:PhoneCallFacet",
+                    "@type": "uco-observable:CallFacet",
                     "uco-observable:callType": "incoming",
                     "uco-observable:allocationStatus": "Intact",
                     "uco-observable:duration": {
