@@ -40,7 +40,7 @@ class ObjectCore(dict):
     def _set_properties_bool(self, **kwargs):
         for key, var in kwargs.items():
             if isinstance(var, bool):
-                self[key] = {"@type": "xsd:boolean", "@value": str(var)}
+                self[key] = {"@type": "xsd:boolean", "@value": var}
             else:
                 self.__handle_var_type_errors(key, var, 'bool') 
 
