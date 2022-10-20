@@ -18,16 +18,18 @@
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
         "xsd": "http://www.w3.org/2001/XMLSchema#"
-    },
-    
-    "uco-core:account_name": "D.F. Expert",
-    "uco-core:specVersion": "CASE 1.0.0",
-    "uco-core:description": "Chat Messages - Extraction from UFED PA XML report",
-    "@id": "bundle-315510df-c981-432a-9205-b746054bf353",
+    },    
     "@graph": [
         {
+            "@id": "kb:315510df-c981-432a-9205-b746054bf353",
+            "@type": "case-investigation:Investigation",
+            "uco-core:description": "Chat Messages - Extraction from UFED PA XML report",
+            "uco-core:specVersion": "CASE 1.0.0"
+
+        },
+        {
             "@id": "kb:6d13c003-490e-4f5d-95a6-da038bb030c3",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:ApplicationFacet",
@@ -37,7 +39,7 @@
         },
         {
             "@id": "kb:8933d37f-6864-4bb1-8ad2-4303035cdb8e",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:AccountFacet",
@@ -61,7 +63,7 @@
         },
         {
             "@id": "kb:2352193a-d2e2-4362-b921-0fb9a1c6d085",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:AccountFacet",
@@ -85,7 +87,7 @@
         },
         {
             "@id": "kb:ffdc3b3e-1146-4f62-9fcf-196034eebe37",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:MessageFacet",
@@ -111,7 +113,7 @@
         },
         {
             "@id": "kb:56420734-a019-4b89-939c-ee1dee84c48b",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:MessageFacet",
@@ -137,7 +139,7 @@
         },
         {
             "@id": "kb:069b16b8-f156-4960-8a6c-15b594aa69c8",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:MessageThreadFacet",

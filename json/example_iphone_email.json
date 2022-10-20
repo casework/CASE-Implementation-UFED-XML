@@ -18,16 +18,18 @@
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
         "xsd": "http://www.w3.org/2001/XMLSchema#"
-    },
-    
-    "uco-core:account_name": "D.F. Expert",
-    "uco-core:specVersion": "CASE 1.0.0",
-    "uco-core:description": "Chat Messages - Extraction from UFED PA XML report",
-    "@id": "bundle-315510df-c981-432a-9205-b746054bf353",
+    },    
     "@graph": [
         {
+            "@id": "kb:315510df-c981-432a-9205-b746054bf353",
+            "@type": "case-investigation:Investigation",
+            "uco-core:description": "Email Messages - Extraction from UFED PA XML report",
+            "uco-core:specVersion": "CASE 1.0.0"
+
+        },
+        {
             "@id": "kb:52118be5-ea76-45f1-8c47-343bdebf3631",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:EmailAddressFacet",
@@ -37,7 +39,7 @@
         },
         {
             "@id": "kb:345048fe-a773-409a-8700-f0c835caf546",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:EmailAddressFacet",
@@ -47,7 +49,7 @@
         },
         {
             "@id": "kb:675a9c1a-c9f4-4f64-a8ac-847bec231937",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:EmailAddressFacet",
@@ -58,7 +60,7 @@
 
         {
             "@id": "kb:c30c27db-0bf2-4a24-9efb-ef9ac9845375",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:AccountFacet",
@@ -78,7 +80,7 @@
         },
         {
             "@id": "kb:f6ceba2f-fdcc-433e-9cd4-19c284172533",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:AccountFacet",
@@ -98,7 +100,7 @@
         },
         {
             "@id": "kb:f85e6601-fdb3-40d5-96d1-467f6d55fa68",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:AccountFacet",
@@ -118,7 +120,7 @@
         },
         {
             "@id": "kb:a90e1b58-bf9f-48c8-9045-9788c30b3277",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:EmailMessageFacet",
@@ -147,7 +149,7 @@
         },
         {
             "@id": "kb:c002a68f-3499-4cef-b802-db711032e9e2",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:ExtInodeFacet",

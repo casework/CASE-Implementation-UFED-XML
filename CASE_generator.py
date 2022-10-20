@@ -149,7 +149,7 @@ class ObjectObservable(ObjectCore):
         """
         super().__init__()   
         self["@id"] = "kb:" + str(uuid4())           
-        self["@type"] = "uco-observable:ObjectObservable" 
+        self["@type"] = "uco-observable:ObservableObject" 
         self["uco-core:hasFacet"] = list()
 
     def append_facets(self, *facets):

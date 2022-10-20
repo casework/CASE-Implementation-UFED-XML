@@ -20,14 +20,17 @@
         "xsd": "http://www.w3.org/2001/XMLSchema#"
     },
     
-    "uco-core:account_name": "D.F. Expert",
-    "uco-core:specVersion": "CASE 1.0.0",
-    "uco-core:description": "Phone Call - Extraction from UFED PA XML report",
-    "@id": "bundle-315510df-c981-432a-9205-b746054bf353",
     "@graph": [
         {
+            "@id": "kb:315510df-c981-432a-9205-b746054bf353",
+            "@type": "case-investigation:Investigation",
+            "uco-core:description": "Phone Call - Extraction from UFED PA XML report",
+            "uco-core:specVersion": "CASE 1.0.0"
+
+        },
+        {
             "@id": "kb:940e4639-507a-4f34-9d04-e8bfae406c71",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:DeviceFacet",
@@ -60,7 +63,7 @@
         },
         {
             "@id": "kb:96501e35-ff11-4819-9ff3-b2a4b44e07c8",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:ApplicationFacet",
@@ -70,7 +73,7 @@
         },
         {
             "@id": "kb:2613c021-ff3f-4ec0-9532-58bf334cd230",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:AccountFacet",
@@ -89,7 +92,7 @@
         },
         {
             "@id": "kb:df3bd8ab-550c-41e1-bec4-62c320b90447",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:AccountFacet",
@@ -109,7 +112,7 @@
         },
         {
             "@id": "kb:c9096a82-6016-40a7-8c6f-886b42bc8e7d",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:PhoneCallFacet",
@@ -137,7 +140,7 @@
         },
         {
             "@id": "kb:c9dca025-d8e2-46ff-8b5d-32febbf36218",
-            "@type": "uco-observable:ObjectObservable",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@type": "uco-observable:ExtInodeFacet",
