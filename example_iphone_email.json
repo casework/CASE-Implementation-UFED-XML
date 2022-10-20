@@ -1,0 +1,223 @@
+{
+    "@context": {
+        "@vocabulary": "http://example.org/kb/",
+        "kb": "http://example.org/kb/",
+        "drafting": "http://example.org/ontology/drafting/",
+        "co": "http://purl.org/co/",
+        "not-in-ontology": "https://not-in/ontology/",
+        "case-investigation": "https://ontology.caseontology.org/case/investigation/",
+        "uco-action": "https://ontology.unifiedcyberontology.org/uco/action/",
+        "uco-core": "https://ontology.unifiedcyberontology.org/uco/core/",
+        "uco-identity": "https://ontology.unifiedcyberontology.org/uco/identity/",
+        "uco-role": "https://ontology.unifiedcyberontology.org/uco/role/",
+        "uco-location": "https://ontology.unifiedcyberontology.org/uco/location/",
+        "uco-observable": "https://ontology.unifiedcyberontology.org/uco/observable/",
+        "uco-tool": "https://ontology.unifiedcyberontology.org/uco/tool/",
+        "uco-types": "https://ontology.unifiedcyberontology.org/uco/types/",
+        "uco-vocabulary": "https://ontology.unifiedcyberontology.org/uco/vocabulary/",
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+    },
+    
+    "uco-core:account_name": "D.F. Expert",
+    "uco-core:specVersion": "CASE 1.0.0",
+    "uco-core:description": "Chat Messages - Extraction from UFED PA XML report",
+    "@id": "bundle-315510df-c981-432a-9205-b746054bf353",
+    "@graph": [
+        {
+            "@id": "kb:52118be5-ea76-45f1-8c47-343bdebf3631",
+            "@type": "uco-observable:ObjectObservable",
+            "uco-core:hasFacet": [
+                {
+                    "@type": "uco-observable:EmailAddressFacet",
+                    "uco-observable:addressValue": "newsdigest@ted_talk.com"
+                }
+            ]
+        },
+        {
+            "@id": "kb:345048fe-a773-409a-8700-f0c835caf546",
+            "@type": "uco-observable:ObjectObservable",
+            "uco-core:hasFacet": [
+                {
+                    "@type": "uco-observable:EmailAddressFacet",
+                    "uco-observable:addressValue": "tornadobeth@gmail.com"
+                }
+            ]
+        },
+        {
+            "@id": "kb:675a9c1a-c9f4-4f64-a8ac-847bec231937",
+            "@type": "uco-observable:ObjectObservable",
+            "uco-core:hasFacet": [
+                {
+                    "@type": "uco-observable:EmailAddressFacet",
+                    "uco-observable:addressValue": "jennybright@gmail.com"
+                }
+            ]
+        },
+
+        {
+            "@id": "kb:c30c27db-0bf2-4a24-9efb-ef9ac9845375",
+            "@type": "uco-observable:ObjectObservable",
+            "uco-core:hasFacet": [
+                {
+                    "@type": "uco-observable:AccountFacet",
+                    "uco-observable:accountIdentifier": "",
+                    "uco-observable:isActive": {
+                        "@type": "xsd:boolean",
+                        "@value": true
+                    }
+                },
+                {
+                    "@type": "uco-observable:EmailAccountFacet",
+                    "uco-observable:emailAddress": {
+                        "@id": "kb:52118be5-ea76-45f1-8c47-343bdebf3631"
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "kb:f6ceba2f-fdcc-433e-9cd4-19c284172533",
+            "@type": "uco-observable:ObjectObservable",
+            "uco-core:hasFacet": [
+                {
+                    "@type": "uco-observable:AccountFacet",
+                    "uco-observable:accountIdentifier": "",
+                    "uco-observable:isActive": {
+                        "@type": "xsd:boolean",
+                        "@value": true
+                    }
+                },
+                {
+                    "@type": "uco-observable:EmailAccountFacet",
+                    "uco-observable:emailAddress": {
+                        "@id": "kb:345048fe-a773-409a-8700-f0c835caf546"
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "kb:f85e6601-fdb3-40d5-96d1-467f6d55fa68",
+            "@type": "uco-observable:ObjectObservable",
+            "uco-core:hasFacet": [
+                {
+                    "@type": "uco-observable:AccountFacet",
+                    "uco-observable:accountIdentifier": "",
+                    "uco-observable:isActive": {
+                        "@type": "xsd:boolean",
+                        "@value": true
+                    }
+                },
+                {
+                    "@type": "uco-observable:EmailAccountFacet",
+                    "uco-observable:emailAddress": {
+                        "@id": "kb:675a9c1a-c9f4-4f64-a8ac-847bec231937"
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "kb:a90e1b58-bf9f-48c8-9045-9788c30b3277",
+            "@type": "uco-observable:ObjectObservable",
+            "uco-core:hasFacet": [
+                {
+                    "@type": "uco-observable:EmailMessageFacet",
+                    "uco-observable:subject": "What's a food allergy -- and what's not?",
+                    "uco-observable:allocationStatus": "Intact",
+                    "uco-observable:sentTime": {
+                        "@type": "xsd:dateTime",
+                        "@value": "2021-03-13T15:50:59+00:00"
+                    },
+                    "uco-observable:from": {
+                        "@id": "kb:c30c27db-0bf2-4a24-9efb-ef9ac9845375"
+                    },
+                    "uco-observable:to": [
+                        {
+                            "@id": "kb:f6ceba2f-fdcc-433e-9cd4-19c284172533"
+                        }
+                    ],
+                    "uco-observable:cc": [
+                        {
+                            "@id": "kb:f85e6601-fdb3-40d5-96d1-467f6d55fa68"
+                        }
+                    ],
+                    "uco-observable:bcc": []                    
+                }
+            ]
+        },
+        {
+            "@id": "kb:c002a68f-3499-4cef-b802-db711032e9e2",
+            "@type": "uco-observable:ObjectObservable",
+            "uco-core:hasFacet": [
+                {
+                    "@type": "uco-observable:ExtInodeFacet",
+                    "uco-observable:extSGID": {
+                        "@type": "xsd:integer",
+                        "@value": "0"
+                    },
+                    "uco-observable:extSUID": {
+                        "@type": "xsd:integer",
+                        "@value": "0"
+                    },
+                    "uco-observable:extInodeID": {
+                        "@type": "xsd:integer",
+                        "@value": "0"
+                    },
+                    "uco-observable:extInodeChangeTime": {
+                        "@type": "xsd:dateTime",
+                        "@value": "1900-01-01T08:00:00+00:00"
+                    }
+                },
+                {
+                    "@type": "uco-observable:FileFacet",
+                    "uco-observable:fileName": "Envelope Index-wal",
+                    "uco-observable:filePath": "/root/private/var/mobile/Library/Mail/Protected Index-walApple_iPhone X (A1901).zip/root/private/var/mobile/Library/Mail/MessageData/119/partial.emlxApple_iPhone X (A1901).zip/root/private/var/mobile/Library/Mail/Envelope Index-wal",
+                    "uco-observable:fileLocalPath": "files/Uncategorized/Envelope Index-wal",
+                    "uco-observable:extension": "",
+                    "uco-core:tag": [
+                        "Uncategorized"
+                    ],
+                    "uco-core:objectAccessedTime": {
+                        "@type": "xsd:dateTime",
+                        "@value": "2021-06-18T12:10:00+00:00"
+                    },
+                    "uco-core:objectCreatedTime": {
+                        "@type": "xsd:dateTime",
+                        "@value": "2021-04-12T08:00:00+00:00"
+                    },
+                    "uco-core:objectModifiedTime": {
+                        "@type": "xsd:dateTime",
+                        "@value": "2021-06-18T12:10:00+00:00"
+                    },
+                    "uco-observable:sizeInBytes": {
+                        "@type": "xsd:integer",
+                        "@value": "112891249313399032"
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "kb:54500feb-819c-4c9f-bd11-f43958893991",
+            "@type": "uco-observable:ObservableRelationship",
+            "uco-core:kindOfRelationship": "Contained_Within",
+            "uco-core:isDirectional": {
+                "@type": "xsd:boolean",
+                "@value": true
+            },
+            "uco-observable:startTime": {
+                "@type": "xsd:dateTime",
+                "@value": "1900-01-01T08:00:00+00:00"
+            },
+            "uco-observable:endTime": {
+                "@type": "xsd:dateTime",
+                "@value": "1900-01-01T08:00:00+00:00"
+            },
+            "uco-core:source": {
+                "@id": "kb:a90e1b58-bf9f-48c8-9045-9788c30b3277"
+            },
+            "uco-core:target": {
+                "@id": "kb:c002a68f-3499-4cef-b802-db711032e9e2"
+            }
+        }
+    ]
+}        
