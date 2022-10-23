@@ -1633,9 +1633,10 @@ class UFEDtoJSON():
 			CHATid_account_from = ''
 #---	if the CHAT doesn't have Participants, it is disregarded
 #
+			if  len(CHATpartyIdentifiers) <= i:
+				continue
+			
 			if len(CHATpartyIdentifiers[i]) == 0:
-#---	ignored, no Participants
-#				
 				continue
 
 			for j, chat_party_id in enumerate(CHATpartyIdentifiers[i]):	

@@ -20,7 +20,7 @@
         "xsd": "http://www.w3.org/2001/XMLSchema#"
     },
     
-    "@graph": [
+    "uco-core:object": [
         {
             "@id": "kb:315510df-c981-432a-9205-b746054bf353",
             "@type": "uco-observable:ObservableObject",

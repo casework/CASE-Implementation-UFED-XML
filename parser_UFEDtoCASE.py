@@ -550,8 +550,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CHATinPartyIdentifier = False
         self.CHATinPartyIdentifierValue = False
         self.CHATinPartyName = False        
-        self.CHATinPartyNameValue = False         
-        self.CHATinInstantMessage = False
+        self.CHATinPartyNameValue = False 
+        self.CHATinInstantMessage = False                
         self.CHATinMultiModelFieldParticipants = False
         self.CHATinMsgFrom = False
         self.CHATinMultiModelFieldTo = False
@@ -1303,7 +1303,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CHATinMultiModelFieldSharedContacts or \
             self.CHATinMultiModelFieldMessageExtraData:
             pass 
-        elif attrType == 'Chat':                
+        elif attrType == 'Chat':
             self.CHATin = True
             self.CHATtotal += 1
             self.printObservable('CHAT', self.CHATtotal)
@@ -1311,7 +1311,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.storeTraceStatus(self.CHATstatus, CHATstate, self.CHATdeleted)
             self.skipLine = True 
             self.Observable = True 
-            self.CHATsource.append('')                                       
+            self.CHATsource.append('') 
         elif attrType == 'Party':
             if self.CHATinMultiModelFieldParticipants:
                 self.CHATinParty = True
@@ -1626,11 +1626,10 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.SOCIAL_MEDIAinTaggedParties = True
 
     def __startElementModelFieldCHAT(self, attrName): 
-        if self.CHATinInstantMessage:
-            if attrName == 'From':
-                self.CHATinMsgFrom = True
-            if attrName == 'Attachment':
-                self.CHATinModelFieldAttachment = True
+        if attrName == 'From':
+            self.CHATinMsgFrom = True
+        if attrName == 'Attachment':
+            self.CHATinModelFieldAttachment = True
               
     def __startElementModelFieldEMAIL(self, attrValue):
         if attrValue == 'From':
@@ -1755,8 +1754,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                 if self.CHATinMsgAttachment:
                     self.CHATinMsgAttachmentUrl = True
             elif attrValue == 'Source':
-                if not self.CHATinInstantMessage:
-                    self.CHATinSource = True
+                self.CHATinSource = True
 
     def __startElementFieldCONTACT(self, attrValue):
         if (self.CONTACTinMultiModelFieldPhotos or  
@@ -2730,7 +2728,10 @@ class ExtractTraces(xml.sax.ContentHandler):
 
     def __charactersCHAT(self, ch):
         if self.CHATinSourceValue:
-            self.CHATsourceText += ch
+            if self.CHATsourceText == "":
+                self.CHATsourceText += ch
+            else:
+                self.CHATsourceText = ch
         elif self.CHATinPartyIdentifierValue:
             self.CHATpartyIdentifierText += ch 
         elif self.CHATinPartyNameValue:
@@ -2741,6 +2742,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CHATmsgNameFromText += ch
         elif self.CHATinMsgBodyValue:
             self.CHATmsgBodyText += ch
+            if 'ciofeca' in self.CHATmsgBodyText:
+                print(f"CHATmsgBodyText={self.CHATmsgBodyText}")
         elif self.CHATinMsgOutcomeValue:
             self.CHATmsgOutcomeText += ch
         elif self.CHATinMsgTimeStampValue:
@@ -2824,6 +2827,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.INSTANT_MSGsubjectText += ch
         elif self.INSTANT_MSGinBodyValue:
             self.INSTANT_MSGbodyText += ch
+            print(f"Instant msg: {self.INSTANT_MSGbodyText}")
         elif self.INSTANT_MSGinTimeStampValue:
             self.INSTANT_MSGtimeStampText += ch
         elif self.INSTANT_MSGinStatusMsgValue:
