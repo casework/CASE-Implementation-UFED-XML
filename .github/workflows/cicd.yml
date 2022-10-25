@@ -24,4 +24,4 @@ jobs:
       uses: kchason/case-validation-action@v2.3
       with:
         case-path: ./json/
-        case-version: "case-1.0.0"
+        case-version: "case-0.6.0"
