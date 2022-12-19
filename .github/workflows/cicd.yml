@@ -21,7 +21,7 @@ jobs:
 
     # Test the output files to confirm they're both conformant to the CASE Ontology
     - name: CASE Validation
-      uses: kchason/case-validation-action@v2.4
+      uses: kchason/case-validation-action@v2.5
       with:
         case-path: ./json/
         case-version: "case-1.1.0"
