@@ -1,0 +1,66 @@
+{
+    "@context": {
+        "kb": "http://example.org/kb/",
+        "acme": "http://custompb.acme.org/core#",
+        "drafting": "http://example.org/ontology/drafting/",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "uco-core": "https://ontology.unifiedcyberontology.org/uco/core/",
+        "uco-identity": "https://ontology.unifiedcyberontology.org/uco/identity/",
+        "uco-observable": "https://ontology.unifiedcyberontology.org/uco/observable/",
+        "uco-types": "https://ontology.unifiedcyberontology.org/uco/types/",
+        "uco-vocabulary": "https://ontology.unifiedcyberontology.org/uco/vocabulary/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+    },
+    "uco-core:object": [
+        {
+                "@id": "kb:5e350cd9-3e48-4f8a-82f1-26e394e0780f",
+                "@type": "uco-observable:ObservableObject",
+                "uco-core:tag": "Uncategorized",
+                "uco-core:hasFacet": [
+                    {
+                        "@id": "kb:0be208ff-034c-4529-b004-39b8426393b4",
+                        "@type": "uco-observable:FileFacet",
+                        "uco-observable:fileName": "Apple_iPhone X (A1901).zip",
+                        "uco-observable:filePath": "Apple_iPhone X (A1901).zip",
+                        "drafting:fileLocalPath": "files/Ucategorized/Apple_iPhone X (A1901).zip",
+                        "uco-observable:extension": ".zip",
+                        "uco-observable:accessedTime": {
+                            "@type": "xsd:dateTime",
+                            "@value": "1900-01-01T08:00:00+00:00"
+                        },
+                        "uco-observable:observableCreatedTime": {
+                            "@type": "xsd:dateTime",
+                            "@value": "1900-01-01T08:00:00+00:00"
+                        },
+                        "uco-observable:modifiedTime": {
+                            "@type": "xsd:dateTime",
+                            "@value": "1900-01-01T08:00:00+00:00"
+                        },                        
+                        "uco-observable:sizeInBytes": {
+                            "@type": "xsd:integer",
+                            "@value": 16965760332
+                        }
+                    },
+                    {
+                        "@id": "kb:097bc2b2-45e4-453a-a208-aeab7e77da99",
+                        "@type": "uco-observable:ContentDataFacet",
+                        "uco-observable:hash": [
+                            {
+                                "@id":"f1bfa603-2214-4d52-87b2-0afe244851de",
+                                "@type": "uco-types:Hash",
+                                "uco-types:hashMethod": {
+                                    "@type": "uco-vocabulary:HashNameVocab",
+                                    "@value": "SHA256"
+                                },
+                                "uco-types:hashValue": {
+                                    "@type": "xsd:hexBinary",
+                                    "@value": "4758982E5B94DF45F4400558608928F1A866104CB20A17BCB513D9B682644E484758982E5B94DF45F4400558608928F1A866104CB20A17BCB513D9B682644E48"
+                                }
+                            }
+                        ]
+                    }                            
+                ]
+            }
+
+    ]
+}

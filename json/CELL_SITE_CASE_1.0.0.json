@@ -1,0 +1,103 @@
+{
+    "@context": {
+        "kb": "http://example.org/kb/",
+        "acme": "http://custompb.acme.org/core#",
+        "drafting": "http://example.org/ontology/drafting/",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "uco-core": "https://ontology.unifiedcyberontology.org/uco/core/",
+        "uco-identity": "https://ontology.unifiedcyberontology.org/uco/identity/",
+        "uco-observable": "https://ontology.unifiedcyberontology.org/uco/observable/",
+        "uco-types": "https://ontology.unifiedcyberontology.org/uco/types/",
+        "uco-vocabulary": "https://ontology.unifiedcyberontology.org/uco/vocabulary/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+    },
+    "uco-core:object": [
+        {
+            "@id": "kb:dc9b8413-f681-4bc6-a66e-b70a7ecde4d4",
+            "@type": "uco-observable:ObservableObject",
+            "rdfs:comment": "@type=uco-observable:CellSite",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:fcfa96c3-3824-4132-a156-8ac857800c05",
+                    "@type": "uco-observable:CellSiteFacet",
+                    "uco-observable:cellSiteType": "GSM",
+                    "uco-observable:cellSiteCountryCode": "228",
+                    "uco-observable:cellSiteNetworkCode": "2",
+                    "uco-observable:cellSiteLocationAreaCode": "22100",
+                    "uco-observable:cellSiteIdentifier": "29220952"
+                },
+                {
+                    "@id": "kb:749dc5c5-f3f2-4e9b-b53c-89bfaf177d76",
+                    "@type": "uco-observable:AntennaFacet",
+                    "uco-observable:azimuth": {
+                        "@type": "xsd:decimal",
+                        "@value": "45"
+                    },
+                    "uco-observable:elevation": {
+                        "@type": "xsd:decimal",
+                        "@value": "5"
+                    },
+                    "uco-observable:skew": {
+                        "@type": "xsd:decimal",
+                        "@value": "10"
+                    },
+                    "uco-observable:horizontalBeamWidth": {
+                        "@type": "xsd:decimal",
+                        "@value": "110"
+                    },
+                    "uco-observable:signalStrength": {
+                        "@type": "xsd:decimal",
+                        "@value": "20"
+                    },
+                    "uco-observable:antennaHeight": {
+                        "@type": "xsd:decimal",
+                        "@value": "25"
+                    }
+                }
+            ]
+        },   
+        {
+            "@id": "kb:f2e90997-16c9-4822-be30-fa4f36553768",
+            "@type": "uco-observable:ObservableObject",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:e7540964-bca0-4dbe-a886-fdd2115d6aed",
+                    "@type": "uco-location:LatLongCoordinatesFacet",
+                    "uco-location:latitude": {
+                        "@type": "xsd:decimal",
+                        "@value": "40.05659866"
+                    },
+                    "uco-location:longitude": {
+                        "@type": "xsd:decimal",
+                        "@value": "-75.67047119"
+                    }
+                }
+            ]
+        },     
+        
+        {
+            "@id": "kb:cdf48c35-c65d-41e4-843b-720f1ad24ab3",
+            "@type": "uco-observable:ObservableRelationship",
+            "uco-observable:startTime": {
+                "@type": "xsd:dateTime",
+                "@value": "2018-06-12T09:10:11Z"
+            },
+            "uco-observable:endTime": {
+                "@type": "xsd:dateTime",
+                "@value": "2018-06-12T15:36:39Z"
+            },
+            "uco-core:source": {
+                "@id": "kb:dc9b8413-f681-4bc6-a66e-b70a7ecde4d4"
+            },
+            "uco-core:target": {
+                "@id": "kb:f2e90997-16c9-4822-be30-fa4f36553768"
+            },
+            "uco-core:kindOfRelationship": "Located_At",
+            "uco-core:isDirectional": {
+                "@type": "xsd:boolean",
+                "@value": true
+            }
+        }
+
+    ]
+}

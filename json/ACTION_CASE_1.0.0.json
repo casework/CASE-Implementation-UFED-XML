@@ -1,0 +1,182 @@
+{
+    "@context": {
+        "kb": "http://example.org/kb/",
+        "drafting": "http://example.org/ontology/drafting/",
+        "co": "http://purl.org/co/",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "uco-core": "https://ontology.unifiedcyberontology.org/uco/core/",
+        "uco-identity": "https://ontology.unifiedcyberontology.org/uco/identity/",
+        "uco-location": "https://ontology.unifiedcyberontology.org/uco/location/",
+        "uco-role": "https://ontology.unifiedcyberontology.org/uco/role/",
+        "uco-action": "https://ontology.unifiedcyberontology.org/uco/action/",
+        "uco-observable": "https://ontology.unifiedcyberontology.org/uco/observable/",
+        "uco-types": "https://ontology.unifiedcyberontology.org/uco/types/",
+        "uco-tool": "https://ontology.unifiedcyberontology.org/uco/tool/",
+        "case-investigation": "https://ontology.caseontology.org/case/investigation/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"        
+    },
+    "uco-core:object": [  
+        {
+            "@id": "kb:e4912cd1-abc3-4ad4-9d73-f54379752e02",
+            "@type": "uco-observable:ObservableObject",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:22f9f968-e829-4a22-89fc-751feff9d0b0",
+                    "@type": "uco-observable:DeviceFacet",
+                    "uco-observable:deviceType": "Mobile phone",
+                    "uco-observable:model": "iPhone X",
+                    "uco-observable:serialNumber": "HW095687Y2022"
+                },
+                {
+                    "@id": "kb:1d4e9269-ad19-4fe4-8055-377301bdefde",
+                    "@type": "uco-observable:MobileDeviceFacet",
+                    "uco-observable:IMSI": "310260249043715",
+                    "uco-observable:ICCID": "8901260243790437158",
+                    "uco-observable:IMEI": "359405082912450"
+                },
+                {
+                    "@id": "kb:6bd89154-b501-4fd8-a750-58d39e4a51e7",                               
+                    "@type": "uco-observable:OperatingSystemFacet",
+                    "uco-observable:displayName": "iOS",
+                    "uco-observable:manufacturer": 
+                        { 
+                            "@id": "kb:73952c43-8df5-4fa3-888c-f0f00d2eab8f" 
+                        },
+                    "uco-observable:version": "14.6"
+                },
+                {
+                    "@id": "kb:75be1e84-348e-4d19-85d3-a1e23eed77cc",
+                    "@type": "uco-observable:BluetoothAddressFacet",
+                    "uco-observable:displayName": "Good hook",
+                    "uco-observable:addressValue": "D4:A3:3D:B5:F4:6C"
+                },
+                {
+                    "@id": "kb:a265c5ed-95c2-46e9-af91-4b73023f918b",
+                    "@type": "uco-observable:WifiAddressFacet",
+                    "uco-observable:addressValue": "D4:A3:3D:B5:F4:48"
+                }
+            ]
+        },
+        {
+            "@id": "kb:73952c43-8df5-4fa3-888c-f0f00d2eab8f",
+            "@type": "uco-identity:Identity",
+            "uco-core:description": "Huawei UK"
+        },
+        {
+            "@id": "kb:7ae6b781-4704-428f-85df-3367515dc608",
+            "@type": "uco-identity:Identity",
+            "uco-core:description": "Cellebrite, Petah Tikva, Israel"
+        },
+        {
+            "@id": "kb:8e4f771d-4fa0-4f70-b593-20d8f00e0461",
+            "@type": "uco-observable:ObservableObject",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:22e1dd8f-6209-479d-b5e7-b8cc4ecc5f6f",
+                    "@type": "uco-identity:SimpleNameFacet",
+                    "uco-identity:givenName": "Forensic Lab FG Consulting"
+                }
+            ]
+        },
+        {
+                "@id": "kb:4252f4ee-d2bd-4d83-bbb4-2669a7be8286",
+                "@type": "uco-tool:Tool",
+                "uco-core:name": "UFED PA",
+                "uco-tool:version": "7.57.1.9",
+                "uco-tool:toolType": "Acquisition",
+                "uco-tool:creator": {
+                    "@id": "kb:7ae6b781-4704-428f-85df-3367515dc608"
+                }
+        },
+        {
+                "@id": "kb:5e350cd9-3e48-4f8a-82f1-26e394e0780f",
+                "@type": "uco-observable:ObservableObject",
+                "uco-core:hasFacet": [
+                    {
+                        "@id": "kb:0be208ff-034c-4529-b004-39b8426393b4",
+                        "@type": "uco-observable:FileFacet",
+                        "uco-observable:fileName": "Apple_iPhone X (A1901).zip",
+                        "uco-observable:filePath": "Apple_iPhone X (A1901).zip",
+                        "drafting:fileLocalPath": "files/Ucategorized/Apple_iPhone X (A1901).zip",
+                        "uco-observable:extension": ".zip",
+                        "uco-observable:accessedTime": {
+                            "@type": "xsd:dateTime",
+                            "@value": "1900-01-01T08:00:00+00:00"
+                        },
+                        "uco-observable:observableCreatedTime": {
+                            "@type": "xsd:dateTime",
+                            "@value": "1900-01-01T08:00:00+00:00"
+                        },
+                        "uco-observable:modifiedTime": {
+                            "@type": "xsd:dateTime",
+                            "@value": "1900-01-01T08:00:00+00:00"
+                        },
+                        "uco-core:tag": [
+                            "Uncategorized"
+                        ],
+                        "uco-observable:sizeInBytes": {
+                            "@type": "xsd:integer",
+                            "@value": 16965760332
+                        }
+                    },
+                    {
+                        "@id": "kb:097bc2b2-45e4-453a-a208-aeab7e77da99",
+                        "@type": "uco-observable:ContentDataFacet",
+                        "uco-observable:hash": [
+                        {
+                            "@id": "kb:hash-fbd39b90-551d-5a80-8f3d-70e91c5fe472",
+                            "@type": "uco-types:Hash",
+                            "uco-types:hashMethod": {
+                                "@type": "uco-vocabulary:HashNameVocab",
+                                "@value": "SHA256"
+                            },
+                            "uco-types:hashValue": {
+                                "@type": "xsd:hexBinary",
+                                "@value": "6b51d431df5d7f141cbececcf79edf3dd861c3b4069f0b11661a3eefacbba918"
+                            }
+                        }
+                    ]
+                    }                            
+                ]
+            },
+        {
+            "@id": "kb:9ebe7b98-5323-4bf5-b44a-d499c928b93d",
+            "@type": "case-investigation:ProvenanceRecord",
+            "case-investigation:exhibitNumber": "E01",
+            "uco-core:object": [
+                {
+                    "@id": "kb:5e350cd9-3e48-4f8a-82f1-26e394e0780f"
+                }
+            ]
+                
+        },
+        {
+            "@id": "kb:0d549b0e-4484-4858-9e48-fb21e3f317f7",
+            "@type": "case-investigation:InvestigativeAction",
+            "rdfs:comment": "also the @type= uco-action:Action is admsissible",
+            "uco-core:name": "Forensic mobile device acquisition",
+            "uco-action:startTime": {
+                "@type": "xsd:dateTime",
+                "@value": "2021-07-29T12:28:49+00:00"
+            },
+            "uco-action:endTime": {
+                "@type": "xsd:dateTime",
+                "@value": "2021-07-29T12:43:44+00:00"
+            },
+            "uco-action:performer": {
+                "@id": "kb:8e4f771d-4fa0-4f70-b593-20d8f00e0461"
+            },
+            "uco-action:instrument": {
+                "@id": "kb:4252f4ee-d2bd-4d83-bbb4-2669a7be8286"
+            },
+            "uco-action:result": [
+                {
+                    "@id": "kb:9ebe7b98-5323-4bf5-b44a-d499c928b93d"
+                }
+            ],
+            "uco-action:object": {
+                "@id": "kb:e4912cd1-abc3-4ad4-9d73-f54379752e02"
+            }                        
+        }
+    ]
+}        
