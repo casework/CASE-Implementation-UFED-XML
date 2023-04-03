@@ -10,6 +10,7 @@
         "uco-role": "https://ontology.unifiedcyberontology.org/uco/role/",
         "uco-action": "https://ontology.unifiedcyberontology.org/uco/action/",
         "uco-observable": "https://ontology.unifiedcyberontology.org/uco/observable/",
+        "uco-vocabulary":"https://ontology.unifiedcyberontology.org/uco/vocabulary/",
         "uco-types": "https://ontology.unifiedcyberontology.org/uco/types/",
         "uco-tool": "https://ontology.unifiedcyberontology.org/uco/tool/",
         "case-investigation": "https://ontology.caseontology.org/case/investigation/",
@@ -123,19 +124,19 @@
                         "@id": "kb:097bc2b2-45e4-453a-a208-aeab7e77da99",
                         "@type": "uco-observable:ContentDataFacet",
                         "uco-observable:hash": [
-                        {
-                            "@id": "kb:hash-fbd39b90-551d-5a80-8f3d-70e91c5fe472",
-                            "@type": "uco-types:Hash",
-                            "uco-types:hashMethod": {
-                                "@type": "uco-vocabulary:HashNameVocab",
-                                "@value": "SHA256"
-                            },
-                            "uco-types:hashValue": {
-                                "@type": "xsd:hexBinary",
-                                "@value": "6b51d431df5d7f141cbececcf79edf3dd861c3b4069f0b11661a3eefacbba918"
+                            {
+                                "@id": "kb:fbd39b90-551d-5a80-8f3d-70e91c5fe472",
+                                "@type": "uco-types:Hash",
+                                "uco-types:hashMethod": {
+                                    "@type": "uco-vocabulary:HashNameVocab",
+                                    "@value": "SHA256"
+                                },
+                                "uco-types:hashValue": {
+                                    "@type": "xsd:hexBinary",
+                                    "@value": "6b51d431df5d7f141cbececcf79edf3dd861c3b4069f0b11661a3eefacbba918"
+                                }
                             }
-                        }
-                    ]
+                        ]
                     }                            
                 ]
             },

@@ -9,7 +9,6 @@ import json
 from datetime import datetime
 from uuid import uuid4
 from datetime import datetime
-from pytz import timezone
 
 class ObjectCore(dict):
 
@@ -105,8 +104,7 @@ class Bundle(ObjectCore):
                 "@vocabulary":"http://example.org/kb/",
                 "kb": "http://example.org/kb/",
                 "drafting":"http://example.org/ontology/drafting/",
-                "co": "http://purl.org/co/",
-                "not-in-ontology": "https://not-in/ontology/",
+                "co": "http://purl.org/co/",                
                 "case-investigation":"https://ontology.caseontology.org/case/investigation/",
                 "uco-action":"https://ontology.unifiedcyberontology.org/uco/action/",
                 "uco-core":"https://ontology.unifiedcyberontology.org/uco/core/",
@@ -121,11 +119,13 @@ class Bundle(ObjectCore):
                 "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
                 "xsd": "http://www.w3.org/2001/XMLSchema#"
             }
+
             self["@type"] = "uco-core:Bundle"
-            self._set_properties_str(**{"uco-core:account_name": uco_core_name,
-                'uco-core:specVersion': spec_version,
-                'uco-core:description': description,
-                '@id': case_identifier})
+            # self._set_properties_str(**{"uco-core:account_name": uco_core_name,
+            #     'uco-core:specVersion': spec_version,
+            #     'uco-core:description': description,
+            #     '@id': case_identifier})
+            self._set_properties_str(**{'@id': case_identifier})
             self.root = root
             self[self.root] = list()
 
@@ -134,14 +134,15 @@ class Bundle(ObjectCore):
                self[self.root].append(item)
 
 class ObjectFacet(ObjectCore):
-
     def __init__(self):
         super().__init__()
+        # each Facet/@type require to have IRIs (`@id`s)
+        self["@id"] = "kb:" + str(uuid4())
 
 
 class ObjectObservable(ObjectCore):
 
-    def __init__(self):
+    def __init__(self, object_class="uco-observable:ObservableObject"):
         """
         An observable object contains Facet, a group of unique features that characterises a 
         Cyber item / Digital vestige.
@@ -149,7 +150,7 @@ class ObjectObservable(ObjectCore):
         """
         super().__init__()   
         self["@id"] = "kb:" + str(uuid4())           
-        self["@type"] = "uco-observable:ObservableObject" 
+        self["@type"] = object_class
         self["uco-core:hasFacet"] = list()
 
     def append_facets(self, *facets):
@@ -158,13 +159,11 @@ class ObjectObservable(ObjectCore):
 
 
 class ObjectSpecial(ObjectCore):
-
     def __init__(self):
         super().__init__()
         self["@id"] = "kb:" + str(uuid4())
 
-class Relationship(ObjectSpecial):	
-    
+class Relationship(ObjectSpecial):	  
     def __init__(self, source=None, target=None, kind_of_relationship=None, start_time=None, end_time=None, 
         directional=None):
         super().__init__()
@@ -178,13 +177,26 @@ class Relationship(ObjectSpecial):
             "uco-core:target": target})
 
 class ProvenanceRecord(ObjectSpecial):
-
     def __init__(self, exhibit_number=None, uco_core_objects=None):
         super().__init__()
         self['@type'] = 'case-investigation:ProvenanceRecord'
-        self._set_properties_int(**{"case-investigation:exhibitNumber": exhibit_number})
+        self._set_properties_str(**{"case-investigation:exhibitNumber": exhibit_number})
         self._set_properties_list_id_reference(**{"uco-core:object": uco_core_objects})
 
+class ObjectInfo(ObjectCore):
+
+    def __init__(self, name="", version="", description=""):
+        """
+        An observable object contains Facet, a group of unique features that characterises a 
+        Cyber item / Digital vestige. This is for storing info about name,
+        description and version o fthe bundle        
+        """
+        super().__init__()   
+        self["@id"] = "kb:" + str(uuid4())           
+        self["@type"] = "uco-observable:ObservableObject" 
+        self["uco-core:name"] = name 
+        self["uco-core:description"] = description
+        self["rdfs:comment"]  = "version: " + version        
 
 class Account(ObjectFacet):
 
@@ -198,8 +210,9 @@ class Account(ObjectFacet):
         """
         super().__init__()
         self._set_properties_str(**{"@type": "uco-observable:AccountFacet",
-			"uco-observable:accountIdentifier": identifier,
-			"uco-observable:accountIssuer": issuer_id})
+			"uco-observable:accountIdentifier": identifier})
+        self._set_properties_id_reference(**{"uco-observable:accountIssuer": issuer_id})
+
         self._set_properties_bool(**{"uco-observable:isActive": is_active})
 
 
@@ -230,7 +243,7 @@ class ContentData(ObjectFacet):
                           "uco-observable:isEncrypted": is_encrypted})
 
         if hash_method is not None or hash_value is not None or hash_value != "-":
-            data = {"@type": "uco-types:Hash"}
+            data = {"@type": "uco-types:Hash", "@id": "kb:" + str(uuid4())}
             if hash_method is not None:
                 data["uco-types:hashMethod"] = {"@type": "uco-vocabulary:HashNameVocab", 
                 "@value": hash_method}
@@ -311,7 +324,7 @@ class BluetoothAddress(ObjectFacet):
 
 class UrlHistory(ObjectFacet):
 
-    def __init__(self, browser_info, history_entries=None):
+    def __init__(self, browser=None, history_entries=None):
         """
         :param browser_info: An observable object containing a URLHistoryFacet
         :param history_entries: A list of URLHistoryEntry types
@@ -319,22 +332,23 @@ class UrlHistory(ObjectFacet):
 
         super().__init__()
         self["@type"] = "uco-observable:URLHistoryFacet"
-        self._set_properties_id_reference(**{'uco-observable:browserInformation': browser_info})
-        # self.append_history_entries(history_entries)
+        self._set_properties_id_reference(**{'uco-observable:browserInformation': browser})        
+        #self.append_history_entries(history_entries)
 
-    def append_history_entries(self, *args):
+    def append_history_entries(self, entries):
         """
         Used to add history entries to this URL History facet
         :param args: A single/tuple of URLHistoryEntry class types
         """
-        self._append_observable_objects('uco-observable:urlHistoryEntry', *args)
+        #for entry in entries:
+        self["uco-core:hasFacet"].append(history_entries)        
 
 
 class UrlHistoryEntry(ObjectFacet):
 
     def __init__(self, first_visit=None, last_visit=None, expiration_time=None, manually_entered_count=None, url=None,
                  user_profile=None, page_title=None, referrer_url=None, visit_count=None, keyword_search_term=None,
-                 allocation_status=None):
+                 allocation_status=None, browser=None):
         """
         :param first_visit:
         :param last_visit:
@@ -350,18 +364,48 @@ class UrlHistoryEntry(ObjectFacet):
         """
 
         super().__init__()
-        self['@type'] = 'uco-observable:URLHistoryEntry'
-        self._set_properties_str(**{'uco-observable:userProfile': user_profile,  # todo: referral?
-                'uco-observable:pageTitle': page_title,
-                'uco-observable:referrerUrl': referrer_url,
-                'uco-observable:keywordSearchTerm': keyword_search_term,
-                'uco-observable:allocationStatus': allocation_status})
-        self._set_properties_int(**{'uco-observable:visitCount': visit_count,
-                'uco-observable:manuallyEnteredCount': manually_entered_count})
-        self._set_properties_date_time(**{'uco-observable:firstVisit': first_visit,
-                               'uco-observable:lastVisit': last_visit,
-                               'uco-observable:expirationTime': expiration_time})
-        self._set_properties_id_reference(**{'uco-observable:url': url})
+        
+        self['@type'] = 'uco-observable:URLHistoryFacet'
+        
+        #self._set_properties_id_reference(**{'uco-observable:browserInformation': browser}) 
+        self['uco-observable:browserInformation'] = {'@id': browser.get_id()}         
+
+        # self._set_properties_str(**{'uco-observable:userProfile': user_profile,  # todo: referral?
+        #         'uco-observable:pageTitle': page_title,
+        #         'uco-observable:referrerUrl': referrer_url,
+        #         'uco-observable:keywordSearchTerm': keyword_search_term,
+        #         'uco-observable:allocationStatus': allocation_status})        
+        # self._set_properties_int(**{'uco-observable:visitCount': visit_count,
+        #          'uco-observable:manuallyEnteredCount': manually_entered_count})
+        # self._set_properties_date_time(**{'uco-observable:firstVisit': first_visit,
+        #                        'uco-observable:lastVisit': last_visit,
+        #                        'uco-observable:expirationTime': expiration_time})
+        # self._set_properties_id_reference(**{'uco-observable:url': url})
+        
+        
+        if first_visit:
+            tz_info = first_visit.strftime("%z")
+            first_iso_format = first_visit.isoformat() if tz_info else first_visit.isoformat() + '+00:00'
+        else:
+            first_iso_format = '1900-01-01T08:00:00+00:00'
+
+        if last_visit:
+            tz_info = last_visit.strftime("%z")
+            last_iso_format = last_visit.isoformat() if tz_info else last_visit.isoformat() + '+00:00'
+        else:
+            last_iso_format = '1900-01-01T08:00:00+00:00'
+
+        self['uco-observable:urlHistoryEntry'] = []
+        self['uco-observable:urlHistoryEntry'].append(
+            {'@id': "kb:" + str(uuid4()),
+            '@type': 'uco-observable:URLHistoryEntry',
+            'uco-observable:firstVisit': {"@type": "xsd:dateTime", "@value": first_iso_format},
+            'uco-observable:lastVisit': {"@type": "xsd:dateTime", "@value": last_iso_format},
+            'uco-observable:pageTitle': page_title,  
+            'uco-observable:url': {'@id': url.get_id()}, 
+            'uco-observable:visitCount': {"@type": "xsd:integer", "@value": visit_count},
+            'uco-observable:allocationStatus': allocation_status,
+            'uco-observable:keywordSearchTerm': keyword_search_term})
 
 
 class Url(ObjectFacet):
@@ -439,6 +483,30 @@ class PhoneCall(ObjectFacet):
                                      "uco-observable:from": call_from,
                                      "uco-observable:to": call_to})
 
+class Call(ObjectFacet):
+
+    def __init__(self, call_type=None, start_time=None, application=None, call_from=None,
+                 call_to=None, call_duration=None, allocation_status=None):
+        """
+        :param call_type: incoming outgoing etc
+        :param start_time: the time at which the device registered the call as starting
+        :param application: ObjectObservable with call-application (e.g. WhatsApp) facet-info
+        :param call_from: ObjectObservable with person/caller facet-info
+        :param call_to: ObjectObservable with person/caller facet-info
+        :param call_duration: how long the call was registedred on the device as lasting in minutes (E.G. 60)
+        :param allocation_status: The allocation status of the record of the call i.e intact for records that are
+        present on the device
+        """
+        super().__init__()
+        self["@type"] = "uco-observable:CallFacet"
+        self._set_properties_str(**{"uco-observable:callType": call_type,
+                          "uco-observable:allocationStatus": allocation_status})
+        self._set_properties_int(**{"uco-observable:duration": call_duration})
+        self._set_properties_date_time(**{"uco-observable:startTime": start_time})
+        self._set_properties_id_reference(**{"uco-observable:application": application,
+                                     "uco-observable:from": call_from,
+                                     "uco-observable:to": call_to})        
+
 
 class PhoneAccount(ObjectFacet):
 
@@ -451,7 +519,7 @@ class PhoneAccount(ObjectFacet):
         super().__init__()
         self["@type"] = "uco-observable:PhoneAccountFacet"
         self._set_properties_str(**{"uco-observable:phoneNumber": phone_number,
-                          "uco-core:name": account_name})
+                          "uco-observable:displayName": account_name})
 
 
 class EmailAccount(ObjectFacet):
@@ -527,7 +595,7 @@ class EmailMessage(ObjectFacet):
             "uco-observable:xMailer": x_mailer,
             "uco-observable:allocationStatus": allocation_status,
             "uco-observable:receivedTime": received_time,            
-            "uco-core:objectModifiedTime": modified_time,
+            "uco-observable:modifiedTime": modified_time,
             "uco-observable:isRead": is_read,
 			"uco-observable:isMimeEncoded": is_mime_encoded,
 			"uco-observable:isMultipart": is_multipart})
@@ -596,14 +664,14 @@ class CalendarEntry(ObjectFacet):
                  attendants=None):
         super().__init__()
         self["@type"] = "uco-observable:CalendarEntryFacet"
-        self._set_properties_str(**{"not-in-ontology:group": group,
+        self._set_properties_str(**{"drafting:group": group,
             "observable:subject": subject,
-            "not-in-ontology:details": details,
-            "not-in-ontology:repeatInterval": repeat_interval,  # todo: type?
+            "drafting:details": details,
+            "drafting:repeatInterval": repeat_interval,  # todo: type?
             'uco-observable:eventStatus': status,
             'uco-observable:recurrence': recurrence,            
             'uco-observable:remindTime': remind_time,
-            "not-in-ontology:repeatUntil": repeat_until,
+            "drafting:repeatUntil": repeat_until,
             'observable:isPrivate': private})
         self._set_properties_date_time(**{"uco-observable:startTime": start_time,
             "uco-observable:endTime": end_time})
@@ -624,9 +692,9 @@ class BrowserCookie(ObjectFacet):
             "uco-observable:cookiePath": path,            
             'uco-observable:isSecure': secure})
         self._set_properties_date_time(**{'uco-observable:observableCreatedTime': created_time,
-            "uco-observable:lastAccessTime": last_access_time,
+            "uco-observable:accessedTime": last_access_time,
             'uco-observable:expirationTime': expiration_time})
-        self._set_properties_id_reference(**{"not-in-ontology:source": source,
+        self._set_properties_id_reference(**{"drafting:source": source,
                                      'uco-observable:cookieDomain': domain})
 
 
@@ -655,14 +723,15 @@ class File(ObjectFacet):
         self._set_properties_str(**{"uco-observable:fileSystemType": file_system_type,
             "uco-observable:fileName": file_name,
             "uco-observable:filePath": file_path,
-            "uco-observable:fileLocalPath": file_local_path,
-            "uco-observable:extension": file_extension,            
+            "drafting:fileLocalPath": file_local_path,
+            "uco-observable:extension": file_extension, 
+            "uco-observable:mimeType": tag,
             "uco-observable:metadataChangeTime": metadata_changed_time})
         #self._set_properties_str(**{'uco-core:tag': tag})
-        self['uco-core:tag'] = tag
-        self._set_properties_date_time(**{"uco-core:objectAccessedTime": accessed_time,
-            "uco-core:objectCreatedTime": created_time,
-            "uco-core:objectModifiedTime": modified_time})
+        #self['uco-core:tag'] = tag
+        self._set_properties_date_time(**{"uco-observable:accessedTime": accessed_time,
+            "uco-observable:observableCreatedTime": created_time,
+            "uco-observable:modifiedTime": modified_time})
         self._set_properties_int(**{"uco-observable:sizeInBytes": size_bytes})
 
 
@@ -692,6 +761,30 @@ class Message(ObjectFacet):
                                      "uco-observable:application": application})
         self._set_properties_list_id_reference(**{"uco-observable:to": msg_to})        
 
+class SmsMessage(ObjectFacet):
+
+    def __init__(self, msg_to=None, msg_from=None, message_text=None, sent_time=None,
+                 application=None, message_id=None, session_id=None):
+        """
+        Characteristics of an electronic message.
+        :param msg_to: A list of ObjectObservables
+        :param msg_from: An ObjectObservable
+        :param message_text: The content of the email.
+        :param sent_time: The time sent, in ISO8601 time format (e.g., "2020-09-29T12:13:01Z")
+        :param application: The application associated with this object.
+        :param message_type:
+        :param message_id: A unique identifier for the message.
+        :param session_id: The priority of the email.
+        """
+        super().__init__()
+        self["@type"] = "uco-observable:SMSMessageFacet"
+        self._set_properties_str(**{"uco-observable:messageText": message_text,
+                          "uco-observable:messageID": message_id,
+                          "uco-observable:sessionID": session_id})
+        self._set_properties_date_time(**{"uco-observable:sentTime": sent_time})
+        self._set_properties_id_reference(**{"uco-observable:from": msg_from,                                     
+                                     "uco-observable:application": application})
+        self._set_properties_list_id_reference(**{"uco-observable:to": msg_to}) 
 
 class MobileDevice(ObjectFacet):
 
@@ -717,9 +810,9 @@ class OperatingSystem(ObjectFacet):
     def __init__(self, os_name=None, os_manufacturer=None, os_version=None, os_install_date=None):
         super().__init__()
         self["@type"] = "uco-observable:OperatingSystemFacet"
-        self._set_properties_str(**{"uco-core:name": os_name,
-                          "uco-observable:manufacturer": os_manufacturer,
+        self._set_properties_str(**{"uco-observable:displayName": os_name,        
                           "uco-observable:version": os_version})
+        self._set_properties_id_reference(**{"uco-observable:manufacturer": os_manufacturer})
         self._set_properties_date_time(**{"uco-observable:installDate": os_install_date})
 
 
@@ -749,15 +842,15 @@ class Event(ObjectFacet):
         :param computer_name: A name of the computer on which the log entry was created.
         """
         super().__init__()
-        self["@type"] = "uco-observable:EventFacet"
+        self["@type"] = "uco-observable:EventRecordFacet"
         self._set_properties_str(**{"uco-observable:eventType": event_type,
-                          "uco-observable:eventText": event_text,
+                          "uco-observable:eventRecordText": event_text,
                           "uco-observable:eventID": event_id,
                           "uco-observable:computerName": computer_name})
         self._set_properties_id_reference(**{'uco-observable:cyberAction': cyber_action})
         self._set_properties_date_time(**{'uco-observable:observableCreatedTime': created_time,
-                               'not-in-ontology:observableStartTime': start_time,
-                               'not-in-ontology:observableEndTime': end_time})
+                               'drafting:observableStartTime': start_time,
+                               'drafting:observableEndTime': end_time})
 
 
 # class ObservableRelationship(ObjectSpecial):
@@ -825,8 +918,7 @@ class DigitalAccount(ObjectFacet):
 
 class WirelessNetworkConnection(ObjectFacet):
 
-    def __init__(self, ssid=None, base_station=None, bssid=None, location=None, connection_time=None,
-                 last_connection=None):
+    def __init__(self, ssid=None, base_station=None):
         """
         A wireless network connection facet is a grouping of characteristics unique to a connection (completed or
         attempted) across an IEEE 802.11 standards-conformant digital network (a group of two or more computer systems
@@ -835,12 +927,7 @@ class WirelessNetworkConnection(ObjectFacet):
         super().__init__()
         self["@type"] = "uco-observable:WirelessNetworkConnectionFacet"
         self._set_properties_str(**{"uco-observable:ssid": ssid,
-                          'uco-observable:baseStation': base_station,
-                          'not-in-ontology:bssid': bssid})
-        self._set_properties_date_time(**{'not-in-ontology:timeConnection': connection_time,
-                               'not-in-ontology:lastConnection': last_connection})
-        self._set_properties_id_reference(**{'uco-observable:location': location})
-
+                          'uco-observable:baseStation': base_station})
 
 class Messagethread(ObjectFacet):
 
@@ -856,22 +943,21 @@ class Messagethread(ObjectFacet):
         self._set_properties_bool(**{'uco-observable:visibility': visibility})
         self._set_properties_list_id_reference(**{'uco-observable:participant': participants})
 
-        self["uco-observable:message"]=dict()
-        self["uco-observable:message"]["olo:length"]= str(len(messages))
-        self["uco-observable:message"]["olo:slot"]=list()
+        self["uco-observable:messageThread"]=dict()
+        self["uco-observable:messageThread"]["@id"]= "kb:" + str(uuid4())
+        self["uco-observable:messageThread"]["@type"] = "uco-types:Thread"
+        self["uco-observable:messageThread"]["co:size"]= dict()
+        self["uco-observable:messageThread"]["co:size"]["@type"] = "xsd:nonNegativeInteger"
+        self["uco-observable:messageThread"]["co:size"]["@value"] = str(len(messages))
+        self["uco-observable:messageThread"]["co:element"]= list()
         for i, m in enumerate(messages):
-            self["uco-observable:message"]["olo:slot"].append({"olo:index":str(i + 1), "olo:item": {"@id":m.get_id()}})
-        # # fixme: once MessageThread revised by the community
-        # self['uco-observable:message'] = Message(has_changed=message_has_changed, state=message_state,
-        #                                          indexed_items=messages)
-        # self['uco-observable:message'].pop('@id')
-        # self['uco-observable:message'].pop('@type')
+            self["uco-observable:messageThread"]["co:element"].append({"@id":m.get_id()})
 
-    def append_messages(self, messages):
-        self['uco-observable:message'].append_indexed_items(messages)
+    # def append_messages(self, messages):
+    #     self['uco-observable:message'].append_indexed_items(messages)
 
-    def append_participants(self, participants):
-        self._append_refs('uco-observable:participant', *participants)
+    # def append_participants(self, participants):
+    #     self._append_refs('uco-observable:participant', *participants)
 
 
 class MessageSMS(ObjectFacet):
@@ -926,21 +1012,16 @@ class Disk(ObjectFacet):
         self._int_vars(**{"uco-observable:diskSize": size})
         self._node_reference_vars(**{"uco-observable:partition": partition})
 
-class CellTower(ObjectFacet):
+class CellSite(ObjectFacet):
 
-    def __init__(self, mcc=None, mnc=None, lac=None, cid=None, nid=None,
-                 bid=None, sid=None, location=None):
+    def __init__(self, country_code=None, network_code=None, area_code=None, site_id=None):
         super().__init__()
-        self['@type'] = "not-in-ontology:CellTowerFacet"
-        self._set_properties_str(**{"not-in-ontology:mcc": mcc,
-                          "not-in-ontology:mnc": mnc,
-                          "not-in-ontology:lac": lac,
-                          "not-in-ontology:cid": cid,
-                          "not-in-ontology:nid": nid,
-                          "not-in-ontology:bid": bid,
-                          "not-in-ontology:sid": sid})
-        self._set_properties_id_reference(**{"uco-observable:location": location})
-
+        self['@type'] = "uco-observable:CellSiteFacet"
+        self._set_properties_str(**{"uco-observable:cellSiteType": "GSM",
+                "uco-observable:cellSiteCountryCode": country_code,
+                "uco-observable:cellSiteNetworkCode": network_code,
+                "uco-observable:cellSiteLocationAreaCode": area_code,
+                "uco-observable:cellSiteIdentifier": site_id})
 
 class SocialMediaActivity(ObjectFacet):
 
@@ -962,15 +1043,15 @@ class SocialMediaActivity(ObjectFacet):
         :param account_id:
         """
         super().__init__()
-        self['@type'] = "not-in-ontology:SocialMediaActivityFacet"
+        self['@type'] = "drafting:SocialMediaActivityFacet"
         self._set_properties_str(**{"uco-observable:body": body,
                           "uco-observable:pageTitle": page_title,
-                          "not-in-ontology:authorIdentifier": author_id,
-                          "not-in-ontology:authorName": author_name,
-                          "not-in-ontology:reactionsCount": reactions_count,
-                          "not-in-ontology:sharesCount": shares_count,
-                          "not-in-ontology:activityType": activity_type,
-                          "not-in-ontology:commentCount": comment_count,
+                          "drafting:authorIdentifier": author_id,
+                          "drafting:authorName": author_name,
+                          "drafting:reactionsCount": reactions_count,
+                          "drafting:sharesCount": shares_count,
+                          "drafting:activityType": activity_type,
+                          "drafting:commentCount": comment_count,
                           "uco-observable:accountIdentifier": account_id})
         self._set_properties_date_time(
             **{'uco-observable:observableCreatedTime': created_time})
@@ -981,23 +1062,23 @@ class SearchedItem(ObjectFacet):
 
     def __init__(self, search_value=None, search_result=None, application=None, search_launch_time=None):
         super().__init__()
-        self["@type"] = "not-in-ontology:SearchedItemFacet"
-        self._set_properties_str(**{"not-in-ontology:searchValue": search_value,
-                          "not-in-ontology:searchResult": search_result})
+        self["@type"] = "drafting:SearchedItemFacet"
+        self._set_properties_str(**{"drafting:searchValue": search_value,
+                          "drafting:searchResult": search_result})
         self._set_properties_date_time(
-            **{'not-in-ontology:searchLaunchedTime': search_launch_time})
+            **{'drafting:searchLaunchedTime': search_launch_time})
         self._set_properties_id_reference(
             **{'uco-observable:application': application})
 
 class Location(ObjectFacet):
 
-    def __init__(self, latitude=None, longitude=None, altitude=None, location_type=None):
+    def __init__(self, latitude=None, longitude=None, altitude=None):
         super().__init__()
         self["@type"] = "uco-location:LatLongCoordinatesFacet"
         self._set_properties_float(**{"uco-location:latitude": latitude,
                             "uco-location:longitude": longitude,
                             'uco-location:altitude': altitude})
-        self._set_properties_str(**{'not-in-ontology:locationType': location_type})
+        #self._set_properties_str(**{'drafting:locationType': location_type})
 
 class SimpleName(ObjectFacet):
 
@@ -1011,7 +1092,7 @@ class SimpleName(ObjectFacet):
         self._set_properties_str(**{"uco-identity:givenName": given_name,
                           "uco-identity:familyName": family_name})
 
-class Role(ObjectFacet):
+class Role(ObjectSpecial):
 
     def __init__(self, description=None, _id=None, modified_time=None, name=None, created_time=None, spec_version=None,
                  tag=None, _type=None, created_by=None, objet_marking=None):
@@ -1028,6 +1109,7 @@ class Role(ObjectFacet):
         :param created_by: The identity that created a characterization of a concept.
         :param objet_marking: Marking definitions to be applied to a particular concept characterization in its entirety
         """
+
         super().__init__()
         self["@type"] = "uco-role:Role"
         self._set_properties_str(**{"uco-core:description": description,
@@ -1053,7 +1135,7 @@ class SimpleAdress(ObjectFacet):
                           'uco-location:region': region,
                           'uco-location:street': street})
 
-class Tool(ObjectFacet):
+class Tool(ObjectSpecial):
 
     def __init__(self, tool_name=None, tool_version=None, tool_type=None, tool_creator=None):
         """
@@ -1067,12 +1149,13 @@ class Tool(ObjectFacet):
         self["@type"] = "uco-tool:Tool"
         self._set_properties_str(**{"uco-core:name": tool_name,
                           "uco-tool:version": tool_version,
-                          "uco-tool:toolType": tool_type,
-                          "uco-tool:creator": tool_creator})
+                          "uco-tool:toolType": tool_type})                                
+        self._set_properties_id_reference(**{"uco-tool:creator": tool_creator})
 
-class InvestigativeAction(ObjectObservable):
+class InvestigativeAction(ObjectSpecial):
 
-    def __init__(self, name=None, description=None, start_time=None, end_time=None):
+    def __init__(self, name=None, description=None, start_time=None, end_time=None,
+        performer=None, instrument=None, location=None, environment=None, results=None, objects=None):
         """
         An investigative action is a CASE object that represents the who, when, what outcome of an action
         :param name: The account_name of the action (e.g., "annotated")
@@ -1082,9 +1165,15 @@ class InvestigativeAction(ObjectObservable):
         super().__init__()
         self["@type"] = "case-investigation:InvestigativeAction"
         self._set_properties_str(**{"uco-core:name": name,
-                          'uco-core:description': description})
+                          'uco-core:description': description,
+                          "uco-action:environment": environment})
         self._set_properties_date_time(**{"uco-action:startTime": start_time,
                                "uco-action:endTime": end_time})
+        self._set_properties_id_reference(**{"uco-action:performer": performer,
+                                    "uco-action:instrument": instrument,
+                                    "uco-action:location": location})
+        self._set_properties_list_id_reference(**{"uco-action:result": results})
+        self._set_properties_list_id_reference_array(**{"uco-action:object": objects})
 
 
 class ActionReferences(ObjectFacet):

@@ -81,7 +81,8 @@
         
         {
             "@id": "kb:4237ff8b-e049-4a56-bcf7-e89ed2797d83",
-            "@type": "uco-observable:MessageThread",
+            "rdfs:comment": "@type: uco-observable:MessageThread",
+            "@type": "uco-observable:ObservableObject",
             "uco-core:hasFacet": [
                 {
                     "@id": "kb:0cd2f9f8-9040-4af7-82f8-8287fb3f861d",

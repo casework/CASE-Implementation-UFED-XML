@@ -1,0 +1,71 @@
+# imports: https://ontology.unifiedcyberontology.org/uco/action/1.0.0
+# imports: https://ontology.unifiedcyberontology.org/uco/configuration/1.0.0
+# imports: https://ontology.unifiedcyberontology.org/uco/core/1.0.0
+# imports: https://ontology.unifiedcyberontology.org/uco/identity/1.0.0
+# imports: https://ontology.unifiedcyberontology.org/uco/location/1.0.0
+# imports: https://ontology.unifiedcyberontology.org/uco/types/1.0.0
+# imports: https://ontology.unifiedcyberontology.org/uco/vocabulary/1.0.0
+
+@prefix action: <https://ontology.unifiedcyberontology.org/uco/action/> .
+@prefix co: <http://purl.org/co/> .
+@prefix configuration: <https://ontology.unifiedcyberontology.org/uco/configuration/> .
+@prefix core: <https://ontology.unifiedcyberontology.org/uco/core/> .
+@prefix identity: <https://ontology.unifiedcyberontology.org/uco/identity/> .
+@prefix location: <https://ontology.unifiedcyberontology.org/uco/location/> .
+@prefix observable: <https://ontology.unifiedcyberontology.org/uco/observable/> .
+@prefix drafting: <http://example.org/ontology/drafting/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix types: <https://ontology.unifiedcyberontology.org/uco/types/> .
+@prefix vocabulary: <https://ontology.unifiedcyberontology.org/uco/vocabulary/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/ontology/drafting>
+	a owl:Ontology ;
+	rdfs:label "drafting"@en ;
+	owl:imports
+		action:1.0.0 ,
+		configuration:1.0.0 ,
+		core:1.0.0 ,
+		identity:1.0.0 ,
+		location:1.0.0 ,
+		types:1.0.0 ,
+		vocabulary:1.0.0
+		;
+	owl:ontologyIRI <http://example.org/ontology/drafting> ;
+	owl:versionIRI drafting:1.0.0 ;
+	.
+
+drafting:SearchedItemFacet
+	a
+		owl:Class ,
+		sh:NodeShape
+		;
+	rdfs:subClassOf core:Facet ;
+	rdfs:label "SearchedItemFacet"@en ;
+	rdfs:comment "A searched item facet is a grouping of characteristics unique to the strings searched by using a web browse."@en ;
+	sh:property
+		[
+			sh:datatype xsd:string ;
+			sh:maxCount "1"^^xsd:integer ;
+			sh:nodeKind sh:Literal ;
+			sh:path observable:searchValue ;
+		] ,
+		[
+			sh:datatype xsd:string ;
+			sh:maxCount "1"^^xsd:integer ;
+			sh:nodeKind sh:Literal ;
+			sh:path observable:searchResult ;
+		] ,
+		[
+			sh:datatype xsd:dateTime ;
+			sh:maxCount "1"^^xsd:integer ;
+			sh:nodeKind sh:Literal ;
+			sh:path observable:searchLaunchedTime ;
+		]
+		;
+	sh:targetClass drafting:SearchedItemFacet ;
+	.	
+	
