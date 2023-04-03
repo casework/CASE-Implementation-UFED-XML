@@ -1,0 +1,114 @@
+{
+    "@context": {
+        "kb": "http://example.org/kb/",
+        "drafting": "http://example.org/ontology/drafting/",
+        "co": "http://purl.org/co/",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "uco-core": "https://ontology.unifiedcyberontology.org/uco/core/",
+        "uco-identity": "https://ontology.unifiedcyberontology.org/uco/identity/",
+        "uco-location": "https://ontology.unifiedcyberontology.org/uco/location/",
+        "uco-role": "https://ontology.unifiedcyberontology.org/uco/role/",
+        "uco-action": "https://ontology.unifiedcyberontology.org/uco/action/",
+        "uco-observable": "https://ontology.unifiedcyberontology.org/uco/observable/",
+        "uco-types": "https://ontology.unifiedcyberontology.org/uco/types/",
+        "uco-tool": "https://ontology.unifiedcyberontology.org/uco/tool/",
+        "case-investigation": "https://ontology.caseontology.org/case/investigation/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"        
+    },
+    "uco-core:object": [  
+
+        {
+            "@id": "kb:b35a22bb-4724-456d-9d5e-cb10bac9939d",
+            "@type": "uco-observable:ObservableObject",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:9822afd7-c7c3-4d36-84b4-65e2f33e9f9a",
+                    "@type": "uco-observable:EmailAddressFacet",
+                    "uco-observable:addressValue": "tornadobeth@gmail.com"
+                }
+            ]
+        },
+        {
+            "@id": "kb:0e9ee8e2-a3ae-4034-ad6e-9faf2d74be4f",
+            "@type": "uco-observable:ObservableObject",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:171e2ad5-4487-4c49-b5b3-fce438264222",
+                    "@type": "uco-observable:EmailAddressFacet",
+                    "uco-observable:addressValue": "sofia.karppi@supo.fi"
+                }
+            ]
+        },
+        {
+            "@id": "kb:4da63ae2-4dde-46ed-902b-707fba9c4ec6",
+            "@type": "uco-observable:ObservableObject",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "22099976-cf95-412f-aa81-73019ee6e5cb",
+                    "@type": "uco-observable:AccountFacet",
+                    "uco-observable:isActive": {
+                        "@type": "xsd:boolean",
+                        "@value": true
+                    },
+                    "uco-observable:accountIdentifier": "Sofia K."
+                },
+                {
+                    "@id": "kb:abefde69-763c-421f-ab98-68ec712c3240",
+                    "@type": "uco-observable:EmailAccountFacet",
+                    "uco-observable:emailAddress": {
+                        "@id": "kb:0e9ee8e2-a3ae-4034-ad6e-9faf2d74be4f"
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "kb:29ec4e5c-79b4-470b-89b0-05f4e4d7438f",
+            "@type": "uco-observable:ObservableObject",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:7727e140-c0cf-4d58-8b1f-fe6872b928fd",
+                    "@type": "uco-observable:AccountFacet",
+                    "uco-observable:isActive": {
+                        "@type": "xsd:boolean",
+                        "@value": true
+                    },
+                    "uco-observable:accountIdentifier": "Beth T."
+                },
+                {
+                    "@id": "kb:b93c1c72-f83f-45a3-b08e-3e56f370c26c",
+                    "@type": "uco-observable:EmailAccountFacet",
+                    "uco-observable:emailAddress": {
+                        "@id": "kb:b35a22bb-4724-456d-9d5e-cb10bac9939d"
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "kb:86c4539e-6bd2-4f73-aa44-00debcd57326",
+            "@type": "uco-observable:ObservableObject",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:a4f1bc5a-9250-442f-b2c0-508cf226809c",
+                    "@type": "uco-observable:EmailMessageFacet",
+                    "uco-observable:subject": "Helena Willamo  clues.",
+                    "uco-observable:body": "Dear Friends, Nice to hearing from you! Thank you for the invitation. I’ll answer to you asap.",
+                    "uco-observable:allocationStatus": "Intact",
+                    "uco-observable:sentTime": {
+                        "@type": "xsd:dateTime",
+                        "@value": "2021-02-25T14:55:51+00:00"
+                    },
+                    "uco-observable:from": {
+                        "@id": "kb:4da63ae2-4dde-46ed-902b-707fba9c4ec6"
+                    },
+                    "uco-observable:to": [
+                        {
+                            "@id": "kb:29ec4e5c-79b4-470b-89b0-05f4e4d7438f"
+                        }
+                    ],
+                    "uco-observable:cc": [],
+                    "uco-observable:bcc": []
+                }
+            ]
+        }
+    ]
+}

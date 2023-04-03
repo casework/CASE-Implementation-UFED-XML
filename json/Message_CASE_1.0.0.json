@@ -1,0 +1,171 @@
+{
+    "@context": {
+        "kb": "http://example.org/kb/",
+        "drafting": "http://example.org/ontology/drafting/",
+        "co": "http://purl.org/co/",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "uco-core": "https://ontology.unifiedcyberontology.org/uco/core/",
+        "uco-identity": "https://ontology.unifiedcyberontology.org/uco/identity/",
+        "uco-location": "https://ontology.unifiedcyberontology.org/uco/location/",
+        "uco-role": "https://ontology.unifiedcyberontology.org/uco/role/",
+        "uco-action": "https://ontology.unifiedcyberontology.org/uco/action/",
+        "uco-observable": "https://ontology.unifiedcyberontology.org/uco/observable/",
+        "uco-types": "https://ontology.unifiedcyberontology.org/uco/types/",
+        "uco-tool": "https://ontology.unifiedcyberontology.org/uco/tool/",
+        "case-investigation": "https://ontology.caseontology.org/case/investigation/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"        
+    },
+    "uco-core:object": [                
+        {
+            "@id": "kb:5340d5ad-0fe1-463c-a461-f211e64edfd4",
+            "@type": "uco-observable:ObservableObject",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:1723ed9c-2d8e-415c-8cf6-31599c49df79",
+                    "@type": "uco-observable:ApplicationFacet",
+                    "uco-observable:applicationIdentifier": "com.whatsapp",
+                    "uco-observable:version": "1.23.45"
+                }
+            ]
+        },        
+        {
+            "@id": "kb:a5931c7e-fc1e-4def-a618-fc31d9ae4cc7",
+            "@type": "uco-observable:ApplicationAccount",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:0279d259-3195-418b-b5bc-ac3d7b8dbf66",
+                    "@type": "uco-observable:AccountFacet",
+                    "uco-observable:accountIdentifier": "393369402190@s.whatsapp.net"
+                },
+                {
+                    "@id": "kb:6a4fc272-4ca3-4da3-93d0-0711ca3e85d6",
+                    "@type": "uco-observable:ApplicationAccountFacet",
+                    "uco-observable:application": {
+                        "@id": "kb:5340d5ad-0fe1-463c-a461-f211e64edfd4"
+                    }
+                },
+                {
+                    "@id": "kb:0d2ac063-7bed-4525-be4c-7dc38a4288f1",
+                    "@type": "uco-observable:DigitalAccountFacet",
+                    "uco-observable:displayName": "Jane Balding"
+                }
+            ]
+        },
+        {
+            "@id": "kb:f135dee3-ba06-4ded-ad63-5484ce240ec8",
+            "@type": "uco-observable:ApplicationAccount",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:36d0abb1-bdd8-460c-8422-63f715e2e1c2",
+                    "@type": "uco-observable:AccountFacet",
+                    "uco-observable:isActive": {
+                        "@type": "xsd:boolean",
+                        "@value": "true"
+                    },
+                    "uco-observable:accountIdentifier": "363483643499@s.whatsapp.net"
+                },
+                {
+                   "@id": "kb:9e8995f1-fa79-432f-915d-1eed79b83413", 
+                    "@type": "uco-observable:ApplicationAccountFacet",
+                    "uco-observable:application": {
+                        "@id": "kb:5340d5ad-0fe1-463c-a461-f211e64edfd4"
+                    }
+                },
+                {
+                    "@id": "kb:cc9400b6-044d-4fef-a7d1-adecdf0b7aa2",
+                    "@type": "uco-observable:DigitalAccountFacet",
+                    "uco-observable:displayName": "Vivienne Joosha"
+                }
+            ]
+        },
+        
+        {
+            "@id": "kb:4237ff8b-e049-4a56-bcf7-e89ed2797d83",
+            "@type": "uco-observable:MessageThread",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:0cd2f9f8-9040-4af7-82f8-8287fb3f861d",
+                    "@type": "uco-observable:MessageThreadFacet",
+                    "identifier": "jane~vivienne@whatsapp.gs.net",
+                    "uco-observable:displayName": "Best Friend Chat!!",
+                    "uco-observable:messageThread": {
+                        "@id": "kb:1a921f84-eadd-4591-be0d-57b936933622",
+                        "@type": "uco-types:Thread",
+                        "co:size": {
+                            "@type": "xsd:nonNegativeInteger",
+                            "@value": 2
+                        },
+                        "co:element": [
+                            {
+                                "@id": "kb:d8330d5a-b8de-4425-9cd8-a37b038afe81"
+                            },
+                            {
+                                "@id": "kb:3328fbc7-1f63-4e66-b8fc-e27143a64331"
+                            }
+                        ]                        
+                    },
+                    "uco-observable:participant": [
+                        {
+                            "@id": "kb:a5931c7e-fc1e-4def-a618-fc31d9ae4cc7"
+                        },
+                        {
+                            "@id": "kb:f135dee3-ba06-4ded-ad63-5484ce240ec8"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "@id": "kb:3328fbc7-1f63-4e66-b8fc-e27143a64331",
+            "@type": "uco-observable:Message",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:3104e958-381e-4aa5-ba0a-6fc47b33ebc7",
+                    "@type": "uco-observable:MessageFacet",
+                    "uco-observable:application": {
+                        "@id": "kb:5340d5ad-0fe1-463c-a461-f211e64edfd4"
+                    },
+                    "uco-observable:messageText": "I said some things in a tweet! @sarahsmithtweeter #hashtag",
+                    "uco-observable:from": {
+                        "@id": "kb:f135dee3-ba06-4ded-ad63-5484ce240ec8"
+                    },
+                    "uco-observable:to": [
+                        {
+                            "@id": "kb:a5931c7e-fc1e-4def-a618-fc31d9ae4cc7"
+                        }
+                    ],
+                    "uco-observable:sentTime": {
+                        "@type": "xsd:dateTime",
+                        "@value": "2010-01-16T16:34:56.25Z"
+                    }
+                }
+            ]
+        },
+        {
+            "@id": "kb:d8330d5a-b8de-4425-9cd8-a37b038afe81",
+            "@type": "uco-observable:Message",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:51b43eaf-49fb-4812-baf2-210f4893e6d0",
+                    "@type": "uco-observable:MessageFacet",
+                    "uco-observable:application": {
+                        "@id": "kb:5340d5ad-0fe1-463c-a461-f211e64edfd4"
+                    },
+                    "uco-observable:messageText": "Hey bud!",
+                    "uco-observable:from": {
+                        "@id": "kb:a5931c7e-fc1e-4def-a618-fc31d9ae4cc7"
+                    },
+                    "uco-observable:to": [
+                        {
+                            "@id": "kb:f135dee3-ba06-4ded-ad63-5484ce240ec8"
+                        }
+                    ],
+                    "uco-observable:sentTime": {
+                        "@type": "xsd:dateTime",
+                        "@value": "2010-01-15T17:59:43.25Z"
+                    }
+                }
+            ]
+        }
+    ]
+}

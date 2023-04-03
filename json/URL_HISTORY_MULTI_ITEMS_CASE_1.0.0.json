@@ -1,0 +1,116 @@
+{
+    "@context": {
+        "kb": "http://example.org/kb/",
+        "drafting": "http://example.org/ontology/drafting/",
+        "co": "http://purl.org/co/",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "uco-core": "https://ontology.unifiedcyberontology.org/uco/core/",
+        "uco-identity": "https://ontology.unifiedcyberontology.org/uco/identity/",
+        "uco-location": "https://ontology.unifiedcyberontology.org/uco/location/",
+        "uco-role": "https://ontology.unifiedcyberontology.org/uco/role/",
+        "uco-action": "https://ontology.unifiedcyberontology.org/uco/action/",
+        "uco-observable": "https://ontology.unifiedcyberontology.org/uco/observable/",
+        "uco-types": "https://ontology.unifiedcyberontology.org/uco/types/",
+        "uco-tool": "https://ontology.unifiedcyberontology.org/uco/tool/",
+        "case-investigation": "https://ontology.caseontology.org/case/investigation/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"        
+    },
+    "uco-core:object": [  
+         {
+            "@id": "kb:5d96df90-d9e1-423c-b8db-c2327812ab38",
+            "@type": "uco-observable:ObservableObject",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:1723ed9c-2d8e-415c-8cf6-31599c49df79",
+                    "@type": "uco-observable:ApplicationFacet",
+                    "uco-observable:applicationIdentifier": "Safari Apple",
+                    "uco-observable:version": "15.23.45"
+                }
+            ]
+        }, 
+        {
+            "@id": "kb:39ff4987-8ae5-47e3-8369-dbd0d5f79398",
+            "@type": "uco-observable:ObservableObject",
+            "rdfs:comment": "@type=uco-observable:URLHistory",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:a455b867-957e-4fce-a0ad-1af9c6fa4edb",
+                    "@type": "uco-observable:URLHistoryFacet",
+                    "uco-observable:browserInformation": {
+                        "@id": "kb:5d96df90-d9e1-423c-b8db-c2327812ab38"
+                    },
+                    "uco-observable:urlHistoryEntry": [
+                        {
+                            "@id": "kb:193a7fc6-5f15-4b3c-8763-f1dc3c9bfd14",
+                            "@type": "uco-observable:URLHistoryEntry",
+                            "uco-observable:firstVisit": {
+                                "@type": "xsd:dateTime",
+                                "@value": "2017-01-25T02:20:22.00Z"
+                            },
+                            "uco-observable:lastVisit": {
+                                "@type": "xsd:dateTime",
+                                "@value": "2017-01-25T02:20:22.00Z"
+                            },
+                            "uco-observable:expirationTime": null,
+                            "uco-observable:url": {
+                                "@id": "kb:b7906534-0483-4cf4-979c-5351916602ed"
+                            },
+                            "uco-observable:pageTitle": "Where can you find baby owls for sale? Are owls legal to keep as pets? - Quora",
+                            "uco-observable:visitCount": 2,
+                            "uco-observable:manuallyEnteredCount": {
+                                "@type": "xsd:nonNegativeInteger",
+                                "@value": 0
+                            },
+                            "uco-observable:keywordSearchTerm": "Baby owl shops"
+                        },
+                        {
+                            "@id": "kb:f3d8a186-3863-42f9-b4f9-05cfdec34c75",
+                            "@type": "uco-observable:URLHistoryEntry",
+                            "uco-observable:firstVisit": {
+                                "@type": "xsd:dateTime",
+                                "@value": "2022-02-22T02:20:22.00Z"
+                            },
+                            "uco-observable:lastVisit": {
+                                "@type": "xsd:dateTime",
+                                "@value": "2022-05-18T02:20:22.00Z"
+                            },
+                            "uco-observable:expirationTime": null,
+                            "uco-observable:url": {
+                                "@id": "kb:b88d66e8-3fae-4e15-879b-1e068240d2a0"
+                            },
+                            "uco-observable:pageTitle": "Otter AI plans",
+                            "uco-observable:visitCount": 12,
+                            "uco-observable:manuallyEnteredCount": {
+                                "@type": "xsd:nonNegativeInteger",
+                                "@value": 0
+                            },
+                            "uco-observable:keywordSearchTerm": "From mp3 to text"
+                        }
+                    ]
+                }
+            ]
+        },  
+        {
+            "@id": "kb:b7906534-0483-4cf4-979c-5351916602ed",
+            "@type": "uco-observable:URL",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:f2618636-aec3-459e-bda7-eeedfbeac3c0",
+                    "@type": "uco-observable:URLFacet",
+                    "uco-observable:fullValue": "https://www.quora.com/Where-can-you-find-baby-owls-for-sale-Are-owls-legal-to-keep-as-pets"
+                }
+            ]
+        },
+        {
+            "@id": "kb:b88d66e8-3fae-4e15-879b-1e068240d2a0",
+            "@type": "uco-observable:URL",
+            "uco-core:hasFacet": [
+                {
+                    "@id": "kb:12c098ec-0466-47b3-a3ba-5addc7778083",
+                    "@type": "uco-observable:URLFacet",
+                    "uco-observable:fullValue": "https://otter.ai/setting/plan"
+                }
+            ]
+        }
+   ]
+}    
