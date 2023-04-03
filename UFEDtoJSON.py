@@ -3,12 +3,12 @@
 import uuid
 import os
 import re
-import json
+#import json
 import sys
 #from inspectrutils.case_builder import *
 from CASE_generator import *
 from datetime import datetime
-from pytz import timezone
+#from pytz import timezone
 #import logging
 
 class UFEDtoJSON():
@@ -97,8 +97,7 @@ class UFEDtoJSON():
 		self.LocationList = []
 		self.LocationIDList = []
 
-		self.CELL_TOWER_gsm ={}
-		self.CELL_TOWER_cdma ={}
+		self.CELL_SITE_gsm ={}
 
 		self.WIRELESS_NET_ACCESS ={}
 
@@ -217,7 +216,7 @@ class UFEDtoJSON():
 #		
 
 		if 	originalDate == '':
-			return UFEDtoJSON.DATE
+			return None
 
 		for k,v in aMonths.items():
 			if originalDate.find(k) > -1:
@@ -274,8 +273,15 @@ class UFEDtoJSON():
 		if re.search('T\d{2}:\d{2}:\d{2}(.+)$', originalDate):
 			originalDate = re.sub('(T\d{2}:\d{2}:\d{2})(.+)$', '\g<1>', originalDate)
 
-
-		return originalDate.strip()	
+		
+		if originalDate.find('+') > -1:
+			originalDate = datetime.strptime(originalDate, 
+				'%Y-%m-%dT%H:%M:%S.%f%z')
+		else:
+			originalDate = datetime.strptime(originalDate, 
+				'%Y-%m-%dT%H:%M:%S')
+		
+		return originalDate
 
 	def __cleanJSONtext(self, originalText):
 		new_text = originalText.strip()
@@ -285,18 +291,6 @@ class UFEDtoJSON():
 			new_text = new_text.replace('"', "").replace('\n', '').replace('\r', '')
 			new_text = new_text.replace('\t', " ").replace("\\'", "'").replace("\\", "")
 			return new_text
-
-	def __convert_str_to_datetime(self, str_date):
-		if str_date.strip() == "":
-			str_date = "1900-01-01T00:00:00"
-		if str_date.find('+') > -1:
-			date_time = datetime.strptime(str_date, 
-				'%Y-%m-%dT%H:%M:%S.%f%z')
-		else:
-			date_time = datetime.strptime(str_date, 
-				'%Y-%m-%dT%H:%M:%S')
-		
-		return date_time
 
 	def __generateContextUfed(self, ufedVersion, deviceReportCreateTime,
 			deviceExtractionStartTime, deviceExtractionEndTime, examinerName, 
@@ -314,7 +308,7 @@ class UFEDtoJSON():
 		
 		# generate Trace/Relation between the above Role and the Identity traces
 		self.__generateTraceRelation(object_identity, object_role, 
-			'has_role', '', '', '', '');		
+			'has_role', '', '', None, None);		
 		
 #---	The XML report contains the attribute DeviceInfoExtractionStartDateTime 
 #		that is the Acquisition Start Date and similarly for the Acquisition
@@ -400,7 +394,7 @@ class UFEDtoJSON():
 
 				self.FILEuuid[IdTrace] = uuidFile
 				self.__generateTraceRelation(uuidTrace, uuidFile, 'Contained_Within', 
-					table, offset, '', '');
+					table, offset, None, None);
 		else:
 			nodeInfoIdList = self.EXTRA_INFOdictNodeInfoId.get(IdTrace, '@@@').split('@@@')
 			for node in nodeInfoIdList:
@@ -408,7 +402,7 @@ class UFEDtoJSON():
 					if node in self.FILEid: 
 						uuidFile = self.FILEuuid.get(node, '_?UUID')
 						self.__generateTraceRelation(uuidTrace, uuidFile, 'Contained_Within', 
-							table, offset, '', '');	
+							table, offset, None, None);	
 					else:
 						print ('nodeInfo ' + node + ' not found')		
 
@@ -466,7 +460,6 @@ class UFEDtoJSON():
 			idPartyTO = ''
 			idPartyFROM = ''
 			idParty = ''
-			nameParty =''
 			
 			maxLen = self.__getMaxLenCallElement(CALLrolesTO[i], CALLrolesFROM[i], 
 					CALLnamesTO[i], CALLnamesFROM[i], CALLidentifiersTO[i], 
@@ -502,13 +495,11 @@ class UFEDtoJSON():
 				CALLidentifiersFROM[i].append('')
 
 			if (len(CALLrolesFROM[i]) > 1):
-				nameParty = ''
 				if CALLrolesFROM[i][0].strip() == '':					
 					idPartyFROM = CALLidentifiersFROM[i][1]
 					nameFROM = CALLnamesFROM[i][1]
 					idPartyTO 	= CALLidentifiersTO[i][0]
 					nameTO = CALLnamesTO[i][0]
-					nameParty = nameTO
 				else:
 					idPartyFROM = CALLidentifiersFROM[i][0]
 					nameFROM = CALLnamesFROM[i][0]
@@ -521,13 +512,11 @@ class UFEDtoJSON():
 						idPartyTO		= CALLidentifiersTO[i][0]
 						idParty = idPartyTO
 						nameTO = CALLnamesTO[i][0]
-						nameParty = nameTO
 					else:						
 						idPartyFROM		= CALLidentifiersFROM[i][0]
 						idParty = idPartyFROM
 						idPartyTO = self.phoneOwnerNumber
 						nameFROM = CALLnamesFROM[i][0]
-						nameParty = nameFROM
 						nameTO = 'PHONE OWNER'
 						
 			resPattern = re.match(phonePattern, idParty.strip())
@@ -537,11 +526,9 @@ class UFEDtoJSON():
 					idx = self.phoneNumberList.index(idPartyTO)
 					uuidPartyTO = self.phoneUuidList[idx]
 				else:	
-	# if the mobile operator will be available in the XML report, it will be possible to 	
-	#	define an object uco-identity:Identity related to the organisation. At the moment
-	# the varibale is set to empty, so no the property uco-observable:accountIssuer is not 
-	# included in the	uco-observable:PhoneAccount				
-					mobileOperator = ""
+	# if the mobile operator is available in the XML report, an uco-identity:Identity 
+	# will be defined as Organisation. 
+					mobileOperator = "-"
 					uuidPartyTO = self.__generateTracePhoneAccount(mobileOperator, 
 						nameTO, idPartyTO)
 
@@ -549,11 +536,8 @@ class UFEDtoJSON():
 					idx = self.phoneNumberList.index(idPartyFROM)
 					uuidPartyFROM = self.phoneUuidList[idx]
 				else:	
-	# if the mobile operator will be available in the XML report, it will be possible to 	
-	#	define an object uco-identity:Identity related to the organisation. At the moment
-	# the varibale is set to empty, so no the property uco-observable:accountIssuer is not 
-	# included in the	uco-observable:PhoneAccount				
-					mobileOperator = ""
+	# see the above commment
+					mobileOperator = "-"
 					uuidPartyFROM = self.__generateTracePhoneAccount(mobileOperator, 
 						nameFROM, idPartyFROM)
 
@@ -590,9 +574,7 @@ class UFEDtoJSON():
 					repeatRule):
 		
 		startDate = self.__cleanDate(startDate)
-		startDate = self.__convert_str_to_datetime(startDate)
 		endDate = self.__cleanDate(endDate)
-		endDate = self.__convert_str_to_datetime(endDate)
 		
 		subject = self.__cleanJSONtext(subject)
 		details = self.__cleanJSONtext(details)
@@ -607,7 +589,7 @@ class UFEDtoJSON():
 		return observable
 		
 
-	def __generateTraceCell_Tower(self, cell_id, cell_status, 
+	def __generateTraceCell_Site(self, cell_id, cell_status, 
 					cell_longitude, cell_latitude, cell_timeStamp, cell_mcc, 
 					cell_mnc, cell_lac, cell_cid, cell_nid, cell_bid, cell_sid):
 		
@@ -619,7 +601,6 @@ class UFEDtoJSON():
 		if observableLocation is None:
 			return None
 
-
 		cell_id = cell_mcc.strip() + '@' + cell_mnc.strip() +'@' + \
 			cell_lac.strip() + '@' + cell_cid.strip()
 		
@@ -628,24 +609,24 @@ class UFEDtoJSON():
 		if cell_id == '@@@':
 			return None
 
-		if cell_id in self.CELL_TOWER_gsm.keys():
+		if cell_id in self.CELL_SITE_gsm.keys():
 #---	return the Cell Tower's uuid generated sometime before
 #			
-			return self.CELL_TOWER_gsm.get(cell_id)
+			return self.CELL_SITE_gsm.get(cell_id)
 		else:				
-			"""				
-			#--- manca location!
-			"uco-observable:location":{
-											"@id":observableLocation
-			"""												
-			observable_cell_tower = ObjectObservable()
-			facet_cell_tower = CellTower(mcc=cell_mcc, 
-				mnc=cell_mnc, lac=cell_lac, cid=cell_cid, location=observableLocation)
-			observable_cell_tower.append_facets(facet_cell_tower)
-			self.bundle.append_to_uco_object(observable_cell_tower)
+			observable_cell_site = ObjectObservable()
+			facet_cell_site = CellSite(country_code=cell_mcc, 
+				network_code=cell_mnc, area_code=cell_lac, site_id=cell_cid)
+			observable_cell_site.append_facets(facet_cell_site)
+			self.bundle.append_to_uco_object(observable_cell_site)
 			
-			self.CELL_TOWER_gsm[cell_id] = observable_cell_tower
-			return observable_cell_tower
+			self.CELL_SITE_gsm[cell_id] = observable_cell_site
+
+			observable_relationship = Relationship(observable_cell_site, observableLocation, 
+					start_time=cell_timeStamp, kind_of_relationship="Located_At", 
+					directional=True)
+			self.bundle.append_to_uco_object(observable_relationship)		
+			return observable_cell_site
 				
 		
 	def __generateTraceApplicationAccount(self, partyId, partyName, idApp):
@@ -654,7 +635,6 @@ class UFEDtoJSON():
 		partyId = self.__cleanJSONtext(partyId)
 		
 		observable = ObjectObservable()
-
 		facet_account = Account(partyId)
 		facet_app_account = ApplicationAccount(application=idApp)		
 		facet_digital_account = DigitalAccount(display_name=partyName)    	
@@ -683,8 +663,7 @@ class UFEDtoJSON():
 		if TOlist == []:
 			TOlist.append(idFrom)
 		
-		body = self.__cleanJSONtext(body)
-		timeStamp = self.__cleanDate(timeStamp)
+		body = self.__cleanJSONtext(body)		
 
 		observable_message = self.__generateTraceMessageFacet(body, idApplication, 
 			idFrom, TOlist, timeStamp, status, 'CHAT Message')
@@ -714,7 +693,7 @@ class UFEDtoJSON():
 				
 				if uuid != '':
 					self.__generateTraceRelation(fileUuid, observable_message, 
-						'Connected_To', '', '', '', '')
+						'Connected_To', '', '', None, None)
 		
 		return observable_message
 
@@ -728,8 +707,9 @@ class UFEDtoJSON():
 			model=deviceModel, serial=deviceSN)	
 		facet_mobile = MobileDevice(IMSI=deviceIMSI, ICCID=deviceICCID,
 			IMEI=deviceIMEI)
+		manufacturer_object = self.__generateTraceIdentity(None, deviceManufacturer, None)
 		facet_operating_system = OperatingSystem(os_name=deviceOS,
-			os_version=deviceOSVersion, os_manufacturer=deviceManufacturer)
+			os_version=deviceOSVersion, os_manufacturer=manufacturer_object)
 		facet_bluetooth = BluetoothAddress(name=deviceBluetoothName,
 			address=deviceBluetoothAddress)
 		facet_wifi = WifiAddress(wifi_mac_address=deviceWiFi)
@@ -753,12 +733,7 @@ class UFEDtoJSON():
 		
 		observable_source = self.__checkAppName(cookie_source)
 		observable_domain = self.__checkAppName(cookie_domain)
-
-		
-		cookie_creationTime = self.__convert_str_to_datetime(cookie_creationTime)
-		cookie_lastAccessedTime = self.__convert_str_to_datetime(cookie_lastAccessedTime)
-		cookie_expiry = self.__convert_str_to_datetime(cookie_expiry)
-		
+				
 		facet_cookie = BrowserCookie(source=observable_source, 
 			name=cookie_name, path=cookie_path, domain=observable_domain, 
 			created_time=cookie_creationTime, last_access_time=cookie_lastAccessedTime, 
@@ -776,7 +751,6 @@ class UFEDtoJSON():
 		event_text = self.__cleanJSONtext(event_text)
 		
 		observable = ObjectObservable()
-		event_timeStamp = self.__convert_str_to_datetime(event_timeStamp)
 
 		facet_event = Event(event_type=event_type, 
 			event_text=event_text, created_time=event_timeStamp)
@@ -843,7 +817,6 @@ class UFEDtoJSON():
 		EMAILtimeStamp = self.__cleanDate(EMAILtimeStamp)
 		
 		observable = ObjectObservable()
-		EMAILtimeStamp = self.__convert_str_to_datetime(EMAILtimeStamp)
 
 		facet_email_message = EmailMessage(msg_to=itemsTO, 
 			msg_from=idFROM, cc=itemsCC, bcc=itemsBCC, subject=subject, body=body, 
@@ -861,7 +834,7 @@ class UFEDtoJSON():
 				'', '', '', 'Uncategorized', '', '', '', '',
   				'', '', '', '', '', '', '', '', '', '', '')
 				self.__generateTraceRelation(fileUuid, observable, 'Attached_To', 
-				'', '', '', '')
+				'', '', None, None)
 		
 		return observable
 
@@ -872,7 +845,7 @@ class UFEDtoJSON():
 
 		observable_email_account = ObjectObservable()
 		facet_email_account = EmailAccount(observable_email_address)
-		facet_account = Account("")
+		facet_account = Account(identifier="-")
 		observable_email_account.append_facets(facet_account, facet_email_account)
 		
 		self.bundle.append_to_uco_object(observable_email_account)
@@ -979,15 +952,11 @@ class UFEDtoJSON():
 			facet_exif = EXIF(**exif_data)
 			observable.append_facets(facet_exif)
 
-		FILEiNodeTimeM = self.__convert_str_to_datetime(FILEiNodeTimeM)
 		facet_ext_inode = ExtInode(inode_change_time=FILEiNodeTimeM, 
 			inode_id=FILEiNode, sgid=FILEgid, suid=FILEuid)
 		observable.append_facets(facet_ext_inode) 
 		
-		FILEtimeC = self.__convert_str_to_datetime(FILEtimeC)
-		FILEtimeM = self.__convert_str_to_datetime(FILEtimeM)
-		FILEtimeA = self.__convert_str_to_datetime(FILEtimeA)
-		facet_file = File(tag=[FILETag], file_name=tail, 
+		facet_file = File(tag=FILETag, file_name=tail, 
 			file_path=path, file_local_path=localPath, file_extension=sExt,
                  size_bytes=FILEsize, accessed_time=FILEtimeA, created_time=FILEtimeC, 
                  modified_time=FILEtimeM)
@@ -999,9 +968,11 @@ class UFEDtoJSON():
 
 
 	def __generateTraceIdentity(self, name, family_name, birthDate):		
-		birthDate = self.__cleanDate(birthDate)
 		
-		observable = ObjectObservable()
+		if birthDate:
+			birthDate = self.__cleanDate(birthDate)
+		
+		observable = ObjectObservable(object_class="uco-identity:Person")
 		facet_identity = SimpleName(given_name=name, 
 			family_name=family_name)
 		observable.append_facets(facet_identity)
@@ -1012,22 +983,28 @@ class UFEDtoJSON():
 					loc_longitude, loc_latitude, loc_elevation,
 					loc_timeStamp, loc_category):
 		
-		location_timeStamp = self.__cleanDate(loc_timeStamp)
+		#location_timeStamp = self.__cleanDate(loc_timeStamp)
 		uuidLocation = self.__checkGeoCoordinates(loc_latitude, loc_longitude,
 			loc_elevation, loc_category)
 
 		return uuidLocation
 
-	def __generateTracePhoneAccount(self, source, name, phone_num):
+	def __generateTracePhoneAccount(self, source, name, phone_num):		
 		
+		observable_identity = None
+		if source != "":
+			observable_identity = ObjectObservable(object_class="uco-identity:Organization")
+			facet_identity = SimpleName(given_name="-" + source)
+			observable_identity.append_facets(facet_identity)
+			self.bundle.append_to_uco_object(observable_identity)
+
 		observable = ObjectObservable()
+		facet_account = Account(identifier=name, issuer_id=observable_identity)
 		facet_phone_account = PhoneAccount(phone_number=phone_num, 
 			account_name=name)
-		facet_account = Account("", is_active=True, 
-			issuer_id=source)
 		observable.append_facets(facet_account, facet_phone_account)
-
 		self.bundle.append_to_uco_object(observable)
+
 		return observable
 
 
@@ -1041,26 +1018,17 @@ class UFEDtoJSON():
 		object_location = self.__generateTraceLocation(str_location)
 #---	to be deleted
 #		
-		str_performer = str(object_performer.get_id())
-		str_instrument = str(object_instrument.get_id())
-		
-		if str_location != '':
-			str_location = str(object_location.get_id())
-
-		start_time = self.__convert_str_to_datetime(start_time)
-		end_time = self.__convert_str_to_datetime(end_time)
 		investigation = InvestigativeAction(
-			name=description, start_time=start_time, end_time=end_time)
+			name=description, start_time=start_time, end_time=end_time,
+			performer=object_performer, instrument=object_instrument, 
+			location=object_location, objects=object_input, results=object_list_result)
 
-		facet_action_ref = ActionReferences(performer=object_performer, 
-			instrument=object_instrument, location=object_location, 
-			objects=object_input, results=object_list_result)
+		# facet_action_ref = ActionReferences(performer=object_performer, 
+		# 	instrument=object_instrument, location=object_location, 
+		# 	objects=object_input, results=object_list_result)
 
-		# facet_action_ref = ActionReferences(performer=str_performer, 
-		# 	instrument=str_instrument, location=str_location, 
-		# 	object=object_input, results=object_list_result)
 		
-		investigation.append_facets(facet_action_ref)
+		#investigation.append_facets(facet_action_ref)
 		self.bundle.append_to_uco_object(investigation)
 
 	
@@ -1092,11 +1060,11 @@ class UFEDtoJSON():
 		duration = int(duration)
 		observable_app = self.__checkAppName("Native")
 		observable = ObjectObservable()
-		startTime = self.__convert_str_to_datetime(startTime)
-		facet_phone_call = PhoneCall(call_type=direction,
+		startTime = self.__cleanDate(startTime)
+		facet_call = Call(call_type=direction,
 			start_time=startTime, application=observable_app, call_from=idFROM, 
 			call_to=idTO, call_duration=duration, allocation_status=status)		
-		observable.append_facets(facet_phone_call)
+		observable.append_facets(facet_call)
 
 		self.bundle.append_to_uco_object(observable)
 		return observable
@@ -1104,14 +1072,22 @@ class UFEDtoJSON():
 
 	def __generateTracePhoneOwner(self, source, name, phone_num):
 				
-		observable = ObjectObservable()
-		facet_account = Account("_")
-		name += ' (Owner)'
-		facet_phone_account = PhoneAccount(phone_number=phone_num,
-			account_name=name)
+		observable_identity = None
+		if source != '':
+			observable_identity = ObjectObservable(object_class="uco-identity:Person")
+			facet_identity = SimpleName(given_name="(Owner) " + source)
+			observable_identity.append_facets(facet_identity)
+			self.bundle.append_to_uco_object(observable_identity)
 
+
+		observable = ObjectObservable()
+		facet_account = Account(identifier=name, issuer_id=observable_identity)
+		name += ' (Owner)'
+		facet_phone_account = PhoneAccount(phone_number=phone_num, 
+			account_name=name)
 		observable.append_facets(facet_account, facet_phone_account)
 		self.bundle.append_to_uco_object(observable)
+
 		
 		self.object_phone_owner = observable
 		self.phoneNumberList.append(phone_num)
@@ -1120,12 +1096,7 @@ class UFEDtoJSON():
 	def __generateTraceProvencance(self, uco_core_objects, description, 
 		exhibitNumber, creationTime):
 		
-		if exhibitNumber.strip() == "":
-			num_exhibit = 0
-		else:
-			num_exhibit = int(exhibitNumber)
-
-		case_provenance = ProvenanceRecord(exhibit_number=num_exhibit, 
+		case_provenance = ProvenanceRecord(exhibit_number=exhibitNumber, 
 			uco_core_objects=uco_core_objects)
 		
 		self.bundle.append_to_uco_object(case_provenance)
@@ -1134,28 +1105,13 @@ class UFEDtoJSON():
 	def __generateTraceRelation(self, source, target, relation, table, offset,
 		start_date, end_date):
 		
-		start_date = self.__cleanDate(start_date)
-		end_date = self.__cleanDate(end_date)
+		if isinstance(start_date, str):
+			start_date = self.__cleanDate(start_date)
 
-		cleanOffset = offset.replace('@', '')
-		lineTable = ''
-		if not table == '':			
-			lineTable = {
-				"@type":"uco-observable:DataRangeFacet",
-				"uco-observable:rangeOffset": {
-					"@type":"xsd:integer",
-					"@value":cleanOffset
-				},
-				"uco-observable:rangeSize": {
-					"@type":"xsd:integer",
-					"@value":"0"
-				}
-			}
-
-		start_date = self.__convert_str_to_datetime(start_date)
-		end_date = self.__convert_str_to_datetime(end_date)
+		if isinstance(end_date, str):
+			end_date = self.__cleanDate(end_date)
 		
-		observable_relationship = Relationship(source, target, 
+		observable_relationship = Relationship(source=source, target=target, 
 			start_time=start_date, end_time=end_date, kind_of_relationship=relation, 
 			directional=True)
 		self.bundle.append_to_uco_object(observable_relationship)
@@ -1164,14 +1120,11 @@ class UFEDtoJSON():
 
 	def __generateTraceRole(self, role):
 		
-		observable = ObjectObservable()
-
    
-		facet_role = Role(name=role)
-		observable.append_facets(facet_role)
+		object_role = Role(name=role)
 
-		self.bundle.append_to_uco_object(observable)
-		return observable
+		self.bundle.append_to_uco_object(object_role)
+		return object_role
 
 	def __generateTraceSocialMedia_Item(self, sm_item_id, sm_status, 
 					sm_source, sm_timeStamp, sm_body,
@@ -1197,7 +1150,6 @@ class UFEDtoJSON():
 			return None
 
 		observable = ObjectObservable()
-		sm_timeStamp = self.__convert_str_to_datetime(sm_timeStamp)
 
 		facet_social_media_activity = SocialMediaActivity(
 			application=observable_app, created_time=sm_timeStamp, body=sm_body, 
@@ -1219,15 +1171,13 @@ class UFEDtoJSON():
 		
 		search_result = self.__cleanJSONtext(search_result)
 		search_timestamp = self.__cleanDate(search_timestamp)
-		if not self.__checkSearchedItems(search_value + search_timestamp):
+		if not self.__checkSearchedItems(search_value + str(search_timestamp)):
 			return None		
 		
 		observable_app = self.__checkAppName(search_app)
 
 		observable = ObjectObservable()
 		
-		search_timestamp = self.__convert_str_to_datetime(search_timestamp)
-
 		facet_searched_item = SearchedItem(
 		search_value=search_value, search_result=search_result, application=observable_app, 
 		search_launch_time=search_timestamp)
@@ -1236,20 +1186,7 @@ class UFEDtoJSON():
 		self.bundle.append_to_uco_object(observable)
 		return observable
 
-	def __generateTraceWireless_Net(self, wnet_id, wnet_status, 
-					wnet_longitude, wnet_latitude, wnet_timeStamp, wnet_last_connection, 
-					wnet_bssid, wnet_ssid):
-
-		wnet_timeStamp = self.__cleanDate(wnet_timeStamp)
-		wnet_last_connection = self.__cleanDate(wnet_last_connection)
-		
-		observable_location = self.__checkGeoCoordinates(wnet_latitude, wnet_longitude, 
-				'', 'Wireless Network')					
-#---	identifier of the Wirelesss Network cannot be empty
-#			
-		if observable_location is None:
-			return None
-			
+	def __generateTraceWireless_Net(self, wnet_id, wnet_status, wnet_ssid, wnet_bssid):
 		wnet_id = wnet_bssid.strip() + '@' + wnet_ssid.strip()
 		if wnet_id == '@':
 			return None
@@ -1258,11 +1195,8 @@ class UFEDtoJSON():
 				observable = self.WIRELESS_NET_ACCESS.get(wnet_id)
 			else:									
 				observable = ObjectObservable()
-				wnet_timeStamp = self.__convert_str_to_datetime(wnet_timeStamp)
-				wnet_last_connection = self.__convert_str_to_datetime(wnet_last_connection)				
 				facet_wnet_connection = WirelessNetworkConnection(
-					ssid=wnet_ssid, bssid=wnet_bssid, location=observable_location, 
-					connection_time=wnet_timeStamp, last_connection=wnet_last_connection)
+					ssid=wnet_ssid, base_station=wnet_bssid)
 				observable.append_facets(facet_wnet_connection)
 				self.bundle.append_to_uco_object(observable)
 				self.WIRELESS_NET_ACCESS[wnet_id] = observable
@@ -1280,17 +1214,36 @@ class UFEDtoJSON():
 			phone_uuid_from == '' :
 			return ''
 		
-		observable = ObjectObservable()
-
-		time_stamp = self.__convert_str_to_datetime(time_stamp)		
+		observable_message = ObjectObservable(object_class="uco-observable:Message")
 
 		facet_message = Message(msg_to=phone_uuid_to, 
 			msg_from=phone_uuid_from, message_text=body, sent_time=time_stamp,
 	                 application=id_app, message_type=type)
+		observable_message.append_facets(facet_message)
+		
+		self.bundle.append_to_uco_object(observable_message)
+		return observable_message
+
+	def __generateTraceSmsMessageFacet(self, body, id_app, phone_uuid_from, phone_uuid_to, 
+			time_stamp, status):
+
+		time_stamp = self.__cleanDate(time_stamp)
+		body = self.__cleanJSONtext(body)
+
+		if body.strip() == ''  	and \
+			phone_uuid_to == '' and \
+			phone_uuid_from == '' :
+			return ''
+		
+		observable = ObjectObservable()
+
+		facet_message = SmsMessage(msg_to=phone_uuid_to, 
+			msg_from=phone_uuid_from, message_text=body, sent_time=time_stamp,
+	                 application=id_app)
 		observable.append_facets(facet_message)
 		
 		self.bundle.append_to_uco_object(observable)
-		return observable
+		return observable		
 
 
 	def __generateTraceSms(self, SMSid, SMSstatus, SMStimeStamp, 
@@ -1304,7 +1257,7 @@ class UFEDtoJSON():
 				if sms_party_identifier.strip() != '':
 					if sms_party_identifier in self.phoneNumberList:						
 						idx = self.phoneNumberList.index(sms_party_identifier)						
-						userId = self.phoneNumberList[idx]
+						#userId = self.phoneNumberList[idx]
 						phone_party_observable = self.phoneUuidList[idx]
 					else:
 						self.phoneNumberList.append(sms_party_identifier)
@@ -1325,7 +1278,7 @@ class UFEDtoJSON():
 			if SMSsmsc[i].strip() != '':
 				if SMSsmsc[i].strip() in self.phoneNumberList:						
 					idx = self.phoneNumberList.index(SMSsmsc[i].strip())						
-					userId = self.phoneNumberList[idx]
+					#userId = self.phoneNumberList[idx]
 					phone_smsc_observable = self.phoneUuidList[idx]
 				else:
 					self.phoneNumberList.append(SMSsmsc[i].strip())
@@ -1355,10 +1308,9 @@ class UFEDtoJSON():
 
 			id_app_name = self.__checkAppName("Native")
 
-			direction = ''
-			observable_message = self.__generateTraceMessageFacet(body, id_app_name, 
-				phone_observable_from, phone_observable_to, SMStimeStamp[i], SMSstatus[i], 
-				'SMS/Native Message')
+			#direction = ''
+			observable_message = self.__generateTraceSmsMessageFacet(body, id_app_name, 
+				phone_observable_from, phone_observable_to, SMStimeStamp[i], SMSstatus[i])
 
 			if observable_message is not None:
 				self.__generateChainOfEvidence(sms_id, observable_message)
@@ -1366,68 +1318,24 @@ class UFEDtoJSON():
 	#def __generateThreadMessages(self, chatTraceId, chatThread, chat_id_to):
 	def __generateThreadMessages(self, chatTraceId, chat_messages, chat_participants):
 		
-		observable = ObjectObservable()
+		observable = ObjectObservable()		
 		facet_message_thread = Messagethread(messages=chat_messages, 
-			participants=chat_participants)		
+			participants=chat_participants, display_name=str(chatTraceId))		
 		observable.append_facets(facet_message_thread)
 		self.bundle.append_to_uco_object(observable)
 		return observable
 
-
-		"""
-#--- the Observable FacetMessageThread is missing		
-		nChatThread = len(chatThread)
-		line_thread  = ''
-		for i in range(nChatThread):
-			line_thread += '{'
-			line_thread += '"olo:index":"' + str(i + 1) + '",'
-			line_thread += '"olo:item": {'
-			line_thread += '"@id":"' + chatThread[i] + '"'
-			line_thread += '}'
-			line_thread += '},'
-		
-		line_thread = json.loads('[' + line_thread[0:-1] + ']')
-
-		nChatAccounts = len(chat_id_to)
-		lineChatAccounts = ''	
-		for i, account_id in enumerate(chat_id_to):
-			lineChatAccounts += '{"@id":"' + str(account_id) + '"},'
-
-		lineChatAccounts = json.loads('[' + lineChatAccounts[0:-1] + ']')
-		len_chat_thread = str(len(chatThread))
-
-		uuid = "kb:" + UFEDtoJSON.__createUUID()
-		object_dict = {
-				"@id":uuid,
-				"@type":"uco-observable:ObservableObject",
-				"uco-observable:hasChanged":True,
-				"uco-core:hasFacet":[
-					{
-						"@type":"uco-observable:MessageThreadFacet",
-						"uco-observable:displayName":"",
-						"uco-observable:message":{
-							"@type":"uco-observable:Message", 
-							"uco-observable:hasChanged":True,
-							"olo:length":len_chat_thread,
-							"olo:slot":line_thread
-						},
-						"uco-observable:participant":lineChatAccounts
-				}			
-			]
-		}
-
-		object_str = json.dumps(object_dict, indent = 4)
-		self.FileOut.write(object_str + ',\n')
-		return uuid
-		"""
-
 	def __generateTraceTool(self, name, type, creator, version, confList):		
-		observable = ObjectObservable()
-		facet_tool = Tool(name, version, tool_type=type, tool_creator=creator)
-		observable.append_facets(facet_tool)
 		
-		self.bundle.append_to_uco_object(observable)
-		return observable
+		observable_identity = ObjectObservable(object_class="uco-identity:Person")
+		facet_identity = SimpleName(family_name=creator)
+		observable_identity.append_facets(facet_identity)
+		self.bundle.append_to_uco_object(observable_identity)		
+		
+		object_tool = Tool(name, version, tool_type=type, tool_creator=observable_identity)
+		
+		self.bundle.append_to_uco_object(object_tool)
+		return object_tool
 
 	def __generateTraceURLFullValue(self, URL_Value):
 		
@@ -1493,7 +1401,7 @@ class UFEDtoJSON():
 			altitude_decimal = 0.00 
 
 		facet_location = Location(latitude=latitude_decimal, 
-			longitude=longitude_decimal, altitude=altitude_decimal, location_type=type)
+			longitude=longitude_decimal, altitude=altitude_decimal)
 		observable.append_facets(facet_location)
 		
 		self.bundle.append_to_uco_object(observable)
@@ -1518,13 +1426,11 @@ class UFEDtoJSON():
 			visit_count = int(visit_count)
 
 			observable = ObjectObservable()
-			WEB_PAGElastVisited[i] = self.__convert_str_to_datetime(WEB_PAGElastVisited[i])
 			facet_url_history_entry = UrlHistoryEntry(
-				last_visit=WEB_PAGElastVisited[i], manually_entered_count=0, 
-				url=observable_url, page_title=title, visit_count=visit_count, 
-				allocation_status=WEB_PAGEstatus[i])			
-			facet_url_history = UrlHistory(observable_app)
-			observable.append_facets(facet_url_history, facet_url_history_entry)
+				last_visit=WEB_PAGElastVisited[i], url=observable_url, page_title=title, 
+				visit_count=visit_count, allocation_status=WEB_PAGEstatus[i], browser=observable_app)			
+			#facet_url_history = UrlHistory(browser=observable_app)
+			observable.append_facets(facet_url_history_entry)
 			
 			self.bundle.append_to_uco_object(observable)			
 			self.__generateChainOfEvidence(web_page_id, observable)
@@ -1555,8 +1461,9 @@ class UFEDtoJSON():
 
 	def writeHeader(self):
 		if self.bundle is None:
-			self.bundle = Bundle(uco_core_name="D.F. Expert", description="Extraction from UFED PA XML report",
-				spec_version="CASE 1.0.0")
+			self.bundle = Bundle()
+			observable_info=ObjectInfo(name="D.F. Expert", version="CASE 1.0.0", description="Extraction from UFED PA XML report")
+			self.bundle.append_to_uco_object(observable_info)
 
 	def writeLastLine(self):
 #---	Save a reference to the original standard output			
@@ -1605,21 +1512,21 @@ class UFEDtoJSON():
 			
 			self.__generateChainOfEvidence(calendar_id, observable_calendar)
 
-	def writeCell_Tower(self, CELL_TOWERid, CELL_TOWERstatus, CELL_TOWERlongitude, 
-					CELL_TOWERlatitude, CELL_TOWERtimeStamp, CELL_TOWERmcc,
-                    CELL_TOWERmnc, CELL_TOWERlac, CELL_TOWERcid, CELL_TOWERnid, 
-                    CELL_TOWERbid, CELL_TOWERsid):
+	def writeCell_Site(self, CELL_SITEid, CELL_SITEstatus, CELL_SITElongitude, 
+					CELL_SITElatitude, CELL_SITEtimeStamp, CELL_SITEmcc,
+                    CELL_SITEmnc, CELL_SITElac, CELL_SITEcid, CELL_SITEnid, 
+                    CELL_SITEbid, CELL_SITEsid):
 		
-		for i, cell_tower_id in enumerate(CELL_TOWERid):
-			observable_cell_tower = self.__generateTraceCell_Tower(cell_tower_id, CELL_TOWERstatus[i], 
-					CELL_TOWERlongitude[i], CELL_TOWERlatitude[i], CELL_TOWERtimeStamp[i], 
-					CELL_TOWERmcc[i], CELL_TOWERmnc[i], CELL_TOWERlac[i], CELL_TOWERcid[i], 
-					CELL_TOWERnid[i], CELL_TOWERbid[i], CELL_TOWERsid[i])
+		for i, cell_site_id in enumerate(CELL_SITEid):
+			observable_cell_site = self.__generateTraceCell_Site(cell_site_id, CELL_SITEstatus[i], 
+					CELL_SITElongitude[i], CELL_SITElatitude[i], CELL_SITEtimeStamp[i], 
+					CELL_SITEmcc[i], CELL_SITEmnc[i], CELL_SITElac[i], CELL_SITEcid[i], 
+					CELL_SITEnid[i], CELL_SITEbid[i], CELL_SITEsid[i])
 			
-			if observable_cell_tower is not None:
-				self.__generateTraceRelation(self.DEVICE_object, observable_cell_tower, 
-					'Connected_To', '', '', CELL_TOWERtimeStamp[i], '')
-				self.__generateChainOfEvidence(cell_tower_id, observable_cell_tower)
+			if observable_cell_site is not None:				
+				self.__generateTraceRelation(self.DEVICE_object, observable_cell_site, 
+					'Connected_To', '', '', CELL_SITEtimeStamp[i], None)
+				self.__generateChainOfEvidence(cell_site_id, observable_cell_site)
 
 	def writeChat(self, CHATid, CHATstatus, CHATsource, CHATpartyIdentifiers, CHATpartyNames, 
                 CHATmsgIdentifiersFrom, CHATmsgNamesFrom, CHATmsgBodies, CHATmsgStatuses, CHATmsgOutcomes,
@@ -1673,7 +1580,7 @@ class UFEDtoJSON():
 						for key in self.FILEpath:						
 							if self.FILEpath[key].find(chat_attachment_file) > - 1:
 								self.__generateTraceRelation(self.FILEuuid[key], 
-									chat_observable, 'Attached_To', '', '', '', '');
+									chat_observable, 'Attached_To', '', '', None, None);
 								break			
 
 #---	if there are not messages for this Chat or no ChatAccount has been generated, 
@@ -1752,8 +1659,6 @@ class UFEDtoJSON():
 					observable_from = self.__generateTracePhoneAccount(mobileOperator, 
 							INSTANT_MSGfromName[i], i_msg_from_identifier)	
 					self.phoneUuidList.append(observable_from)
-			else:
-				i_msg_from_id = ''
 			
 			list_TO = INSTANT_MSGtoIdentifier[i].split('@@@')
 			observables_msg_to = []
@@ -1772,8 +1677,8 @@ class UFEDtoJSON():
 					observables_msg_to.append(observable_to)
 						
 			observable_message = self.__generateTraceMessageFacet(INSTANT_MSGbody[i], 
-				observable_app, observable_from, observables_msg_to, INSTANT_MSGtimeStamp[i], INSTANT_MSGstatus[i], 
-				'Instant Message')			
+				observable_app, observable_from, observables_msg_to, INSTANT_MSGtimeStamp[i], 
+				INSTANT_MSGstatus[i], 'Instant Message')			
 			
 			if observable_message is not None:
 				self.__generateChainOfEvidence(i_msg_id, observable_message)
@@ -1789,7 +1694,7 @@ class UFEDtoJSON():
 			
 			if observable_location is not None:
 				self.__generateTraceRelation(self.DEVICE_object, observable_location, 
-					'Mapped_By', '', '', LOCATIONtimeStamp[i], '')
+					'Mapped_By', '', '', LOCATIONtimeStamp[i], None)
 				self.__generateChainOfEvidence(location_id, observable_location)
 
 
@@ -1833,13 +1738,19 @@ class UFEDtoJSON():
                     WIRELESS_NETbssid, WIRELESS_NETssid):
 		
 		for i, wireless_net_id in enumerate(WIRELESS_NETid):
-			observable_wnet= self.__generateTraceWireless_Net(wireless_net_id, WIRELESS_NETstatus[i], 
-					WIRELESS_NETlongitude[i], WIRELESS_NETlatitude[i], WIRELESS_NETtimeStamp[i], 
-					WIRELESS_NETlastConnection[i], WIRELESS_NETbssid[i], WIRELESS_NETssid[i])
+			observable_wnet= self.__generateTraceWireless_Net(wireless_net_id, 
+				WIRELESS_NETstatus[i], WIRELESS_NETbssid[i], WIRELESS_NETssid[i])
 			
 			if observable_wnet is not None:
+				wnet_timeStamp = self.__cleanDate(WIRELESS_NETtimeStamp[i])
+				wnet_last_connection = self.__cleanDate(WIRELESS_NETlastConnection[i])
 				self.__generateTraceRelation(self.DEVICE_object, observable_wnet, 'Connected_To', 
-					'', '', WIRELESS_NETtimeStamp[i], WIRELESS_NETlastConnection[i])
+					'', '', wnet_timeStamp, wnet_last_connection)				
+				observable_location = self.__checkGeoCoordinates(WIRELESS_NETlatitude[i], 
+					WIRELESS_NETlongitude[i], '', 'Wireless Network')					
+				if observable_location:
+					self.__generateTraceRelation(observable_wnet, observable_location,
+						'Mapped_To', '', '', None, None)								
 				self.__generateChainOfEvidence(wireless_net_id, observable_wnet)
 
 	def writeSms(self, SMSid, SMSstatus, SMStimeStamp, SMSpartyRoles,

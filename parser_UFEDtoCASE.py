@@ -5,14 +5,12 @@
 #
 
 import xml.sax
-import string
 import argparse
 import os
 import codecs
 import UFEDtoJSON as CJ
 import re
 import timeit
-import sys
 from time import localtime, strftime
 #import logging
 
@@ -133,8 +131,7 @@ class UFEDparser():
         #self.show_elapsed_time(tic_write, 'Write SMS')
 
 #---    all parameters are lists containing data of the extracted CALL_LOG
-#    
-        tic_write= timeit.default_timer()
+#            
         caseTrace.writeCall(Handler.CALLid, Handler.CALLstatus, Handler.CALLsource, 
             Handler.CALLtimeStamp, Handler.CALLdirection, Handler.CALLduration,
             Handler.CALLrolesTO, Handler.CALLrolesFROM, Handler.CALLnamesTO, 
@@ -142,7 +139,7 @@ class UFEDparser():
             Handler.CALLidentifiersFROM)        
         #self.show_elapsed_time(tic_write, 'Write CALL')
 
-#---    all parameters are lists containing data of the extracted CELL_TOWER
+#---    all parameters are lists containing data of the extracted CALENDAR
 #    
         #tic_write = timeit.default_timer()
         caseTrace.writeCalendar(Handler.CALENDARid, Handler.CALENDARstatus, 
@@ -152,14 +149,14 @@ class UFEDparser():
             Handler.CALENDARrepeatDay, Handler.CALENDARrepeatInterval)        
         #self.show_elapsed_time(tic_write, 'Write CALENDAR')
 
-#---    all parameters are lists containing data of the extracted CELL_TOWER
+#---    all parameters are lists containing data of the extracted CELL_SITE
 #    
         #tic_write = timeit.default_timer()
-        caseTrace.writeCell_Tower(Handler.CELL_TOWERid, Handler.CELL_TOWERstatus, 
-            Handler.CELL_TOWERlongitude, Handler.CELL_TOWERlatitude,
-            Handler.CELL_TOWERtimeStamp, Handler.CELL_TOWERmcc,
-            Handler.CELL_TOWERmnc, Handler.CELL_TOWERlac, Handler.CELL_TOWERcid,
-            Handler.CELL_TOWERnid, Handler.CELL_TOWERbid, Handler.CELL_TOWERsid)                
+        caseTrace.writeCell_Site(Handler.CELL_SITEid, Handler.CELL_SITEstatus, 
+            Handler.CELL_SITElongitude, Handler.CELL_SITElatitude,
+            Handler.CELL_SITEtimeStamp, Handler.CELL_SITEmcc,
+            Handler.CELL_SITEmnc, Handler.CELL_SITElac, Handler.CELL_SITEcid,
+            Handler.CELL_SITEnid, Handler.CELL_SITEbid, Handler.CELL_SITEsid)                
         #self.show_elapsed_time(tic_write, 'Write CELL TOWER')
 
 #---    all parameters are lists containing data of the extracted CHAT
@@ -251,7 +248,7 @@ class UFEDparser():
             Handler.WEB_PAGElastVisited)        
         #self.show_elapsed_time(tic_write, 'Write WEB PAGES')
 
-#---    all parameters are lists containing data of the extracted CELL_TOWER
+#---    all parameters are lists containing data of the extracted CELL_SITE
 #    
         #tic_write = timeit.default_timer()
         caseTrace.writeWireless_Net(Handler.WIRELESS_NETid, Handler.WIRELESS_NETstatus, 
@@ -488,57 +485,57 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CALLidentifiersTO = []
         self.CALLidentifiersFROM = []
 
-#-- CELL_TOWER  section
+#-- CELL_SITE  section
 #                
-        self.CELL_TOWERinModelType = False
-        self.CELL_TOWERin = False
-        self.CELL_TOWERinPosition = False
-        self.CELL_TOWERinLongitude = False
-        self.CELL_TOWERinLongitudeValue = False
-        self.CELL_TOWERinLatitude = False
-        self.CELL_TOWERinLatitudeValue = False
-        self.CELL_TOWERinTimeStamp = False
-        self.CELL_TOWERinTimeStampValue = False
-        self.CELL_TOWERinMCC = False
-        self.CELL_TOWERinMCCValue = False
-        self.CELL_TOWERinMNC = False
-        self.CELL_TOWERinMNCValue = False
-        self.CELL_TOWERinLAC = False
-        self.CELL_TOWERinLACValue = False
-        self.CELL_TOWERinCID = False
-        self.CELL_TOWERinCIDValue = False
-        self.CELL_TOWERinNID = False
-        self.CELL_TOWERinNIDValue = False
-        self.CELL_TOWERinBID = False
-        self.CELL_TOWERinBIDValue = False
-        self.CELL_TOWERinSID = False
-        self.CELL_TOWERinSIDValue = False
+        self.CELL_SITEinModelType = False
+        self.CELL_SITEin = False
+        self.CELL_SITEinPosition = False
+        self.CELL_SITEinLongitude = False
+        self.CELL_SITEinLongitudeValue = False
+        self.CELL_SITEinLatitude = False
+        self.CELL_SITEinLatitudeValue = False
+        self.CELL_SITEinTimeStamp = False
+        self.CELL_SITEinTimeStampValue = False
+        self.CELL_SITEinMCC = False
+        self.CELL_SITEinMCCValue = False
+        self.CELL_SITEinMNC = False
+        self.CELL_SITEinMNCValue = False
+        self.CELL_SITEinLAC = False
+        self.CELL_SITEinLACValue = False
+        self.CELL_SITEinCID = False
+        self.CELL_SITEinCIDValue = False
+        self.CELL_SITEinNID = False
+        self.CELL_SITEinNIDValue = False
+        self.CELL_SITEinBID = False
+        self.CELL_SITEinBIDValue = False
+        self.CELL_SITEinSID = False
+        self.CELL_SITEinSIDValue = False
 
-        self.CELL_TOWERtotal = 0
-        self.CELL_TOWERlongitudeText = ''
-        self.CELL_TOWERlatitudeText = ''
-        self.CELL_TOWERtimeStampText = ''
-        self.CELL_TOWERmccText = ''
-        self.CELL_TOWERmncText = ''
-        self.CELL_TOWERlacText = ''
-        self.CELL_TOWERcidText = ''
-        self.CELL_TOWERnidText = ''
-        self.CELL_TOWERbidText = ''
-        self.CELL_TOWERsidText = ''
+        self.CELL_SITEtotal = 0
+        self.CELL_SITElongitudeText = ''
+        self.CELL_SITElatitudeText = ''
+        self.CELL_SITEtimeStampText = ''
+        self.CELL_SITEmccText = ''
+        self.CELL_SITEmncText = ''
+        self.CELL_SITElacText = ''
+        self.CELL_SITEcidText = ''
+        self.CELL_SITEnidText = ''
+        self.CELL_SITEbidText = ''
+        self.CELL_SITEsidText = ''
 
-        self.CELL_TOWERdeleted = 0
-        self.CELL_TOWERid = []
-        self.CELL_TOWERlongitude = []
-        self.CELL_TOWERlatitude = []
-        self.CELL_TOWERtimeStamp = []
-        self.CELL_TOWERmcc = []
-        self.CELL_TOWERmnc = []
-        self.CELL_TOWERlac = []
-        self.CELL_TOWERcid = []
-        self.CELL_TOWERnid = []
-        self.CELL_TOWERbid = []
-        self.CELL_TOWERsid = []
-        self.CELL_TOWERstatus = []
+        self.CELL_SITEdeleted = 0
+        self.CELL_SITEid = []
+        self.CELL_SITElongitude = []
+        self.CELL_SITElatitude = []
+        self.CELL_SITEtimeStamp = []
+        self.CELL_SITEmcc = []
+        self.CELL_SITEmnc = []
+        self.CELL_SITElac = []
+        self.CELL_SITEcid = []
+        self.CELL_SITEnid = []
+        self.CELL_SITEbid = []
+        self.CELL_SITEsid = []
+        self.CELL_SITEstatus = []
 
 #---    CHAT section
 #
@@ -1272,30 +1269,30 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALENDARrepeatDay.append('')
             self.CALENDARrepeatInterval.append('')
 
-    def __startElementModelCELL_TOWER(self, attrValue, CELL_TOWERid, CELL_TOWERstate):
+    def __startElementModelCELL_SITE(self, attrValue, CELL_SITEid, CELL_SITEstate):
         if attrValue == 'CellTower':
-            self.CELL_TOWERin = True
-            self.CELL_TOWERtotal += 1
-            self.printObservable('CELL_TOWER', self.CELL_TOWERtotal)
-            self.CELL_TOWERid.append(CELL_TOWERid)
-            self.storeTraceStatus(self.CELL_TOWERstatus, CELL_TOWERstate, 
-                self.CELL_TOWERdeleted)
+            self.CELL_SITEin = True
+            self.CELL_SITEtotal += 1
+            self.printObservable('CELL_SITE', self.CELL_SITEtotal)
+            self.CELL_SITEid.append(CELL_SITEid)
+            self.storeTraceStatus(self.CELL_SITEstatus, CELL_SITEstate, 
+                self.CELL_SITEdeleted)
             self.skipLine = True 
             self.Observable = True 
 #---    these assignments guarantee that each array has the same size
 #       in case one of the corresponding XML Element is not present in 
 #       the report
 #
-            self.CELL_TOWERlongitude.append('')
-            self.CELL_TOWERlatitude.append('')
-            self.CELL_TOWERtimeStamp.append('')
-            self.CELL_TOWERmcc.append('')
-            self.CELL_TOWERmnc.append('')
-            self.CELL_TOWERlac.append('')
-            self.CELL_TOWERcid.append('')
-            self.CELL_TOWERnid.append('')
-            self.CELL_TOWERbid.append('')
-            self.CELL_TOWERsid.append('')
+            self.CELL_SITElongitude.append('')
+            self.CELL_SITElatitude.append('')
+            self.CELL_SITEtimeStamp.append('')
+            self.CELL_SITEmcc.append('')
+            self.CELL_SITEmnc.append('')
+            self.CELL_SITElac.append('')
+            self.CELL_SITEcid.append('')
+            self.CELL_SITEnid.append('')
+            self.CELL_SITEbid.append('')
+            self.CELL_SITEsid.append('')
 
     def __startElementModelCHAT(self, attrType, CHATid, CHATstate):
         if self.CHATinMultiModelFieldPhotos or \
@@ -1591,9 +1588,9 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.EMAILinMultiModelFieldAttachments = True
                 self.EMAILattachmentFilename.append('')
 
-    def __startElementModelFieldCELL_TOWER(self, attrValue):
+    def __startElementModelFieldCELL_SITE(self, attrValue):
         if attrValue == 'Position':
-            self.CELL_TOWERinPosition = True
+            self.CELL_SITEinPosition = True
 
     def __startElementMultiModelFieldCHAT(self, attrValue):
         if attrValue == 'Participants':
@@ -1699,27 +1696,27 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif attrValue == 'RepeatInterval':
             self.CALENDARinRepeatUntil = True
 
-    def __startElementFieldCELL_TOWER(self, attrValue):
+    def __startElementFieldCELL_SITE(self, attrValue):
         if attrValue == 'Longitude':
-            self.CELL_TOWERinLongitude = True
+            self.CELL_SITEinLongitude = True
         elif attrValue == 'Latitude':
-            self.CELL_TOWERinLatitude = True
+            self.CELL_SITEinLatitude = True
         elif attrValue == 'TimeStamp':
-            self.CELL_TOWERinTimeStamp = True
+            self.CELL_SITEinTimeStamp = True
         elif attrValue == 'MCC':
-            self.CELL_TOWERinMCC = True
+            self.CELL_SITEinMCC = True
         elif attrValue == 'LAC':
-            self.CELL_TOWERinLAC = True
+            self.CELL_SITEinLAC = True
         elif attrValue == 'CID':
-            self.CELL_TOWERinCID = True
+            self.CELL_SITEinCID = True
         elif attrValue == 'NID':
-            self.CELL_TOWERinNID = True
+            self.CELL_SITEinNID = True
         elif attrValue == 'BID':
-            self.CELL_TOWERinBID = True
+            self.CELL_SITEinBID = True
         elif attrValue == 'SID':
-            self.CELL_TOWERinSID = True
+            self.CELL_SITEinSID = True
         elif attrValue == 'MCC':
-            self.CELL_TOWERinMCC = True
+            self.CELL_SITEinMCC = True
 
     def __startElementFieldDEVICE_EVENT(self, attrValue):
         if attrValue == 'StartTime':
@@ -2093,27 +2090,27 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.CALENDARinRepeatInterval:
             self.CALENDARinRepeatIntervalValue = True        
 
-    def __startElementValueCELL_TOWER(self):
-        if self.CELL_TOWERinLongitude:
-            self.CELL_TOWERinLongitudeValue = True
-        elif self.CELL_TOWERinLatitude:
-            self.CELL_TOWERinLatitudeValue = True
-        elif self.CELL_TOWERinTimeStamp:
-            self.CELL_TOWERinTimeStampValue = True
-        elif self.CELL_TOWERinMCC:
-            self.CELL_TOWERinMCCValue = True
-        elif self.CELL_TOWERinMNC:
-            self.CELL_TOWERinMNCValue = True
-        elif self.CELL_TOWERinLAC:
-            self.CELL_TOWERinLACValue = True
-        elif self.CELL_TOWERinCID:
-            self.CELL_TOWERinCIDValue = True
-        elif self.CELL_TOWERinNID:
-            self.CELL_TOWERinNIDValue = True
-        elif self.CELL_TOWERinBID:
-            self.CELL_TOWERinBIDValue = True
-        elif self.CELL_TOWERinSID:
-            self.CELL_TOWERinSIDValue = True
+    def __startElementValueCELL_SITE(self):
+        if self.CELL_SITEinLongitude:
+            self.CELL_SITEinLongitudeValue = True
+        elif self.CELL_SITEinLatitude:
+            self.CELL_SITEinLatitudeValue = True
+        elif self.CELL_SITEinTimeStamp:
+            self.CELL_SITEinTimeStampValue = True
+        elif self.CELL_SITEinMCC:
+            self.CELL_SITEinMCCValue = True
+        elif self.CELL_SITEinMNC:
+            self.CELL_SITEinMNCValue = True
+        elif self.CELL_SITEinLAC:
+            self.CELL_SITEinLACValue = True
+        elif self.CELL_SITEinCID:
+            self.CELL_SITEinCIDValue = True
+        elif self.CELL_SITEinNID:
+            self.CELL_SITEinNIDValue = True
+        elif self.CELL_SITEinBID:
+            self.CELL_SITEinBIDValue = True
+        elif self.CELL_SITEinSID:
+            self.CELL_SITEinSIDValue = True
 
     def __startElementValueCONTACT(self):
         if self.CONTACTinSource:
@@ -2362,7 +2359,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             elif attrType == 'CalendarEntry':
                 self.CALENDARinModelType = True            
             elif attrType == 'CellTower':
-                self.CELL_TOWERinModelType = True
+                self.CELL_SITEinModelType = True
             elif attrType == 'Chat':
                 self.CHATinModelType = True
             elif attrType == 'Contact':
@@ -2394,8 +2391,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__startElementModelCALL(attrType, id, traceState)
             elif self.CALENDARinModelType:
                 self.__startElementModelCALENDAR(attrType, id, traceState)
-            elif self.CELL_TOWERinModelType:
-                self.__startElementModelCELL_TOWER(attrType, id, traceState)
+            elif self.CELL_SITEinModelType:
+                self.__startElementModelCELL_SITE(attrType, id, traceState)
             elif self.CHATinModelType:
                 self.__startElementModelCHAT(attrType, id, traceState)
             elif self.CONTACTinModelType:
@@ -2439,8 +2436,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif name == 'modelField':
             if self.CHATin:
                 self.__startElementModelFieldCHAT(attrName)
-            elif self.CELL_TOWERin:
-                self.__startElementModelFieldCELL_TOWER(attrName)
+            elif self.CELL_SITEin:
+                self.__startElementModelFieldCELL_SITE(attrName)
             elif self.EMAILin:
                 self.__startElementModelFieldEMAIL(attrName)            
             elif self.LOCATIONin:
@@ -2461,8 +2458,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__startElementFieldCALENDAR(attrName)
             elif self.CHATin:
                 self.__startElementFieldCHAT(attrName)            
-            elif self.CELL_TOWERin:
-                self.__startElementFieldCELL_TOWER(attrName)
+            elif self.CELL_SITEin:
+                self.__startElementFieldCELL_SITE(attrName)
             elif self.CONTACTin:
                 self.__startElementFieldCONTACT(attrName)
             elif self.COOKIEin:
@@ -2494,8 +2491,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__startElementValueCALL()
             elif self.CALENDARin:
                 self.__startElementValueCALENDAR()
-            elif self.CELL_TOWERin:
-                self.__startElementValueCELL_TOWER()
+            elif self.CELL_SITEin:
+                self.__startElementValueCELL_SITE()
             elif self.CHATin:
                 self.__startElementValueCHAT(attrType)
             elif self.CONTACTin:
@@ -2686,27 +2683,27 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.CALLinIdentifierValue:
             self.CALLidentifierText += ch
 
-    def __charactersCELL_TOWER(self, ch):
-        if self.CELL_TOWERinLongitudeValue:
-            self.CELL_TOWERlongitudeText += ch
-        elif self.CELL_TOWERinLatitudeValue:
-            self.CELL_TOWERlatitudeText += ch
-        elif self.CELL_TOWERinTimeStampValue:
-            self.CELL_TOWERtimeStampText += ch
-        elif self.CELL_TOWERinMCCValue:
-            self.CELL_TOWERmccText += ch
-        elif self.CELL_TOWERinMNCValue:
-            self.CELL_TOWERmncText += ch
-        elif self.CELL_TOWERinLACValue:
-            self.CELL_TOWERlacText += ch
-        elif self.CELL_TOWERinCIDValue:
-            self.CELL_TOWERcidText += ch
-        elif self.CELL_TOWERinNIDValue:
-            self.CELL_TOWERnidText += ch
-        elif self.CELL_TOWERinBIDValue:
-            self.CELL_TOWERbidText += ch
-        elif self.CELL_TOWERinSIDValue:
-            self.CELL_TOWERsidText += ch
+    def __charactersCELL_SITE(self, ch):
+        if self.CELL_SITEinLongitudeValue:
+            self.CELL_SITElongitudeText += ch
+        elif self.CELL_SITEinLatitudeValue:
+            self.CELL_SITElatitudeText += ch
+        elif self.CELL_SITEinTimeStampValue:
+            self.CELL_SITEtimeStampText += ch
+        elif self.CELL_SITEinMCCValue:
+            self.CELL_SITEmccText += ch
+        elif self.CELL_SITEinMNCValue:
+            self.CELL_SITEmncText += ch
+        elif self.CELL_SITEinLACValue:
+            self.CELL_SITElacText += ch
+        elif self.CELL_SITEinCIDValue:
+            self.CELL_SITEcidText += ch
+        elif self.CELL_SITEinNIDValue:
+            self.CELL_SITEnidText += ch
+        elif self.CELL_SITEinBIDValue:
+            self.CELL_SITEbidText += ch
+        elif self.CELL_SITEinSIDValue:
+            self.CELL_SITEsidText += ch
 
     def __charactersCONTACT(self, ch):
         if self.CONTACTinSourceValue:
@@ -3039,8 +3036,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.__charactersCALENDAR(ch)
         elif self.CALLin:
             self.__charactersCALL(ch)
-        elif self.CELL_TOWERin:
-            self.__charactersCELL_TOWER(ch)
+        elif self.CELL_SITEin:
+            self.__charactersCELL_SITE(ch)
         elif self.CONTACTin:
             self.__charactersCONTACT(ch)
         elif self.CHATin:
@@ -3125,32 +3122,32 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CALENDARinAttachments = False 
 
 
-    def __endElementModelCELL_TOWER(self):
-        if self.CELL_TOWERin:
+    def __endElementModelCELL_SITE(self):
+        if self.CELL_SITEin:
 
-            if not self.CELL_TOWERinPosition:
-                idx = self.CELL_TOWERtotal - 1
-                self.CELL_TOWERlongitude[idx] = self.CELL_TOWERlongitudeText
-                self.CELL_TOWERlatitude[idx] = self.CELL_TOWERlatitudeText
-                self.CELL_TOWERtimeStamp[idx] = self.CELL_TOWERtimeStampText
-                self.CELL_TOWERmcc[idx] = self.CELL_TOWERmccText
-                self.CELL_TOWERmnc[idx] = self.CELL_TOWERmncText
-                self.CELL_TOWERlac[idx] = self.CELL_TOWERlacText
-                self.CELL_TOWERcid[idx] = self.CELL_TOWERcidText
-                self.CELL_TOWERnid[idx] = self.CELL_TOWERnidText
-                self.CELL_TOWERbid[idx] = self.CELL_TOWERbidText
-                self.CELL_TOWERsid[idx] = self.CELL_TOWERsidText
-                self.CELL_TOWERlongitudeText = ''
-                self.CELL_TOWERlatitudeText = ''
-                self.CELL_TOWERtimeStampText = ''                
-                self.CELL_TOWERmccText = ''
-                self.CELL_TOWERmncText = ''
-                self.CELL_TOWERlacText = ''
-                self.CELL_TOWERcidText = ''
-                self.CELL_TOWERnidText = ''
-                self.CELL_TOWERbidText = ''
-                self.CELL_TOWERsidText = ''
-                self.CELL_TOWERin = False                
+            if not self.CELL_SITEinPosition:
+                idx = self.CELL_SITEtotal - 1
+                self.CELL_SITElongitude[idx] = self.CELL_SITElongitudeText
+                self.CELL_SITElatitude[idx] = self.CELL_SITElatitudeText
+                self.CELL_SITEtimeStamp[idx] = self.CELL_SITEtimeStampText
+                self.CELL_SITEmcc[idx] = self.CELL_SITEmccText
+                self.CELL_SITEmnc[idx] = self.CELL_SITEmncText
+                self.CELL_SITElac[idx] = self.CELL_SITElacText
+                self.CELL_SITEcid[idx] = self.CELL_SITEcidText
+                self.CELL_SITEnid[idx] = self.CELL_SITEnidText
+                self.CELL_SITEbid[idx] = self.CELL_SITEbidText
+                self.CELL_SITEsid[idx] = self.CELL_SITEsidText
+                self.CELL_SITElongitudeText = ''
+                self.CELL_SITElatitudeText = ''
+                self.CELL_SITEtimeStampText = ''                
+                self.CELL_SITEmccText = ''
+                self.CELL_SITEmncText = ''
+                self.CELL_SITElacText = ''
+                self.CELL_SITEcidText = ''
+                self.CELL_SITEnidText = ''
+                self.CELL_SITEbidText = ''
+                self.CELL_SITEsidText = ''
+                self.CELL_SITEin = False                
 
     def __endElementModelCALL(self):        
         if self.CALLinParty:
@@ -3602,27 +3599,27 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.CALENDARinRepeatInterval:
             self.CALENDARinRepeatInterval = False
 
-    def __endElementFieldCELL_TOWER(self):
-        if self.CELL_TOWERinLongitude:
-            self.CELL_TOWERinLongitude = False
-        elif self.CELL_TOWERinLatitude:
-            self.CELL_TOWERinLatitude = False
-        elif self.CELL_TOWERinTimeStamp:
-            self.CELL_TOWERinTimeStamp = False
-        elif self.CELL_TOWERinMCC:
-            self.CELL_TOWERinMCC = False
-        elif self.CELL_TOWERinMNC:
-            self.CELL_TOWERinMNC = False
-        elif self.CELL_TOWERinLAC:
-            self.CELL_TOWERinLAC = False
-        elif self.CELL_TOWERinCID:
-            self.CELL_TOWERinCID = False
-        elif self.CELL_TOWERinNID:
-            self.CELL_TOWERinNID = False
-        elif self.CELL_TOWERinBID:
-            self.CELL_TOWERinBID = False
-        elif self.CELL_TOWERinSID:
-            self.CELL_TOWERinSID = False  
+    def __endElementFieldCELL_SITE(self):
+        if self.CELL_SITEinLongitude:
+            self.CELL_SITEinLongitude = False
+        elif self.CELL_SITEinLatitude:
+            self.CELL_SITEinLatitude = False
+        elif self.CELL_SITEinTimeStamp:
+            self.CELL_SITEinTimeStamp = False
+        elif self.CELL_SITEinMCC:
+            self.CELL_SITEinMCC = False
+        elif self.CELL_SITEinMNC:
+            self.CELL_SITEinMNC = False
+        elif self.CELL_SITEinLAC:
+            self.CELL_SITEinLAC = False
+        elif self.CELL_SITEinCID:
+            self.CELL_SITEinCID = False
+        elif self.CELL_SITEinNID:
+            self.CELL_SITEinNID = False
+        elif self.CELL_SITEinBID:
+            self.CELL_SITEinBID = False
+        elif self.CELL_SITEinSID:
+            self.CELL_SITEinSID = False  
 
     def __endElementFieldWIRELESS_NET(self):
         if self.WIRELESS_NETinLongitude:
@@ -3871,27 +3868,27 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.CALENDARinRepeatIntervalValue:
             self.CALENDARinRepeatIntervalValue = False
 
-    def __endElementValueCELL_TOWER(self):
-        if self.CELL_TOWERinLongitudeValue:
-            self.CELL_TOWERinLongitudeValue = False
-        elif self.CELL_TOWERinLatitudeValue:
-            self.CELL_TOWERinLatitudeValue = False
-        elif self.CELL_TOWERinTimeStampValue:
-            self.CELL_TOWERinTimeStampValue = False
-        elif self.CELL_TOWERinMCCValue:
-            self.CELL_TOWERinMCCValue = False
-        elif self.CELL_TOWERinMNCValue:
-            self.CELL_TOWERinMNCValue = False
-        elif self.CELL_TOWERinLACValue:
-            self.CELL_TOWERinLACValue = False
-        elif self.CELL_TOWERinCIDValue:
-            self.CELL_TOWERinCIDValue = False
-        elif self.CELL_TOWERinNIDValue:
-            self.CELL_TOWERinNIDValue = False
-        elif self.CELL_TOWERinBIDValue:
-            self.CELL_TOWERinBIDValue = False
-        elif self.CELL_TOWERinSIDValue:
-            self.CELL_TOWERinSIDValue = False
+    def __endElementValueCELL_SITE(self):
+        if self.CELL_SITEinLongitudeValue:
+            self.CELL_SITEinLongitudeValue = False
+        elif self.CELL_SITEinLatitudeValue:
+            self.CELL_SITEinLatitudeValue = False
+        elif self.CELL_SITEinTimeStampValue:
+            self.CELL_SITEinTimeStampValue = False
+        elif self.CELL_SITEinMCCValue:
+            self.CELL_SITEinMCCValue = False
+        elif self.CELL_SITEinMNCValue:
+            self.CELL_SITEinMNCValue = False
+        elif self.CELL_SITEinLACValue:
+            self.CELL_SITEinLACValue = False
+        elif self.CELL_SITEinCIDValue:
+            self.CELL_SITEinCIDValue = False
+        elif self.CELL_SITEinNIDValue:
+            self.CELL_SITEinNIDValue = False
+        elif self.CELL_SITEinBIDValue:
+            self.CELL_SITEinBIDValue = False
+        elif self.CELL_SITEinSIDValue:
+            self.CELL_SITEinSIDValue = False
 
     def __endElementValueDEVICE_EVENT(self):
         if self.DEVICE_EVENTinTimeStampValue:
@@ -3958,13 +3955,13 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.EMAILinSourceValue:
             self.EMAILinSourceValue = False
         elif self.EMAILinIdentifierFROMvalue:
-           self.EMAILinIdentifierFROMvalue = False
+            self.EMAILinIdentifierFROMvalue = False
         elif self.EMAILinIdentifierTOvalue:
-           self.EMAILinIdentifierTOvalue = False
+            self.EMAILinIdentifierTOvalue = False
         elif self.EMAILinIdentifierCCvalue:
-           self.EMAILinIdentifierCCvalue = False
+            self.EMAILinIdentifierCCvalue = False
         elif self.EMAILinIdentifierBCCvalue:
-           self.EMAILinIdentifierBCCvalue = False
+            self.EMAILinIdentifierBCCvalue = False
         elif self.EMAILinBodyValue:
             self.EMAILinBodyValue = False
         elif self.EMAILinSubjectValue:
@@ -4224,8 +4221,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__endElementModelCALL()
             elif self.CALENDARinModelType:
                 self.__endElementModelCALENDAR()
-            elif self.CELL_TOWERinModelType:
-                self.__endElementModelCELL_TOWER()
+            elif self.CELL_SITEinModelType:
+                self.__endElementModelCELL_SITE()
             elif self.CONTACTinModelType:
                 self.__endElementModelCONTACT()
             elif self.CHATinModelType:
@@ -4256,8 +4253,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CALLinModelType = False
             elif self.CALENDARinModelType:
                 self.CALENDARinModelType = False
-            elif self.CELL_TOWERinModelType:
-                self.CELL_TOWERinModelType = False
+            elif self.CELL_SITEinModelType:
+                self.CELL_SITEinModelType = False
             elif self.COOKIEinModelType:
                 self.COOKIEinModelType = False
             elif self.CHATinModelType:
@@ -4283,8 +4280,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             elif self.WIRELESS_NETinModelType:
                 self.WIRELESS_NETinModelType = False
         elif name == 'modelField':
-            if self.CELL_TOWERinPosition:
-                self.CELL_TOWERinPosition = False  
+            if self.CELL_SITEinPosition:
+                self.CELL_SITEinPosition = False  
             if self.CHATinModelFieldAttachment:
                 self.CHATinModelFieldAttachment = False
             elif self.CHATinMsgFrom:
@@ -4363,8 +4360,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__endElementFieldCALL()
             elif self.CALENDARin:
                 self.__endElementFieldCALENDAR()
-            elif self.CELL_TOWERin:
-                self.__endElementFieldCELL_TOWER()
+            elif self.CELL_SITEin:
+                self.__endElementFieldCELL_SITE()
             elif self.CONTACTin:
                 self.__endElementFieldCONTACT()            
             elif self.COOKIEin:
@@ -4397,8 +4394,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__endElementValueCALL()
             elif self.CALENDARin:
                 self.__endElementValueCALENDAR()
-            elif self.CELL_TOWERin:
-                self.__endElementValueCELL_TOWER()            
+            elif self.CELL_SITEin:
+                self.__endElementValueCELL_SITE()            
             elif self.CONTACTin:
                 self.__endElementValueCONTACT()
             elif self.COOKIEin:
@@ -4426,7 +4423,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif name == 'timestamp':
             self.__endElementTimeStampTAGGED_FILE()            
         elif name == 'nodeInfo':
-           if self.EXTRA_INFOin:
+            if self.EXTRA_INFOin:
                 self.EXTRA_INFOnodeInfoin = False              
         elif name == 'extraInfo':
             self.EXTRA_INFOin = False
