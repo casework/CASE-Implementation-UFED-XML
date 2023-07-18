@@ -38,10 +38,9 @@ class UFEDparser():
         elapsedMm = str(int(ss) // 60)
         elapsedSs = str(int(ss) % 60)
         elapsedMs = str(round(ms, 2))[2:]
-        elapsed_time = elapsedMm + ' min. ' +  elapsedSs + ' sec. and ' + \
-            elapsedMs + ' hundredths'
+        elapsed_time = "".join([elapsedMm, ' min. ', elapsedSs, ' sec. and ',  elapsedMs, ' hundredths'])
         if self.verbose:
-            print('\n' + C_CYAN + 'elapsed time - ' + message + ': ' + elapsed_time + '\n' + C_BLACK)
+            print("".join(['\n', C_CYAN, 'elapsed time - ', message, ': ', elapsed_time, '\n', C_BLACK]))
 
     def processXmlReport(self):
 #---    create the SAX parser object
@@ -71,7 +70,7 @@ class UFEDparser():
             phoneNumber = Handler.CONTEXTdeviceMsisdnText.replace(' ', '')
 
         if self.verbose:
-            print(Handler.C_CYAN + "owner's phone number: " + phoneNumber + '\n' + Handler.C_BLACK)
+            print("".join([Handler.C_CYAN, "owner's phone number: ", phoneNumber, '\n', Handler.C_BLACK]))
 
         caseTrace = CJ.UFEDtoJSON(json_output=Handler.fOut, app_name=Handler.U_ACCOUNTsource, 
             app_user_name=Handler.U_ACCOUNTname, app_user_account=Handler.U_ACCOUNTusername, 
@@ -1226,13 +1225,12 @@ class ExtractTraces(xml.sax.ContentHandler):
                         
 
     def printObservable(self, oName, oCount):        
-        line =  'Extracting artifacts --> ' + oName +  ' n. ' +  \
-            str(oCount) + self.C_BLACK
+        line =  "".join(['Extracting artifacts --> ', oName, ' n. ', str(oCount), self.C_BLACK])
         if self.verbose:            
             if oCount == 1:
-                print(self.C_GREEN + '\n' + line, end='\r') 
+                print("".join([self.C_GREEN, '\n', line]), end='\r') 
             else:
-                print(self.C_GREEN + line, end='\r') 
+                print("".join([self.C_GREEN, line]), end='\r') 
 
     def __startElementModelCALL(self, attrValue, CALLid, CALLstate):
         if attrValue == 'Call':
@@ -2554,13 +2552,13 @@ class ExtractTraces(xml.sax.ContentHandler):
                     self.EXTRA_INFOdictNodeInfoId[i] = ''
                     charSep = ''
                 else:
-                    self.EXTRA_INFOdictNodeInfoId[i] += '@@@' + attrs.get('id')
+                    self.EXTRA_INFOdictNodeInfoId[i] += "".join(['@@@', attrs.get('id')])
                     charSep = '@@@'
 
-                self.EXTRA_INFOdictPath[i] += charSep + str(attrs.get('path'))
-                self.EXTRA_INFOdictSize[i] += charSep + str(attrs.get('size'))
-                self.EXTRA_INFOdictTableName[i] += charSep + str(attrs.get('tableName'))
-                self.EXTRA_INFOdictOffset[i] += charSep + str(attrs.get('offset'))                    
+                self.EXTRA_INFOdictPath[i] += "".join([charSep, str(attrs.get('path'))])
+                self.EXTRA_INFOdictSize[i] += "".join([charSep, str(attrs.get('size'))])
+                self.EXTRA_INFOdictTableName[i] += "".join([charSep, str(attrs.get('tableName'))])
+                self.EXTRA_INFOdictOffset[i] += "".join([charSep, str(attrs.get('offset'))])
         elif name == 'file':
             if self.TAGGED_FILESin:                
                 if attrs.get('fs').lower().find('system') > -1:
@@ -2636,8 +2634,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTEXTinCaseInfo = True                                     
         
         if (not self.Observable):
-            line = self.C_GREY + '*\tProcessing Element <' + name + '> at line '
-            line += str(self.lineXML) + ' ...'  + self.C_BLACK
+            line = "".join([self.C_GREY, '*\tProcessing Element <', name, '> at line ',  str(self.lineXML), ' ...', self.C_BLACK])
             if self.verbose:
                 if self.skipLine:
                     print ('\n' + line , end='\r')
@@ -2739,8 +2736,6 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CHATmsgNameFromText += ch
         elif self.CHATinMsgBodyValue:
             self.CHATmsgBodyText += ch
-            if 'ciofeca' in self.CHATmsgBodyText:
-                print(f"CHATmsgBodyText={self.CHATmsgBodyText}")
         elif self.CHATinMsgOutcomeValue:
             self.CHATmsgOutcomeText += ch
         elif self.CHATinMsgTimeStampValue:
@@ -2824,7 +2819,6 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.INSTANT_MSGsubjectText += ch
         elif self.INSTANT_MSGinBodyValue:
             self.INSTANT_MSGbodyText += ch
-            print(f"Instant msg: {self.INSTANT_MSGbodyText}")
         elif self.INSTANT_MSGinTimeStampValue:
             self.INSTANT_MSGtimeStampText += ch
         elif self.INSTANT_MSGinStatusMsgValue:
@@ -4476,25 +4470,25 @@ if __name__ == '__main__':
 
 
     if args.output_CASE_JSON is None:
-        path, name = os.path.split(args.inFileXML[0:-3] + 'JSON')
+        path, name = os.path.split("".join([args.inFileXML[0:-3], 'JSON']))
         args.output_CASE_JSON = name
 
     head, tail = os.path.split(args.output_CASE_JSON)
     
     if verbose:
         print('*--- Input paramaters start \n')
-        print('\tFile XML:\t\t' + args.inFileXML)
-        print('\tFile Output:\t\t' + args.output_CASE_JSON)
+        print("".join(['\tFile XML:\t\t', args.inFileXML]))
+        print("".join(['\tFile Output:\t\t', args.output_CASE_JSON]))
 
     if args.output_DEBUG is None:
         pass
     else:
         if verbose:
-            print('\tFile Debug:\t\t' + args.output_DEBUG)
+            print("".join(['\tFile Debug:\t\t', args.output_DEBUG]))
 
     if verbose:
         print('\n*--- Input paramaters end')
-        print('\n\n' + C_CYAN + '*** Start processing: ' + strftime("%Y-%m-%d %H:%M:%S", localtime()) + C_BLACK + '\n')
+        print("".join(['\n\n', C_CYAN, '*** Start processing: ', strftime("%Y-%m-%d %H:%M:%S", localtime()), C_BLACK, '\n']))
 
 #---    baseLocalPath is for setting the fileLocalPath property of FileFacet 
 #       Observable. 
