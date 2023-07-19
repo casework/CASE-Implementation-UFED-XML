@@ -15,9 +15,20 @@ from time import localtime, strftime
 #import logging
 
 
-class UFEDparser():         
+class UFEDparser():
+    '''
+    It represents all attributes and methods to process the traces extracted from XML reports by using
+    the SAX parser.
+    '''    
     def __init__(self, report_xml=None, json_output=None, 
         base_local_path="", case_bundle=None, mode_verbose=False):
+        '''
+        It initialises the main attributes for processing the XML report.
+            :param report_xml: The filename of the XML report, provided as argumnent in the command line (string).
+            :param json_output: The filename of the JSO-LD to be generated, provided as argumnent in the command line (string).
+            :param case_bundle: The container of all Objects in the JSON-LF file (list).
+            :param mode_verbose: True if the processing progress will be shown in the standard output (boolean).
+        '''        
         self.xmlReport = report_xml
         self.jsonCASE = json_output
         self.baseLocalPath = os.path.join(base_local_path, '') 
@@ -26,10 +37,18 @@ class UFEDparser():
         # #logging.basicConfig(filename='_ufed_log.txt', level=logging.INFO,
         #    filemode='w', format='%(message)s')
         self.bundle = case_bundle
+        # it stores the start time of the processing
         self.tic_start = timeit.default_timer()
         self.verbose = mode_verbose
 
     def show_elapsed_time(self, tic, message):
+        '''
+        It shows the processing time gone.
+            :param report_xml: The filename of the XML report, provided as argumnent in the command line.
+            :param tic: The initial time for calculating the processing time passed (float).
+            :param message: The message to be shown (string).
+            :return: None.
+        '''        
         toc = timeit.default_timer()
         C_CYAN = '\033[36m'
         C_BLACK = '\033[0m'
@@ -43,18 +62,14 @@ class UFEDparser():
             print("".join(['\n', C_CYAN, 'elapsed time - ', message, ': ', elapsed_time, '\n', C_BLACK]))
 
     def processXmlReport(self):
-#---    create the SAX parser object
-#
+        '''
+        It implements the SAX parser overriding the default ContextHandler method.
+            :return: None.
+        '''         
         SAXparser = xml.sax.make_parser()
-
-#---    override the default ContextHandler
-#
         Handler = ExtractTraces(self.baseLocalPath, self.verbose)        
-
         Handler.createOutFile(self.jsonCASE)
-
         SAXparser.setContentHandler(Handler)
-
         SAXparser.parse(self.xmlReport)
 
         self.show_elapsed_time(self.tic_start, 'Extraction Traces')
@@ -108,20 +123,12 @@ class UFEDparser():
         #self.show_elapsed_time(tic_write, 'Write FILES')
 
 
-#---    CONTACTname:        list of contact's names
-#       CONTACTphoneNums:   list of contact's phone numbers. Eeach item represents 
-#       the list of phone numbers of a contact. So a contact is identified by 
-#       the item CONTACname[i] and this contact may have many phone numbers 
-#       identified by CONTACTphoneNums[i][j] iterating on the index j
-#          
         #tic_write = timeit.default_timer()        
         caseTrace.writeContact(Handler.CONTACTid, Handler.CONTACTstatus, Handler.CONTACTsource, 
             Handler.CONTACTname, Handler.CONTACTuserIds, Handler.CONTACTphoneNums, 
             Handler.CONTACTaccount)       
         #self.show_elapsed_time(tic_write, 'Write CONTACT')
             
-#---    all parameters are lists containing data of the extracted SMS
-#    
         #tic_write = timeit.default_timer()
         caseTrace.writeSms(Handler.SMSid, Handler.SMSstatus, Handler.SMStimeStamp, 
             Handler.SMSpartyRoles, Handler.SMSpartyIdentifiers, 
@@ -129,8 +136,6 @@ class UFEDparser():
             Handler.SMSbody, Handler.SMSsource)        
         #self.show_elapsed_time(tic_write, 'Write SMS')
 
-#---    all parameters are lists containing data of the extracted CALL_LOG
-#            
         caseTrace.writeCall(Handler.CALLid, Handler.CALLstatus, Handler.CALLsource, 
             Handler.CALLtimeStamp, Handler.CALLdirection, Handler.CALLduration,
             Handler.CALLrolesTO, Handler.CALLrolesFROM, Handler.CALLnamesTO, 
@@ -138,8 +143,6 @@ class UFEDparser():
             Handler.CALLidentifiersFROM)        
         #self.show_elapsed_time(tic_write, 'Write CALL')
 
-#---    all parameters are lists containing data of the extracted CALENDAR
-#    
         #tic_write = timeit.default_timer()
         caseTrace.writeCalendar(Handler.CALENDARid, Handler.CALENDARstatus, 
             Handler.CALENDARcategory, Handler.CALENDARsubject,
@@ -148,8 +151,6 @@ class UFEDparser():
             Handler.CALENDARrepeatDay, Handler.CALENDARrepeatInterval)        
         #self.show_elapsed_time(tic_write, 'Write CALENDAR')
 
-#---    all parameters are lists containing data of the extracted CELL_SITE
-#    
         #tic_write = timeit.default_timer()
         caseTrace.writeCell_Site(Handler.CELL_SITEid, Handler.CELL_SITEstatus, 
             Handler.CELL_SITElongitude, Handler.CELL_SITElatitude,
@@ -158,8 +159,6 @@ class UFEDparser():
             Handler.CELL_SITEnid, Handler.CELL_SITEbid, Handler.CELL_SITEsid)                
         #self.show_elapsed_time(tic_write, 'Write CELL TOWER')
 
-#---    all parameters are lists containing data of the extracted CHAT
-#            
         #tic_write = timeit.default_timer()        
         caseTrace.writeChat(Handler.CHATid, Handler.CHATstatus, Handler.CHATsource, 
             Handler.CHATpartyIdentifiers, Handler.CHATpartyNames, 
@@ -169,8 +168,6 @@ class UFEDparser():
             Handler.CHATmsgAttachmentFilenames, Handler.CHATmsgAttachmentUrls)        
         #self.show_elapsed_time(tic_write, 'Write CHAT')
 
-#---    all parameters are lists containing data of the extracted COOKIE
-#    
         #tic_write = timeit.default_timer()
         caseTrace.writeCookie(Handler.COOKIEid, Handler.COOKIEstatus, 
             Handler.COOKIEsource, Handler.COOKIEname,
@@ -179,16 +176,12 @@ class UFEDparser():
             Handler.COOKIEexpiry)        
         #self.show_elapsed_time(tic_write, 'Write COOKIE')
 
-#---    all parameters are lists containing data of the extracted COOKIE
-#    
         #tic_write = timeit.default_timer()
         caseTrace.writeDeviceEvent(Handler.DEVICE_EVENTid, Handler.DEVICE_EVENTstatus, 
             Handler.DEVICE_EVENTtimeStamp, Handler.DEVICE_EVENTeventType,
             Handler.DEVICE_EVENTvalue)        
         #self.show_elapsed_time(tic_write, 'Write DEVICE EVENT')
 
-#---    all parameters are lists containing data of the extracted EMAIL
-#
         #tic_write = timeit.default_timer()
         caseTrace.writeEmail(Handler.EMAILid, Handler.EMAILstatus, Handler.EMAILsource, 
             Handler.EMAILidentifierFROM, Handler.EMAILidentifiersTO, 
@@ -197,9 +190,6 @@ class UFEDparser():
             Handler.EMAILattachmentsFilename)        
         #self.show_elapsed_time(tic_write, 'Write EMAIL')
 
-
-#---    all parameters are lists containing data of the extracted LOCATION
-#    
         #tic_write = timeit.default_timer()
         caseTrace.writeInstantMessage(Handler.INSTANT_MSGid, Handler.INSTANT_MSGstatus, 
             Handler.INSTANT_MSGsource, Handler.INSTANT_MSGtimeStamp, 
@@ -209,8 +199,6 @@ class UFEDparser():
             Handler.INSTANT_MSGtype, Handler.INSTANT_MSGapplication)        
         #self.show_elapsed_time(tic_write, 'Write INSTANT MESSAGE')
 
-#---    all parameters are lists containing data of the extracted LOCATION
-#    
         #tic_write = timeit.default_timer()
         caseTrace.writeLocationDevice(Handler.LOCATIONid, Handler.LOCATIONstatus, 
             Handler.LOCATIONlongitude, Handler.LOCATIONlatitude,
@@ -218,16 +206,12 @@ class UFEDparser():
             Handler.LOCATIONcategory)        
         #self.show_elapsed_time(tic_write, 'Write LOCATION DEVICE')
 
-#---    all parameters are lists containing data of the extracted COOKIE
-#    
         #tic_write = timeit.default_timer()
         caseTrace.writeSearched_Item(Handler.SEARCHED_ITEMid, Handler.SEARCHED_ITEMstatus, 
             Handler.SEARCHED_ITEMsource, Handler.SEARCHED_ITEMtimeStamp,
             Handler.SEARCHED_ITEMvalue, Handler.SEARCHED_ITEMsearchResult)        
         #self.show_elapsed_time(tic_write, 'Write SEARCHED ITEM')
 
-#---    all parameters are lists containing data of the extracted SOCIAL MEDIA ACTIVITY
-#    
         #tic_write = timeit.default_timer()            
         caseTrace.writeSocial_Media(Handler.SOCIAL_MEDIAid, Handler.SOCIAL_MEDIAstatus, 
             Handler.SOCIAL_MEDIAsource, Handler.SOCIAL_MEDIAtimeStamp, 
@@ -238,17 +222,12 @@ class UFEDparser():
             Handler.SOCIAL_MEDIAaccount)        
         #self.show_elapsed_time(tic_write, 'Write SOCIAL MEDIA')
 
-
-# all parameters are lists containing data of the extracted WEB_PAGE
-#
         #tic_write = timeit.default_timer()
         caseTrace.writeWebPages(Handler.WEB_PAGEid, Handler.WEB_PAGEstatus, Handler.WEB_PAGEsource, 
             Handler.WEB_PAGEurl, Handler.WEB_PAGEtitle, Handler.WEB_PAGEvisitCount,
             Handler.WEB_PAGElastVisited)        
         #self.show_elapsed_time(tic_write, 'Write WEB PAGES')
 
-#---    all parameters are lists containing data of the extracted CELL_SITE
-#    
         #tic_write = timeit.default_timer()
         caseTrace.writeWireless_Net(Handler.WIRELESS_NETid, Handler.WIRELESS_NETstatus, 
             Handler.WIRELESS_NETlongitude, Handler.WIRELESS_NETlatitude,
@@ -256,10 +235,6 @@ class UFEDparser():
             Handler.WIRELESS_NETbssid, Handler.WIRELESS_NETssid)        
         #self.show_elapsed_time(tic_write, 'Write WIRELESS NET')
 
-#---    write the context info: Device info, Forensic tool info, 
-#       Acquisition/Extraction investigative Actions, Peformer info
-#       deviceCreationTime is the Extraction start time
-#
         #tic_write = timeit.default_timer()
         caseTrace.writeContextUfed(Handler.CONTEXTufedVersionText, 
             Handler.CONTEXTdeviceCreationTimeText, Handler.CONTEXTdeviceExtractionStartText,
@@ -268,8 +243,7 @@ class UFEDparser():
             Handler.CONTEXTimageMetadataHashSHA, Handler.CONTEXTimageMetadataHashMD5)        
         #self.show_elapsed_time(tic_write, 'Write CONTEXT UFED')
 
-#---    this write a single line to complete the JSON output file
-#    
+#---    it writes a single line to complete the JSON output file
         caseTrace.writeLastLine()  
         self.show_elapsed_time(tic_case_start, 'Generation CASE JSON-LD file')
 
@@ -278,7 +252,15 @@ class UFEDparser():
 
 
 class ExtractTraces(xml.sax.ContentHandler):
+    '''
+    Used to extract the Traces from the XML reports and fill in the appropriate structure before generatign the JSON-LD file.
+    '''     
     def __init__(self, baseLocalPath, verbose):
+        '''
+        It initialises the attributes for the processing phase.
+            :param baseLocalPath: The local path of the physical files extracted duting the acquisition process (string)
+            :param verbose: True if the processing progress will be shonw on the standard output (boolean).
+        '''         
         self.fOut = ''
         self.lineXML = 0
         self.skipLine = False
@@ -291,10 +273,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.C_CYAN = '\033[36m'
         self.C_BLACK = '\033[0m'
 
-        #self.ARTIFACTmax = 1000000
-
 # FILE section for the Chain of Evidence
-#        
         self.TAGGED_FILESin = False
         self.TAGGED_FILESsystem = False
         self.TAGGED_FILESinFile = False
@@ -328,7 +307,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.TAGGED_FILESexifMake = ''
         self.TAGGED_FILESinExifModel = False
         self.TAGGED_FILESexifModel = ''
-
 
         self.TAGGED_FILESinLocalPath  = False  
         self.TAGGED_FILESbaseLocalPath = baseLocalPath
@@ -364,7 +342,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.FILEexifMake = []
         self.FILEexifModel = []
 
-
         self.EXTRA_INFOin = False 
         self.EXTRA_INFOnodeInfoin = False
         self.EXTRA_INFOid = ''
@@ -375,8 +352,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.EXTRA_INFOdictOffset = {}
         self.EXTRA_INFOdictNodeInfoId = {}
 
-#-- CALENDAR  section
-#                
+#-- CALENDAR  section    
         self.CALENDARinModelType = False
         self.CALENDARin = False
         self.CALENDARinCategory = False
@@ -421,7 +397,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CALENDARstatus = []
 
 #--     CALL  section
-#           
         self.CALLinModelType = False
         self.CALLin = False
         self.CALLinSource = False
@@ -484,8 +459,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CALLidentifiersTO = []
         self.CALLidentifiersFROM = []
 
-#-- CELL_SITE  section
-#                
+#-- CELL_SITE  section     
         self.CELL_SITEinModelType = False
         self.CELL_SITEin = False
         self.CELL_SITEinPosition = False
@@ -537,7 +511,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CELL_SITEstatus = []
 
 #---    CHAT section
-#
         self.CHATinModelType = False
         self.CHATin = False
         self.CHATinSource = False
@@ -615,7 +588,6 @@ class ExtractTraces(xml.sax.ContentHandler):
 #       the Chat[0] contains three messages whose body are "How are you?", "I',m fine, and you?"
 #       "So far so good", then the  CHATmsgBodies[0] is the the following list
 #       ["How are you?", "I',m fine, and you?", "So far so good"]
-#        
         self.CHATpartyIdentifiers = []
         self.CHATpartyNames = []
         self.CHATmsgIdentifiersFrom = []
@@ -629,7 +601,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CHATmsgAttachmentUrls = [] 
 
 #-- COOKIE  section
-#                
         self.COOKIEin = False
         self.COOKIEinModelType = False
         self.COOKIEinSource = False
@@ -668,7 +639,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.COOKIEstatus = []        
 
 #-- DEVICE_EVENT  section
-#                
         self.DEVICE_EVENTinModelType = False
         self.DEVICE_EVENTin = False
         self.DEVICE_EVENTinTimeStamp = False
@@ -691,7 +661,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.DEVICE_EVENTstatus = []
         
 #-- EMAIL section
-#
         self.EMAILinModelType = False
         self.EMAILin = False
         self.EMAILinSource = False
@@ -750,7 +719,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.EMAILattachmentsFilename = []
 
 # SMS section 
-#
         self.SMSinModelType = False
         self.SMSin = False
         self.SMSinSource = False
@@ -762,8 +730,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SMSinFolder = False
         self.SMSinFolderValue = False
 
-        #---    Short Message Service Center, part of the mdelType type="SMS"
-#        
+#---    Short Message Service Center, part of the mdelType type="SMS"
         self.SMSinSmsc = False
         self.SMSinSmscValue = False
 
@@ -805,7 +772,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SMSpartyNames = []
 
 #-- INSTANT_MSG  section
-#        
         self.INSTANT_MSGinModelType = False
         self.INSTANT_MSGin = False
         self.INSTANT_MSGinSource = False
@@ -838,7 +804,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.INSTANT_MSGinApplication = False
         self.INSTANT_MSGinApplicationValue = False
 
-
         self.INSTANT_MSGtotal = 0
         self.INSTANT_MSGdeleted = 0
         self.INSTANT_MSGsourceText = ''
@@ -869,9 +834,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.INSTANT_MSGfolder = []
         self.INSTANT_MSGapplication = []
 
-
 #-- LOCATION (Device Location) section
-#                
         self.LOCATIONinModelType = False
         self.LOCATIONin = False
         self.LOCATIONinPosition = False
@@ -906,7 +869,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.LOCATIONstatus = []
 
 # CONTACT section
-#        
         self.CONTACTin = False
         self.CONTACTinModelType = False
         self.CONTACTinSource = False
@@ -945,9 +907,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CONTACTphoneNums = []
         self.CONTACTuserIds = []
 
-
-#-- SEARCHED ITEM  section
-#                
+#-- SEARCHED ITEM  section     
         self.SEARCHED_ITEMin = False
         self.SEARCHED_ITEMinModelType = False
         self.SEARCHED_ITEMinSource = False
@@ -973,8 +933,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SEARCHED_ITEMstatus = []  
         self.SEARCHED_ITEMsearchResult = []  
 
-#-- SOCIAL MEDIA ACTIVITY (direct interactions with the social media platform)
-#                
+#-- SOCIAL MEDIA ACTIVITY (direct interactions with the social media platform)            
         self.SOCIAL_MEDIAinModelType = False
         self.SOCIAL_MEDIAin = False
         self.SOCIAL_MEDIAinSource = False
@@ -1004,7 +963,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SOCIAL_MEDIAinCommentCountValue = False
         self.SOCIAL_MEDIAinAccount = False
         self.SOCIAL_MEDIAinAccountValue = False
-
 
         self.SOCIAL_MEDIAtotal = 0        
         self.SOCIAL_MEDIAsourceText = ''
@@ -1038,7 +996,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SOCIAL_MEDIAstatus = []
 
 #---    WEB HISTORY section
-#        
         self.WEB_PAGEinModelType = False
         self.WEB_PAGEin = False
         self.WEB_PAGEinSource = False
@@ -1068,7 +1025,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.WEB_PAGElastVisited = []
         
 #-- WIRELESS_NET  section
-#         
         self.WIRELESS_NETin = False
         self.WIRELESS_NETinModelType = False
         self.WIRELESS_NETinPosition = False
@@ -1103,11 +1059,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.WIRELESS_NETssid = []
         self.WIRELESS_NETstatus = []        
 
-#---    USER ACCOUNT section, it is for detecting username account
-#       of the owner's phone number for all application installed on
-#       the device (i.e. account Whatsapp that includes the phone number, 
-#       Skype, Telegram, Snapchat, etc.)
-#        
+#---    USER ACCOUNT section, it is for detecting username account of the owner's phone number 
+#       for all application installed on the device (i.e. account Whatsapp that includes the 
+#       phone number, Skype, Telegram, Snapchat, etc.)
         self.U_ACCOUNTin = False
         self.U_ACCOUNTinUsername = False
         self.U_ACCOUNTinUsernameValue = False
@@ -1131,9 +1085,8 @@ class ExtractTraces(xml.sax.ContentHandler):
 
         self.U_ACCOUNTtotal = 0
 
-#---    Data for the context (tool, mobile device info, acquisition and 
+#---    Data for the context: tool, mobile device info, acquisition and 
 #       extraction investigative action
-#        
         self.CONTEXTinAdditionalFields = False
         self.CONTEXTinUfedVersionValue  = False
         self.CONTEXTufedVersionText = ''
@@ -1189,14 +1142,24 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CONTEXTimageMetadataHashMD5 = []
 
     def __cleanText(self, text):
+        '''
+        It cleans the text getting rid of carriage return, line feed and doublw quote.
+            :param text: The original text to be cleaned (string)
+            :return: The cleaned text (string).
+        '''         
         text = text.replace('\n', ' ')
         text = text.replace('"', "'")
         text = text.replace('\n', ' ')
         return text
 
     def __cleanPhoneNumber(self, phoneNum):
+        '''
+        It cleans the phone number. If the phone number does not contain the expected characters, only the ones
+        including in the regexp are returned.
+            :param phoneNum: The orginal phone number text (string)
+            :return: The phone number with only the expected characters, defined in the regexp (string).
+        '''        
         phonePattern = '([0-9]+)'
-        #phoneNum = phoneNum.strip().replace(' ', '').replace('+', '00')
         phoneNum = phoneNum.strip().replace(' ', '')
         phoneMatch = re.search(phonePattern, phoneNum)
         if phoneMatch:
@@ -1205,9 +1168,21 @@ class ExtractTraces(xml.sax.ContentHandler):
         return phoneNum
 
     def createOutFile(self, filename):
+        '''
+        It transfers all the Traces (Observable in CUCO/CASE terminology) from the memory to the file, whose name has been
+        provided as an argument in the command line.
+            :param filename: The JSON-LD filename that is being generated, complied with the UOC/CASE ontologies (string).
+            :return:  None.
+        '''         
         self.fOut = codecs.open(filename, 'w', encoding='utf8')
 
     def findOwnerPhone(self, UserAccounts):
+        '''
+        It finds the owner's phone number relying on the whataspp application, that should be installed
+        on the mobile device.
+            :param UserAccounts: List of the user accounts (list).
+            :return:  The owner name, empty in case the whataspp application is not installed.
+        '''          
         ownerPhone = ''
         for account in UserAccounts:
             posAccount = account.find('@s.whatsapp.net')
@@ -1216,15 +1191,28 @@ class ExtractTraces(xml.sax.ContentHandler):
                 break
         return ownerPhone
     
-    def storeTraceStatus(self, listTrace, status, sDeleted):
+    def storeTraceStatus(self, listTrace, status, nDeleted):
+        '''
+        It stores the status of the Trace currewntly processed.
+            :param listTrace: List of the status of the Trace of the kind currently processes, such as Call, Chat etc. (list).
+            :param status: The status of the current Trace item, possible values are Intact or Deleted (string).
+            :para nDeleted: It counts the number of deleted items of the current Trace (int).
+            :return:  None.
+        '''         
         if status == 'Deleted':
             listTrace.append('Deleted')
-            sDeleted +=1
+            nDeleted +=1
         else:
             listTrace.append('Intact')
                         
 
     def printObservable(self, oName, oCount):        
+        '''
+        It prints the number of the kind of Trace item currently processed.
+            :param oName: Name of the kind of Trace such as Contact, Call, Chat etc.  (string).
+            :param oCount: The number of the kind of Trace item currently processed (int).
+            :return:  None.
+        '''            
         line =  "".join(['Extracting artifacts --> ', oName, ' n. ', str(oCount), self.C_BLACK])
         if self.verbose:            
             if oCount == 1:
@@ -1233,6 +1221,14 @@ class ExtractTraces(xml.sax.ContentHandler):
                 print("".join([self.C_GREEN, line]), end='\r') 
 
     def __startElementModelCALL(self, attrValue, CALLid, CALLstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Call"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param CALLid: The value of the id attribute of the Element  (string).
+            :param CALLstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''         
         if attrValue == 'Call':
             self.CALLin = True
             self.CALLtotal += 1
@@ -1245,6 +1241,14 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALLinParty = True 
 
     def __startElementModelCALENDAR(self, attrValue, CALENDARid, CALENDARstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="CalendarEntry"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param CALENDARid: The value of the id attribute of the Element  (string).
+            :param CALENDARstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''         
         if attrValue == 'CalendarEntry':
             self.CALENDARin = True
             self.CALENDARtotal += 1
@@ -1254,10 +1258,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CALENDARdeleted)
             self.skipLine = True 
             self.Observable = True 
-#---    these assignments guarantee that each array has the same size
-#       in case one of the corresponding XML Element is not present in 
-#       the report
-#
+
             self.CALENDARcategory.append('')
             self.CALENDARsubject.append('')
             self.CALENDARdetails.append('')
@@ -1268,6 +1269,15 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALENDARrepeatInterval.append('')
 
     def __startElementModelCELL_SITE(self, attrValue, CELL_SITEid, CELL_SITEstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="CellTower"]. In UCO/CASE the correspondent Observable
+        is Cellsite.
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param CELL_SITEid: The value of the id attribute of the Element  (string).
+            :param CELL_SITEstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''         
         if attrValue == 'CellTower':
             self.CELL_SITEin = True
             self.CELL_SITEtotal += 1
@@ -1277,10 +1287,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CELL_SITEdeleted)
             self.skipLine = True 
             self.Observable = True 
-#---    these assignments guarantee that each array has the same size
-#       in case one of the corresponding XML Element is not present in 
-#       the report
-#
+
             self.CELL_SITElongitude.append('')
             self.CELL_SITElatitude.append('')
             self.CELL_SITEtimeStamp.append('')
@@ -1293,6 +1300,14 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CELL_SITEsid.append('')
 
     def __startElementModelCHAT(self, attrType, CHATid, CHATstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Chat"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param CHATid: The value of the id attribute of the Element  (string).
+            :param CHATstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''        
         if self.CHATinMultiModelFieldPhotos or \
             self.CHATinMultiModelFieldTo or \
             self.CHATinMultiModelFieldSharedContacts or \
@@ -1318,8 +1333,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CHATmsgNameFrom.append('')
 #---    the body is initialised with a space text, instead of an empty value. 
 #       This allows to iterate on this item, otherwise in case the body is empty
-#       it will be ignored and no MessageFacet will be generated
-#                
+#       it will be ignored and no MessageFacet will be generated                
             self.CHATmsgBody.append(' ')
             self.CHATmsgOutcome.append('')
             self.CHATmsgTimeStamp.append('')
@@ -1329,6 +1343,14 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CHATinMsgAttachment = True
                 
     def __startElementModelCONTACT(self, attrValue, CONTACTid, CONTACTstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Contact"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param CONTACTid: The value of the id attribute of the Element  (string).
+            :param CONTACTstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''          
         if self.CONTACTinMultiModelFieldPhotos:
             pass            
         elif self.CONTACTinMultiModelFieldEntries:
@@ -1351,6 +1373,14 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTACTaccount.append('')
 
     def __startElementModelCOOKIE(self, attrValue, COOKIEid, COOKIEstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Cookie"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param COOKIEid: The value of the id attribute of the Element  (string).
+            :param COOKIEstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''        
         if attrValue == 'Cookie':
             self.COOKIEin = True
             self.COOKIEtotal += 1
@@ -1360,10 +1390,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.COOKIEdeleted)
             self.skipLine = True 
             self.Observable = True 
-#---    these assignments guarantee that each array has the same size
-#       in case one of the corresponding XML Element is not present in 
-#       the report
-#
+
             self.COOKIEsource.append('')
             self.COOKIEname.append('')
             self.COOKIEvalue.append('')
@@ -1374,6 +1401,14 @@ class ExtractTraces(xml.sax.ContentHandler):
 
 
     def __startElementModelDEVICE_EVENT(self, attrValue, DEVICE_EVENTid, DEVICE_EVENTstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="DeviceEvent"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param DEVICE_EVENTid: The value of the id attribute of the Element  (string).
+            :param DEVICE_EVENTstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''        
         if attrValue == 'DeviceEvent':
             self.DEVICE_EVENTin = True
             self.DEVICE_EVENTtotal += 1
@@ -1383,15 +1418,20 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.DEVICE_EVENTdeleted)
             self.skipLine = True 
             self.Observable = True 
-#---    these assignments guarantee that each array has the same size
-#       in case one of the corresponding XML Element is not present in 
-#       the report
-#
+
             self.DEVICE_EVENTtimeStamp.append('')
             self.DEVICE_EVENTeventType.append('')
             self.DEVICE_EVENTvalue.append('')
 
     def __startElementModelEMAIL(self, attrValue, EMAILid, EMAILstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Email"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param EMAILid: The value of the id attribute of the Element  (string).
+            :param EMAILstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''        
         if attrValue == 'Email':                
             self.EMAILin = True
             self.EMAILtotal += 1
@@ -1409,6 +1449,14 @@ class ExtractTraces(xml.sax.ContentHandler):
 
 
     def __startElementModelINSTANT_MSG(self, attrValue, INSTANT_MSGid, INSTANT_MSGstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="InstantMessage"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param INSTANT_MSGid: The value of the id attribute of the Element  (string).
+            :param INSTANT_MSGstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''         
         if attrValue == 'InstantMessage':
             self.INSTANT_MSGin = True
             self.INSTANT_MSGtotal += 1
@@ -1418,10 +1466,7 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.INSTANT_MSGdeleted)
             self.skipLine = True 
             self.Observable = True 
-#---    these assignments guarantee that each array has the same size
-#       in case one of the corresponding XML Element is not present in 
-#       the report
-#
+
             self.INSTANT_MSGsource.append('')
             self.INSTANT_MSGfromIdentifier.append('')
             self.INSTANT_MSGfromName.append('')
@@ -1435,15 +1480,17 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.INSTANT_MSGfolder.append('')
             self.INSTANT_MSGapplication.append('')
 
-    def __startElementModelLOCATION(self, attrValue, LOCATIONid, LOCATIONstate):
-#---    in some mobile phone the number of device location exceeds 350.000 items,
-#       therefore the processing time is quite long and the JSON-LD file size is
-#       huge. In these circumstances, only the first self.ARTIFACTmax will be inlcuded
-#       in the conversion process
-#        
+    def __startElementModelLOCATION(self, attrValue, LOCATIONid, LOCATIONstate):        
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Location"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param LOCATIONid: The value of the id attribute of the Element  (string).
+            :param LOCATIONstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''        
         if attrValue == 'Location':
             self.LOCATIONtotal += 1
-            #if self.ARTIFACTmax > self.LOCATIONtotal:                
             self.LOCATIONin = True                                                    
             self.printObservable('LOCATION', self.LOCATIONtotal)
             self.LOCATIONid.append(LOCATIONid)
@@ -1458,6 +1505,14 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.LOCATIONcategory.append('')      
 
     def __startElementModelSEARCHED_ITEM(self, attrValue, SEARCHED_ITEMid, SEARCHED_ITEMstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="SearchedItem"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param SEARCHED_ITEMid: The value of the id attribute of the Element  (string).
+            :param SEARCHED_ITEMstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''        
         if attrValue == 'SearchedItem':
             self.SEARCHED_ITEMin = True
             self.SEARCHED_ITEMtotal += 1
@@ -1474,6 +1529,14 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SEARCHED_ITEMsearchResult.append('')
 
     def __startElementModelSMS(self, attrValue, SMSid, SMSstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="SMS"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param SMSid: The value of the id attribute of the Element  (string).
+            :param SMSstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''        
         if attrValue == 'SMS':                
             self.SMSin = True
             self.SMStotal += 1
@@ -1484,6 +1547,14 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.Observable = True  
 
     def __startElementModelSOCIAL_MEDIA(self, attrValue, SOCIAL_MEDIAid, SOCIAL_MEDIAstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="SocialMediaActivity"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param SOCIAL_MEDIAid: The value of the id attribute of the Element  (string).
+            :param SOCIAL_MEDIAstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''         
         if attrValue == 'SocialMediaActivity':
             self.SOCIAL_MEDIAtotal += 1
             self.SOCIAL_MEDIAin = True                                                    
@@ -1508,6 +1579,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SOCIAL_MEDIAaccount.append('')
 
     def __startElementModelU_ACCOUNT(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="UserAccount"]
+            :param attrValue: Value of the attribute name of the Element (string).
+            :return:  None.
+        '''          
         if attrValue == 'UserAccount':
             self.U_ACCOUNTin = True
             self.U_ACCOUNTtotal+=1
@@ -1529,6 +1606,14 @@ class ExtractTraces(xml.sax.ContentHandler):
 
 
     def __startElementModelWEB_PAGE(self, attrValue, WEB_PAGEid, WEB_PAGEstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="VisitedPage"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param WEB_PAGEid: The value of the id attribute of the Element  (string).
+            :param WEB_PAGEstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''         
         if attrValue == 'VisitedPage':                
             self.WEB_PAGEin = True
             self.WEB_PAGEtotal += 1
@@ -1539,6 +1624,14 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.Observable = True  
 
     def __startElementModelWIRELESS_NET(self, attrValue, WIRELESS_NETid, WIRELESS_NETstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="WirelessNetwork"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param WIRELESS_NETid: The value of the id attribute of the Element  (string).
+            :param WIRELESS_NETstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''         
         if attrValue == 'WirelessNetwork':
             self.WIRELESS_NETtotal += 1
             #if self.ARTIFACTmax > self.WIRELESS_NETtotal:                
@@ -1558,6 +1651,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.WIRELESS_NETssid.append('')
 
     def __startElementMultiModelFieldCALENDAR(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="CalendarEntry"]/multiModelField[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''         
         if self.CALENDARin:
             if attrValue == 'Attendees':
                 self.CALENDARinAttendees = True
@@ -1565,6 +1664,12 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CALENDARinAttachments = True
 
     def __startElementMultiModelFieldCONTACT(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Contact"]/multiModelField[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if self.CONTACTin:  
             if attrValue == 'Photos':
                 self.CONTACTinMultiModelFieldPhotos = True
@@ -1572,6 +1677,12 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CONTACTinMultiModelFieldEntries = True
 
     def __startElementMultiModelFieldEMAIL(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Email"]/multiModelField[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if self.EMAILin:            
             if attrValue == 'To':
                 self.EMAILinMultiModelFieldTO = True
@@ -1586,11 +1697,13 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.EMAILinMultiModelFieldAttachments = True
                 self.EMAILattachmentFilename.append('')
 
-    def __startElementModelFieldCELL_SITE(self, attrValue):
-        if attrValue == 'Position':
-            self.CELL_SITEinPosition = True
-
     def __startElementMultiModelFieldCHAT(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Chat"]/multiModelField[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''            
         if attrValue == 'Participants':
             self.CHATinMultiModelFieldParticipants = True
         elif attrValue == 'Photos':
@@ -1605,6 +1718,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CHATinMultiModelFieldTo = True
 
     def __startElementMultiModelFieldINSTANT_MSG(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="InstantMessage"]/multiModelField[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''            
         if self.INSTANT_MSGin:
             if attrValue == 'To':
                 self.INSTANT_MSGinPartyTo = True
@@ -1614,47 +1733,111 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.INSTANT_MSGinSharedContacts = True
             
     def __startElementMultiModelFieldSOCIAL_MEDIA(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="SocialMediaActivity"]/multiModelField[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''            
         if self.SOCIAL_MEDIAin:
             if attrValue == 'Attachments':
                 self.SOCIAL_MEDIAinAttachments = True
             elif attrValue == 'TaggedParties':
                 self.SOCIAL_MEDIAinTaggedParties = True
 
+    def __startElementMultiModelFieldSMS(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="SMS"]/multiModelField[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''
+        if attrValue == 'Parties':
+            self.SMSinParty = True 
+        elif attrValue == 'AllTimeStamps':
+            self.SMSinAllTimeStamps = True
+            
+    def __startElementModelFieldCELL_SITE(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="CellTower"]//modelField[@Position=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''
+        if attrValue == 'Position':
+            self.CELL_SITEinPosition = True
+            
     def __startElementModelFieldCHAT(self, attrName): 
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Chat"]//modelField[@name=...]
+            :param attrName: Name of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if attrName == 'From':
             self.CHATinMsgFrom = True
         if attrName == 'Attachment':
             self.CHATinModelFieldAttachment = True
               
     def __startElementModelFieldEMAIL(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Email"]//modelField[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''
         if attrValue == 'From':
             self.EMAILinModelFieldFROM = True
 
     def __startElementModelFieldLOCATION(self, attrName):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Location"]//modelField[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if attrName == 'Position':
             self.LOCATIONinPosition = True
 
     def __startElementModelFieldSOCIAL_MEDIA(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="SocialMediaActivity"]//modelField[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if attrValue == 'Author':
             self.SOCIAL_MEDIAinAuthor = True
 
     def __startElementModelFieldINSTANT_MSG(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="InstantMessage"]//modelField[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if attrValue == 'From':
             self.INSTANT_MSGinPartyFrom = True
         elif attrValue == 'Attachment':
-            self.INSTANT_MSGinAttachment = True
-                
-    def __startElementMultiModelFieldSMS(self, attrValue):
-        if attrValue == 'Parties':
-            self.SMSinParty = True 
-        elif attrValue == 'AllTimeStamps':
-            self.SMSinAllTimeStamps = True 
+            self.INSTANT_MSGinAttachment = True                    
 
     def __startElementModelFieldWIRELESS_NET(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="WirelessNetwork"]//modelField[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if attrValue == 'Position':
             self.WIRELESS_NETinPosition = True
     
     def __startElementFieldCALL(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Call"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if self.CALLinParty:
             if attrValue == 'Identifier':
                 self.CALLinIdentifier = True
@@ -1677,6 +1860,12 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CALLinDuration = True
             
     def __startElementFieldCALENDAR(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Calendar"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if attrValue == 'Category':
             self.CALENDARinCategory = True
         elif attrValue == 'Subject':
@@ -1695,6 +1884,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALENDARinRepeatUntil = True
 
     def __startElementFieldCELL_SITE(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="CellTower"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if attrValue == 'Longitude':
             self.CELL_SITEinLongitude = True
         elif attrValue == 'Latitude':
@@ -1717,6 +1912,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CELL_SITEinMCC = True
 
     def __startElementFieldDEVICE_EVENT(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="DeviceEvent"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if attrValue == 'StartTime':
             self.DEVICE_EVENTinTimeStamp = True
         elif attrValue == 'EventType':
@@ -1725,6 +1926,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.DEVICE_EVENTinValue = True
 
     def __startElementFieldCHAT(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Chat"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if self.CHATinModelType:            
             if attrValue == 'Identifier':
                 if self.CHATinMsgFrom:
@@ -1752,6 +1959,12 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CHATinSource = True
 
     def __startElementFieldCONTACT(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Contact"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if (self.CONTACTinMultiModelFieldPhotos or  
             self.CONTACTinModelProfilePicture):
             pass 
@@ -1770,6 +1983,12 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CONTACTinAccount = True
 
     def __startElementFieldCOOKIE(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Cookie"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if attrValue == 'Source':
             self.COOKIEinSource = True
         elif attrValue == 'Name':
@@ -1786,6 +2005,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.COOKIEinExpiry = True
 
     def __startElementFieldEMAIL(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Email"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if self.EMAILinModelFieldFROM:
             if attrValue == 'Identifier':
                 self.EMAILinIdentifierFROM = True
@@ -1814,11 +2039,23 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.EMAILinTimeStamp = True
     
     def __startElementFieldCONTEXT(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //caseInformation/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if self.CONTEXTinCaseInfo:
             if attrValue == 'ExaminerName':
                 self.CONTEXTinExaminerNameValue = True
 
     def __startElementFieldINSTANT_MSG(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="InstantMessage"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''
         if attrValue == 'Source':
             self.INSTANT_MSGinSource = True
         elif attrValue == 'Identifier':
@@ -1853,6 +2090,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.INSTANT_MSGinApplication = True
 
     def __startElementFieldLOCATION(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="Location"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if attrValue == 'Longitude':
             self.LOCATIONinLongitude = True
         elif attrValue == 'Latitude':
@@ -1865,6 +2108,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.LOCATIONinCategory = True
 
     def __startElementFieldSEARCHED_ITEM(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="SearchedItem"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if attrValue == 'Source':
             self.SEARCHED_ITEMinSource = True
         elif attrValue == 'TimeStamp':
@@ -1873,6 +2122,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SEARCHED_ITEMinValue = True
 
     def __startElementFieldSMS(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="SMS"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if self.SMSinParty:
             if attrValue == 'Identifier':
                 self.SMSinPartyIdentifier = True
@@ -1893,6 +2148,12 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.SMSinSmsc = True
              
     def __startElementFieldSOCIAL_MEDIA(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="SocialActivityType"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if not self.SOCIAL_MEDIAinAttachments:
             if attrValue == 'Source':
                 self.SOCIAL_MEDIAinSource = True
@@ -1921,6 +2182,12 @@ class ExtractTraces(xml.sax.ContentHandler):
                     self.SOCIAL_MEDIAinName = True
 
     def __startElementFieldU_ACCOUNT(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="UserAccount"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if self.U_ACCOUNTinContactPhoto:
             return(0)
         elif self.U_ACCOUNTinEmailAddress:
@@ -1934,20 +2201,32 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif attrValue == 'Username':
             self.U_ACCOUNTinUsername = True
 
-    def __startElementFieldWEB_PAGE(self, attrName):        
-        if attrName == 'Source':
+    def __startElementFieldWEB_PAGE(self, attrValue):        
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="VisitedPage"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
+        if attrValue == 'Source':
             self.WEB_PAGEinSource = True
-        elif attrName == 'Title':
+        elif attrValue == 'Title':
             self.WEB_PAGEinTitle = True
-        elif attrName == 'Url':
+        elif attrValue == 'Url':
             self.WEB_PAGEinUrl = True
-        elif attrName == 'LastVisited':
+        elif attrValue == 'LastVisited':
             self.WEB_PAGEinLastVisited = True
-        elif attrName == 'VisitCount':
+        elif attrValue == 'VisitCount':
             self.WEB_PAGEinVisitCount = True
         
 
     def __startElementFieldWIRELESS_NET(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="WirelessNetwork"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''
         if attrValue == 'Longitude':
             self.WIRELESS_NETinLongitude = True
         elif attrValue == 'Latitude':
@@ -1962,6 +2241,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.WIRELESS_NETinSsid = True
 
     def __startElementItemCONTEXT(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //metadata[@section="Additional Fields"]/item[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if self.CONTEXTinAdditionalFields:
             if attrValue == 'DeviceInfoCreationTime':
                 self.CONTEXTinDeviceCreationTimeValue = True
@@ -2008,10 +2293,22 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CONTEXTinImageMetadataHashValueMD5 = True
 
     def __startElementMultiFieldSEARCHED_ITEM(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="SearchedItem"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
         if attrValue == 'SearchResults':
             self.SEARCHED_ITEMinSearchResult = True
 
     def __startElementItemTAGGED_FILES(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //taggedFiles//metadata/item[@name="..."]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''           
         if self.TAGGED_FILESinFile:
             if self.TAGGED_FILESsystem:
                 pass
@@ -2051,6 +2348,11 @@ class ExtractTraces(xml.sax.ContentHandler):
                     self.TAGGED_FILESinExifModel = True
 
     def __startElementValueCALL(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="Call"]/field[@name=...]/value
+            :return:  None.
+        '''         
         if self.CALLinSource:
             self.CALLinSourceValue = True
         elif self.CALLinDirection:
@@ -2071,6 +2373,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALLinNameValue = True            
 
     def __startElementValueCALENDAR(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="CalendarEntry"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.CALENDARinCategory:
             self.CALENDARinCategoryValue = True
         elif self.CALENDARinSubject:
@@ -2089,6 +2396,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALENDARinRepeatIntervalValue = True        
 
     def __startElementValueCELL_SITE(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="CellTower"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.CELL_SITEinLongitude:
             self.CELL_SITEinLongitudeValue = True
         elif self.CELL_SITEinLatitude:
@@ -2111,6 +2423,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CELL_SITEinSIDValue = True
 
     def __startElementValueCONTACT(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="Contact"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.CONTACTinSource:
             self.CONTACTinSourceValue = True
         elif self.CONTACTinName:
@@ -2123,6 +2440,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTACTinAccountValue = True
 
     def __startElementValueCHAT(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="Chat"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.CHATinSource:
             self.CHATinSourceValue = True
         elif self.CHATinPartyIdentifier:
@@ -2146,6 +2468,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CHATinMsgAttachmentUrlValue = True
 
     def __startElementValueCOOKIE(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="Cookie"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.COOKIEinSource:
             self.COOKIEinSourceValue = True
         elif self.COOKIEinName:
@@ -2162,6 +2489,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.COOKIEinExpiryValue = True
 
     def __startElementValueDEVICE_EVENT(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="DeviceEvent"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.DEVICE_EVENTinTimeStamp:
             self.DEVICE_EVENTinTimeStampValue = True
         elif self.DEVICE_EVENTinEventType:
@@ -2171,6 +2503,11 @@ class ExtractTraces(xml.sax.ContentHandler):
         
 
     def __startElementValueEMAIL(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="Email"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.EMAILinIdentifierFROM:
             self.EMAILinIdentifierFROMvalue = True
         elif self.EMAILinIdentifierTO:
@@ -2191,6 +2528,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.EMAILinAttachmentFilenameValue = True
 
     def __startElementValueINSTANT_MSG(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="InstantMessage"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.INSTANT_MSGinSource:
             self.INSTANT_MSGinSourceValue = True
         elif self.INSTANT_MSGinFromIdentifier:
@@ -2217,6 +2559,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.INSTANT_MSGinApplicationValue = True
 
     def __startElementValueLOCATION(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="Location"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.LOCATIONinLongitude:
             self.LOCATIONinLongitudeValue = True
         elif self.LOCATIONinLatitude:
@@ -2229,6 +2576,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.LOCATIONinCategoryValue = True
 
     def __startElementValueSEARCHED_ITEM(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="SearchedItem"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.SEARCHED_ITEMinSource:
             self.SEARCHED_ITEMinSourceValue = True
         elif self.SEARCHED_ITEMinTimeStamp:
@@ -2239,6 +2591,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SEARCHED_ITEMinSearchResultValue = True
 
     def __startElementValueSMS(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="SMS"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.SMSinSource:
             self.SMSinSourceValue = True
         elif self.SMSinTimeStamp:
@@ -2257,6 +2614,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SMSinPartyNameValue = True
 
     def __startElementValueSOCIAL_MEDIA(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="SocialMediaActivity"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.SOCIAL_MEDIAinSource:
             self.SOCIAL_MEDIAinSourceValue = True
         elif self.SOCIAL_MEDIAinTimeStamp:
@@ -2283,6 +2645,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SOCIAL_MEDIAinAccountValue = True
 
     def __startElementValueU_ACCOUNT(self):        
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="Account"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.U_ACCOUNTinSource:
             self.U_ACCOUNTinSourceValue = True
         elif self.U_ACCOUNTinName:
@@ -2291,6 +2658,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.U_ACCOUNTinUsernameValue = True
 
     def __startElementValueWEB_PAGE(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="VisitedPage"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.WEB_PAGEinSource:
             self.WEB_PAGEinSourceValue = True
         elif self.WEB_PAGEinTitle:
@@ -2303,6 +2675,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.WEB_PAGEinLastVisitedValue = True    
 
     def __startElementValueWIRELESS_NET(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="WirelessNetwork"]/field[@name=...]/value
+            :return:  None.
+        '''        
         if self.WIRELESS_NETin:
             if self.WIRELESS_NETinLongitude:
                 self.WIRELESS_NETinLongitudeValue = True
@@ -2318,10 +2695,20 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.WIRELESS_NETinSsidValue = True
 
     def __startElementEmptyCALL(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="Call"]/field[@name=...]/empty
+            :return:  None.
+        '''        
         if self.CALLinSourceValue:
             self.CALLsourceText = ''
 
     def __startElementEmptyU_ACCOUNT(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="UserAccount"]/field[@name=...]/empty
+            :return:  None.
+        '''        
         if self.U_ACCOUNTinSource:
             self.U_ACCOUNTsourceValueText = ''
             self.U_ACCOUNTinSourceValue = False
@@ -2333,190 +2720,49 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.U_ACCOUNTinUsernameValue = False
 
     def __startElementEmptyWEB_PAGE(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="VisitedPage"]/field[@name=...]/empty
+            :return:  None.
+        '''        
         if self.WEB_PAGEinTitleValue:
             self.WEB_PAGEtitleText = ''
         elif self.WEB_PAGEinVisitCountValue:
             self.WEB_PAGEvisitCountText = ''
         elif self.WEB_PAGEinLastVisitedValue:
-            self.WEB_PAGElastVisitedText = ''
-
-#---    It captures each Element when it is opened., the order depends on their 
-#       position from the beginning of the document
-#            
+            self.WEB_PAGElastVisitedText = ''        
+    
     def startElement(self, name, attrs):
-                                                                                        
+        '''
+        It captures the opening of any XML Element, the order depends on their 
+        position from the beginning of the document.
+            :return:  None.
+        '''        
         self.lineXML +=1
         attrType = attrs.get('type')
         attrName = attrs.get('name')
         attrSection = attrs.get('section')
         
         if name == 'modelType':
-            self.Observable = False
-            if attrType == 'Call':
-                self.CALLinModelType = True
-            elif attrType == 'CalendarEntry':
-                self.CALENDARinModelType = True            
-            elif attrType == 'CellTower':
-                self.CELL_SITEinModelType = True
-            elif attrType == 'Chat':
-                self.CHATinModelType = True
-            elif attrType == 'Contact':
-                self.CONTACTinModelType = True
-            elif attrType == 'Cookie':
-                self.COOKIEinModelType = True
-            elif attrType == 'DeviceEvent':
-                self.DEVICE_EVENTinModelType = True
-            elif attrType == 'Email':
-                self.EMAILinModelType = True
-            elif attrType == 'InstantMessage':
-                self.INSTANT_MSGinModelType = True
-            elif attrType == 'Location':
-                self.LOCATIONinModelType = True
-            elif attrType == 'SearchedItem':
-                self.SEARCHED_ITEMinModelType = True
-            elif attrType == 'SMS':
-                self.SMSinModelType = True
-            elif attrType == 'SocialMediaActivity':
-                self.SOCIAL_MEDIAinModelType = True
-            elif attrType == 'VisitedPage':
-                self.WEB_PAGEinModelType = True
-            elif attrType == 'WirelessNetwork':
-                self.WIRELESS_NETinModelType = True
+            self.__startElementModelType(attrType)
+            
         elif name == 'model':                                    
             traceState = attrs.get('deleted_state')
-            id = attrs.get('id')                        
-            if self.CALLinModelType:
-                self.__startElementModelCALL(attrType, id, traceState)
-            elif self.CALENDARinModelType:
-                self.__startElementModelCALENDAR(attrType, id, traceState)
-            elif self.CELL_SITEinModelType:
-                self.__startElementModelCELL_SITE(attrType, id, traceState)
-            elif self.CHATinModelType:
-                self.__startElementModelCHAT(attrType, id, traceState)
-            elif self.CONTACTinModelType:
-                self.__startElementModelCONTACT(attrType, id, traceState)
-            elif self.COOKIEinModelType:
-                self.__startElementModelCOOKIE(attrType, id, traceState)
-            elif self.DEVICE_EVENTinModelType:
-                self.__startElementModelDEVICE_EVENT(attrType, id, traceState)
-            elif self.EMAILinModelType:
-                self.__startElementModelEMAIL(attrType, id, traceState)
-            elif self.INSTANT_MSGinModelType:
-                self.__startElementModelINSTANT_MSG(attrType, id, traceState)
-            elif self.LOCATIONinModelType:
-                self.__startElementModelLOCATION(attrType, id, traceState)
-            elif self.SEARCHED_ITEMinModelType:
-                self.__startElementModelSEARCHED_ITEM(attrType, id, traceState)
-            elif self.SMSinModelType:
-                self.__startElementModelSMS(attrType, id, traceState)
-            elif self.SOCIAL_MEDIAinModelType:
-                self.__startElementModelSOCIAL_MEDIA(attrType, id, traceState)
-            elif self.WEB_PAGEinModelType:
-                self.__startElementModelWEB_PAGE(attrType, id, traceState)
-            elif self.WIRELESS_NETinModelType:
-                self.__startElementModelWIRELESS_NET(attrType, id, traceState)                                       
-            self.__startElementModelU_ACCOUNT(attrType)            
+            id = attrs.get('id')
+            self.__startElementModel(attrType, id, traceState)
+                      
         elif name == 'multiModelField':
-            if self.CHATinModelType:
-                self.__startElementMultiModelFieldCHAT(attrName)
-            elif self.CALENDARinModelType:
-                self.__startElementMultiModelFieldCALENDAR(attrName)
-            elif self.CONTACTinModelType:
-                self.__startElementMultiModelFieldCONTACT(attrName)
-            elif self.EMAILinModelType:
-                self.__startElementMultiModelFieldEMAIL(attrName)
-            elif self.INSTANT_MSGinModelType:
-                self.__startElementMultiModelFieldINSTANT_MSG(attrName)
-            elif self.SMSinModelType:
-                self.__startElementMultiModelFieldSMS(attrName)
-            elif self.SOCIAL_MEDIAinModelType:
-                self.__startElementMultiModelFieldSOCIAL_MEDIA(attrName)
+            self.__startMultiModelField(attrName)
+            
         elif name == 'modelField':
-            if self.CHATin:
-                self.__startElementModelFieldCHAT(attrName)
-            elif self.CELL_SITEin:
-                self.__startElementModelFieldCELL_SITE(attrName)
-            elif self.EMAILin:
-                self.__startElementModelFieldEMAIL(attrName)            
-            elif self.LOCATIONin:
-                self.__startElementModelFieldLOCATION(attrName)
-            elif self.INSTANT_MSGin:
-                self.__startElementModelFieldINSTANT_MSG(attrName)
-            elif self.SOCIAL_MEDIAin:
-                self.__startElementModelFieldSOCIAL_MEDIA(attrName)
-            elif self.WIRELESS_NETin:
-                self.__startElementModelFieldWIRELESS_NET(attrName)
+            self.__startModelField(attrName)            
         elif name == 'multiField':
             if self.SEARCHED_ITEMin:
                 self.__startElementMultiFieldSEARCHED_ITEM(attrName) 
         elif name == 'field':
-            if self.CALLin:
-                self.__startElementFieldCALL(attrName)
-            elif self.CALENDARin:
-                self.__startElementFieldCALENDAR(attrName)
-            elif self.CHATin:
-                self.__startElementFieldCHAT(attrName)            
-            elif self.CELL_SITEin:
-                self.__startElementFieldCELL_SITE(attrName)
-            elif self.CONTACTin:
-                self.__startElementFieldCONTACT(attrName)
-            elif self.COOKIEin:
-                self.__startElementFieldCOOKIE(attrName)
-            elif self.DEVICE_EVENTin:
-                self.__startElementFieldDEVICE_EVENT(attrName)
-            elif self.EMAILin:
-                self.__startElementFieldEMAIL(attrName)
-            elif self.INSTANT_MSGin:
-                self.__startElementFieldINSTANT_MSG(attrName)
-            elif self.LOCATIONin:
-                self.__startElementFieldLOCATION(attrName)
-            elif self.SEARCHED_ITEMin:
-                self.__startElementFieldSEARCHED_ITEM(attrName)
-            elif self.SMSin:
-                self.__startElementFieldSMS(attrName)
-            elif self.SOCIAL_MEDIAin:
-                self.__startElementFieldSOCIAL_MEDIA(attrName)
-            elif self.U_ACCOUNTin:
-                self.__startElementFieldU_ACCOUNT(attrName)
-            elif self.WEB_PAGEin:
-                self.__startElementFieldWEB_PAGE(attrName)
-            elif self.WIRELESS_NETin:
-                self.__startElementFieldWIRELESS_NET(attrName)
-            attrFieldType = attrs.get('fieldType')
-            self.__startElementFieldCONTEXT(attrFieldType)                                                  
-        elif name == 'value':            
-            if self.CALLin:
-                self.__startElementValueCALL()
-            elif self.CALENDARin:
-                self.__startElementValueCALENDAR()
-            elif self.CELL_SITEin:
-                self.__startElementValueCELL_SITE()
-            elif self.CHATin:
-                self.__startElementValueCHAT(attrType)
-            elif self.CONTACTin:
-                self.__startElementValueCONTACT()
-            elif self.COOKIEin:
-                self.__startElementValueCOOKIE()
-            elif self.DEVICE_EVENTin:
-                self.__startElementValueDEVICE_EVENT()
-            elif self.EMAILin:
-                self.__startElementValueEMAIL()
-            elif self.INSTANT_MSGin:
-                self.__startElementValueINSTANT_MSG()
-            elif self.LOCATIONin:
-                self.__startElementValueLOCATION()
-            elif self.SEARCHED_ITEMin:
-                self.__startElementValueSEARCHED_ITEM()
-            elif self.SMSin:
-                self.__startElementValueSMS()
-            elif self.SOCIAL_MEDIAin:
-                self.__startElementValueSOCIAL_MEDIA()
-            elif self.U_ACCOUNTin:
-                self.__startElementValueU_ACCOUNT()
-            elif self.WEB_PAGEin:
-                self.__startElementValueWEB_PAGE()
-            elif self.WIRELESS_NETin:
-                self.__startElementValueWIRELESS_NET()
+            self.__startElementField(attrName, attrs)                                                              
+        elif name == 'value':
+            self.__startElementValue(attrType)            
         elif name == 'empty':
             self.__startElementEmptyCALL()
             self.__startElementEmptyU_ACCOUNT()
@@ -2541,13 +2787,11 @@ class ExtractTraces(xml.sax.ContentHandler):
 
 #---    key of the dictionaries containing the infoNode values.
 #       Different values are separated by @@@
-#                
                 i = self.EXTRA_INFOid
 
 #---    in some cases there are more than one single nodeInfo
 #       contained in the extraInfo element, so a dictionary with
-#       key = extraInfoID is necessary to store the whole info                
-#                
+#       key = extraInfoID is necessary to store the whole info                         
                 if attrs.get('id') is None:                    
                     self.EXTRA_INFOdictNodeInfoId[i] = ''
                     charSep = ''
@@ -2642,7 +2886,210 @@ class ExtractTraces(xml.sax.ContentHandler):
                 else:
                     print (line , end='\r') 
 
+    def __startElementModelType(self, attrType):
+        '''
+        It captures the opening of any XML Element matching with the XPath expression
+        //modelType/
+            :return:  None.
+        '''        
+        self.Observable = False
+        if attrType == 'Call':
+            self.CALLinModelType = True
+        elif attrType == 'CalendarEntry':
+            self.CALENDARinModelType = True            
+        elif attrType == 'CellTower':
+            self.CELL_SITEinModelType = True
+        elif attrType == 'Chat':
+            self.CHATinModelType = True
+        elif attrType == 'Contact':
+            self.CONTACTinModelType = True
+        elif attrType == 'Cookie':
+            self.COOKIEinModelType = True
+        elif attrType == 'DeviceEvent':
+            self.DEVICE_EVENTinModelType = True
+        elif attrType == 'Email':
+            self.EMAILinModelType = True
+        elif attrType == 'InstantMessage':
+            self.INSTANT_MSGinModelType = True
+        elif attrType == 'Location':
+            self.LOCATIONinModelType = True
+        elif attrType == 'SearchedItem':
+            self.SEARCHED_ITEMinModelType = True
+        elif attrType == 'SMS':
+            self.SMSinModelType = True
+        elif attrType == 'SocialMediaActivity':
+            self.SOCIAL_MEDIAinModelType = True
+        elif attrType == 'VisitedPage':
+            self.WEB_PAGEinModelType = True
+        elif attrType == 'WirelessNetwork':
+            self.WIRELESS_NETinModelType = True
+
+    def __startElementModel(self, attrType, id, traceState):
+        '''
+        It captures the opening of any XML Element matching with the XPath expression
+        //model/
+            :return:  None.
+        '''                
+        if self.CALLinModelType:
+            self.__startElementModelCALL(attrType, id, traceState)
+        elif self.CALENDARinModelType:
+            self.__startElementModelCALENDAR(attrType, id, traceState)
+        elif self.CELL_SITEinModelType:
+            self.__startElementModelCELL_SITE(attrType, id, traceState)
+        elif self.CHATinModelType:
+            self.__startElementModelCHAT(attrType, id, traceState)
+        elif self.CONTACTinModelType:
+            self.__startElementModelCONTACT(attrType, id, traceState)
+        elif self.COOKIEinModelType:
+            self.__startElementModelCOOKIE(attrType, id, traceState)
+        elif self.DEVICE_EVENTinModelType:
+            self.__startElementModelDEVICE_EVENT(attrType, id, traceState)
+        elif self.EMAILinModelType:
+            self.__startElementModelEMAIL(attrType, id, traceState)
+        elif self.INSTANT_MSGinModelType:
+            self.__startElementModelINSTANT_MSG(attrType, id, traceState)
+        elif self.LOCATIONinModelType:
+            self.__startElementModelLOCATION(attrType, id, traceState)
+        elif self.SEARCHED_ITEMinModelType:
+            self.__startElementModelSEARCHED_ITEM(attrType, id, traceState)
+        elif self.SMSinModelType:
+            self.__startElementModelSMS(attrType, id, traceState)
+        elif self.SOCIAL_MEDIAinModelType:
+            self.__startElementModelSOCIAL_MEDIA(attrType, id, traceState)
+        elif self.WEB_PAGEinModelType:
+            self.__startElementModelWEB_PAGE(attrType, id, traceState)
+        elif self.WIRELESS_NETinModelType:
+            self.__startElementModelWIRELESS_NET(attrType, id, traceState)                                       
+        self.__startElementModelU_ACCOUNT(attrType)  
+                
+    def __startMultiModelField(self, attrName):
+        '''
+        It captures the opening of any XML Element matching with the XPath expression
+        //modelField/
+            :return:  None.
+        '''                
+        if self.CHATinModelType:
+            self.__startElementMultiModelFieldCHAT(attrName)
+        elif self.CALENDARinModelType:
+            self.__startElementMultiModelFieldCALENDAR(attrName)
+        elif self.CONTACTinModelType:
+            self.__startElementMultiModelFieldCONTACT(attrName)
+        elif self.EMAILinModelType:
+            self.__startElementMultiModelFieldEMAIL(attrName)
+        elif self.INSTANT_MSGinModelType:
+            self.__startElementMultiModelFieldINSTANT_MSG(attrName)
+        elif self.SMSinModelType:
+            self.__startElementMultiModelFieldSMS(attrName)
+        elif self.SOCIAL_MEDIAinModelType:
+            self.__startElementMultiModelFieldSOCIAL_MEDIA(attrName)        
+        
+    def __startModelField(self, attrName):
+        '''
+        It captures the opening of any XML Element matching with the XPath expression
+        //modelField/
+            :return:  None.
+        '''                
+        if self.CHATin:
+            self.__startElementModelFieldCHAT(attrName)
+        elif self.CELL_SITEin:
+            self.__startElementModelFieldCELL_SITE(attrName)
+        elif self.EMAILin:
+            self.__startElementModelFieldEMAIL(attrName)            
+        elif self.LOCATIONin:
+            self.__startElementModelFieldLOCATION(attrName)
+        elif self.INSTANT_MSGin:
+            self.__startElementModelFieldINSTANT_MSG(attrName)
+        elif self.SOCIAL_MEDIAin:
+            self.__startElementModelFieldSOCIAL_MEDIA(attrName)
+        elif self.WIRELESS_NETin:
+            self.__startElementModelFieldWIRELESS_NET(attrName)
+        
+    def __startElementField(self, attrName, attrs):
+        '''
+        It captures the opening of any XML Element matching with the XPath expression
+        //field/
+            :return:  None.
+        '''                
+        if self.CALLin:
+            self.__startElementFieldCALL(attrName)
+        elif self.CALENDARin:
+            self.__startElementFieldCALENDAR(attrName)
+        elif self.CHATin:
+            self.__startElementFieldCHAT(attrName)            
+        elif self.CELL_SITEin:
+            self.__startElementFieldCELL_SITE(attrName)
+        elif self.CONTACTin:
+            self.__startElementFieldCONTACT(attrName)
+        elif self.COOKIEin:
+            self.__startElementFieldCOOKIE(attrName)
+        elif self.DEVICE_EVENTin:
+            self.__startElementFieldDEVICE_EVENT(attrName)
+        elif self.EMAILin:
+            self.__startElementFieldEMAIL(attrName)
+        elif self.INSTANT_MSGin:
+            self.__startElementFieldINSTANT_MSG(attrName)
+        elif self.LOCATIONin:
+            self.__startElementFieldLOCATION(attrName)
+        elif self.SEARCHED_ITEMin:
+            self.__startElementFieldSEARCHED_ITEM(attrName)
+        elif self.SMSin:
+            self.__startElementFieldSMS(attrName)
+        elif self.SOCIAL_MEDIAin:
+            self.__startElementFieldSOCIAL_MEDIA(attrName)
+        elif self.U_ACCOUNTin:
+            self.__startElementFieldU_ACCOUNT(attrName)
+        elif self.WEB_PAGEin:
+            self.__startElementFieldWEB_PAGE(attrName)
+        elif self.WIRELESS_NETin:
+            self.__startElementFieldWIRELESS_NET(attrName)
+        attrFieldType = attrs.get('fieldType')
+        self.__startElementFieldCONTEXT(attrFieldType)
+    
+    def __startElementValue(self, attrType):        
+        '''
+        It captures the opening of any XML Element matching with the XPath expression
+        //value/
+            :return:  None.
+        '''                
+        if self.CALLin:
+            self.__startElementValueCALL()
+        elif self.CALENDARin:
+            self.__startElementValueCALENDAR()
+        elif self.CELL_SITEin:
+            self.__startElementValueCELL_SITE()
+        elif self.CHATin:
+            self.__startElementValueCHAT(attrType)
+        elif self.CONTACTin:
+            self.__startElementValueCONTACT()
+        elif self.COOKIEin:
+            self.__startElementValueCOOKIE()
+        elif self.DEVICE_EVENTin:
+            self.__startElementValueDEVICE_EVENT()
+        elif self.EMAILin:
+            self.__startElementValueEMAIL()
+        elif self.INSTANT_MSGin:
+            self.__startElementValueINSTANT_MSG()
+        elif self.LOCATIONin:
+            self.__startElementValueLOCATION()
+        elif self.SEARCHED_ITEMin:
+            self.__startElementValueSEARCHED_ITEM()
+        elif self.SMSin:
+            self.__startElementValueSMS()
+        elif self.SOCIAL_MEDIAin:
+            self.__startElementValueSOCIAL_MEDIA()
+        elif self.U_ACCOUNTin:
+            self.__startElementValueU_ACCOUNT()
+        elif self.WEB_PAGEin:
+            self.__startElementValueWEB_PAGE()
+        elif self.WIRELESS_NETin:
+            self.__startElementValueWIRELESS_NET()
+    
     def __charactersCALENDAR(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="Calendar"]//value/
+            :return:  None.
+        '''
         if self.CALENDARinCategoryValue:
             self.CALENDARcategoryText += ch
         elif self.CALENDARinSubjectValue:
@@ -2661,6 +3108,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALENDARrepeatIntervalText += ch    
 
     def __charactersCALL(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="Call"]//value/
+            :return:  None.
+        '''        
         if self.CALLinSourceValue:
             self.CALLsourceText += ch
         elif self.CALLinTimeStampValue:
@@ -2681,6 +3133,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALLidentifierText += ch
 
     def __charactersCELL_SITE(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="CellTower"]//value/
+            :return:  None.
+        '''        
         if self.CELL_SITEinLongitudeValue:
             self.CELL_SITElongitudeText += ch
         elif self.CELL_SITEinLatitudeValue:
@@ -2703,6 +3160,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CELL_SITEsidText += ch
 
     def __charactersCONTACT(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="Contact"]//value/
+            :return:  None.
+        '''        
         if self.CONTACTinSourceValue:
             self.CONTACTsourceText += ch
         if self.CONTACTinNameValue:
@@ -2721,6 +3183,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTACTaccountText += ch
 
     def __charactersCHAT(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="Chat"]//value/
+            :return:  None.
+        '''        
         if self.CHATinSourceValue:
             if self.CHATsourceText == "":
                 self.CHATsourceText += ch
@@ -2745,7 +3212,6 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CHATmsgAttachmentFilenameText += ch
             else:
 #---    The separator ### is for dividing more than one attachment to the same msg
-#                
                 self.CHATmsgAttachmentFilenameText += '###' + ch
         elif self.CHATinMsgAttachmentUrlValue:
             if self.CHATmsgAttachmentUrlText == '':
@@ -2754,6 +3220,11 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CHATmsgAttachmentUrlText += '###' + ch  
 
     def __charactersCOOKIE(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="Cookie"]//value/
+            :return:  None.
+        '''        
         if self.COOKIEinSourceValue:
             self.COOKIEsourceText += ch
         elif self.COOKIEinNameValue:
@@ -2770,6 +3241,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.COOKIEexpiryText += ch
 
     def __charactersDEVICE_EVENT(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="DeviceEvent"]//value/
+            :return:  None.
+        '''        
         if self.DEVICE_EVENTinTimeStampValue:
             self.DEVICE_EVENTtimeStampText += ch
         elif self.DEVICE_EVENTinEventTypeValue:
@@ -2778,6 +3254,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.DEVICE_EVENTvalueText += ch
 
     def __charactersEMAIL(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="Email"]//value/
+            :return:  None.
+        '''        
         if self.EMAILinSourceValue:
             self.EMAILsourceText += ch
         elif self.EMAILinIdentifierFROMvalue:
@@ -2798,6 +3279,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.EMAILattachmentFilenameText += ch
 
     def __charactersINSTANT_MSG(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="InstantMessage"]//value/
+            :return:  None.
+        '''        
         if self.INSTANT_MSGinSourceValue:
             self.INSTANT_MSGsourceText += ch
         elif self.INSTANT_MSGinFromIdentifierValue:            
@@ -2831,6 +3317,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.INSTANT_MSGapplicationText += ch
 
     def __charactersLOCATION(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="Location"]//value/
+            :return:  None.
+        '''        
         if self.LOCATIONinLongitudeValue:
             self.LOCATIONlongitudeText += ch
         elif self.LOCATIONinLatitudeValue:
@@ -2843,6 +3334,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.LOCATIONcategoryText += ch
 
     def __charactersSEARCHED_ITEM(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="SearchedItem"]//value/
+            :return:  None.
+        '''        
         if self.SEARCHED_ITEMinSourceValue:
             self.SEARCHED_ITEMsourceText += ch
         elif self.SEARCHED_ITEMinTimeStampValue:
@@ -2853,6 +3349,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SEARCHED_ITEMsearchResultText += ch
 
     def __charactersSMS(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="SMS"]//value/
+            :return:  None.
+        '''        
         if self.SMSinSourceValue:
             self.SMSsourceText += ch
         elif self.SMSinTimeStampValue:
@@ -2871,6 +3372,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SMSpartyNameText += ch
 
     def __charactersSOCIAL_MEDIA(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="SocialMediaActivity"]//value/
+            :return:  None.
+        '''        
         if self.SOCIAL_MEDIAinSourceValue:
             self.SOCIAL_MEDIAsourceText += ch
         elif self.SOCIAL_MEDIAinTimeStampValue:
@@ -2897,8 +3403,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SOCIAL_MEDIAaccountText += ch
 
     def __charactersU_ACCOUNT(self, ch):
-#---    U_ACCOUNT processing for the owner phone number
-#            
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="Account"]//value/ 
+            :return:  None.
+        '''        
         if self.U_ACCOUNTinSourceValue:
             self.U_ACCOUNTsourceValueText += ch
         elif self.U_ACCOUNTinNameValue:
@@ -2907,6 +3416,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.U_ACCOUNTusernameValueText += ch
 
     def __charactersWEB_PAGE(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="VisitedPage"]//value/
+            :return:  None.
+        '''        
         if self.WEB_PAGEinSourceValue:
             self.WEB_PAGEsourceText += ch
         elif self.WEB_PAGEinUrlValue:
@@ -2919,6 +3433,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.WEB_PAGElastVisitedText += ch
 
     def __charactersWIRELESS_NET(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="WirelessNetwork"]//value/
+            :return:  None.
+        '''        
         if self.WIRELESS_NETinLongitudeValue:
             self.WIRELESS_NETlongitudeText += ch
         elif self.WIRELESS_NETinLatitudeValue:
@@ -2932,10 +3451,12 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.WIRELESS_NETinSsidValue:
             self.WIRELESS_NETssidText += ch
 
-
     def __charactersTAGGED_FILES(self, ch):
-#---    TAGGED_FILES processing for Chain of Evidence
-#            
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //taggedFile
+            :return:  None.
+        '''        
         if self.TAGGED_FILESinAccessInfoCreate:
             self.TAGGED_FILESCreateText += ch
         elif self.TAGGED_FILESinAccessInfoModify:
@@ -2971,10 +3492,12 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.TAGGED_FILESinExifModel:
             self.TAGGED_FILESexifModel += ch  
 
-    def __charactersCONTEXT(self, ch): 
-#---    CONTEXT for the information about device, tool, 
-#       acquisition/extrtaction actions
-#
+    def __charactersCONTEXT(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //metadata//item/
+            :return:  None.
+        '''        
         if self.CONTEXTinDeviceCreationTimeValue:
             if self.CONTEXTdeviceCreationTimeText == '':
                 self.CONTEXTdeviceCreationTimeText += ch
@@ -3025,6 +3548,11 @@ class ExtractTraces(xml.sax.ContentHandler):
 #---    it captures the value/character inside the Text Elements
 #                
     def characters(self, ch):        
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType//value/
+            :return:  None.
+        '''
         self.__charactersCONTEXT(ch)
         if self.CALENDARin:
             self.__charactersCALENDAR(ch)
@@ -3061,6 +3589,11 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.__charactersTAGGED_FILES(ch)
 
     def __endElementModelSMS(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="SMS"]/model/
+            :return:  None.
+        '''
         if self.SMSinAllTimeStamps:
             pass
         elif self.SMSinParty:
@@ -3091,6 +3624,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SMSin = False
     
     def __endElementModelCALENDAR(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="CalendarEntry"]/model/
+            :return:  None.
+        '''        
         if self.CALENDARin:
 
             if (not self.CALENDARinAttendees) and (not self.CALENDARinAttachments):
@@ -3117,6 +3655,11 @@ class ExtractTraces(xml.sax.ContentHandler):
 
 
     def __endElementModelCELL_SITE(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="CellTower"]/model/
+            :return:  None.
+        '''        
         if self.CELL_SITEin:
 
             if not self.CELL_SITEinPosition:
@@ -3144,6 +3687,11 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CELL_SITEin = False                
 
     def __endElementModelCALL(self):        
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Call"]/model/
+            :return:  None.
+        '''        
         if self.CALLinParty:
             self.CALLinParty = False
             if self.CALLroleText.upper() == 'TO':
@@ -3199,6 +3747,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALLin = False
 
     def __endElementModelCONTACT(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Contact"]/model/
+            :return:  None.
+        '''        
         if self.CONTACTinModelUserId:
             self.CONTACTinModelUserId = False
         elif self.CONTACTinModelPhoneNumber:
@@ -3234,6 +3787,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTACTin = False
 
     def __endElementModelCHAT(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Chat"]/model/
+            :return:  None.
+        '''        
         if self.CHATinMultiModelFieldPhotos:            
             pass
         elif self.CHATinParty:
@@ -3267,11 +3825,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CHATmsgAttachmentUrlText = ''
                 self.CHATinInstantMessage = False
         elif self.CHATin:                    
-#---    the notation msg[:] creates a copy of the list, otherwise the next clear would 
-#       empty both instances: clearing the CHAT.msgBody would empty the same item in the 
-#       container list CHAT.msgBodies
-#                            
-            
+#---    use the list slicing to generate a new list where each item is a list, otherwise the next clear would 
+#       empty both lists: clearing the CHAT.msgBody would empty the same item in the container list CHAT.msgBodies                       
             self.CHATsource[self.CHATtotal - 1] = self.CHATsourceText
             self.CHATsourceText = ''
             self.CHATpartyIdentifiers.append(self.CHATpartyIdentifier[:])
@@ -3299,6 +3854,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CHATin = False
                                 
     def __endElementModelCOOKIE(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Cookie"]/model/
+            :return:  None.
+        '''         
         if self.COOKIEin:
             idx = self.COOKIEtotal - 1
             self.COOKIEsource[idx] = self.COOKIEsourceText
@@ -3318,6 +3878,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.COOKIEin = False
 
     def __endElementModelDEVICE_EVENT(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="DeviceEvent"]/model/
+            :return:  None.
+        '''         
         if self.DEVICE_EVENTin:
             idx = self.DEVICE_EVENTtotal - 1
             self.DEVICE_EVENTtimeStamp[idx] = self.DEVICE_EVENTtimeStampText
@@ -3329,6 +3894,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.DEVICE_EVENTin = False
 
     def __endElementModelEMAIL(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Email"]/model/
+            :return:  None.
+        '''         
         if self.EMAILinModelFieldFROM:
             self.EMAILinModelFieldFROM = False
         elif self.EMAILinMultiModelFieldTO:
@@ -3378,6 +3948,11 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.EMAILinSource = False
 
     def __endElementModelINSTANT_MSG(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="InstantMessage"]/model/
+            :return:  None.
+        '''         
         if self.INSTANT_MSGin:
             if  not self.INSTANT_MSGinPartyFrom and \
                 not self.INSTANT_MSGinPartyTo and \
@@ -3413,8 +3988,12 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.INSTANT_MSGin = False                
             
     def __endElementModelLOCATION(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Location"]/model/
+            :return:  None.
+        '''         
         if self.LOCATIONin:
-
             if not self.LOCATIONinPosition:
                 idx = self.LOCATIONtotal - 1
                 self.LOCATIONlongitude[idx] = self.LOCATIONlongitudeText
@@ -3430,6 +4009,11 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.LOCATIONin = False
 
     def __endElementModelU_ACCOUNT(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="UserAccount"]/model/
+            :return:  None.
+        '''         
         if self.U_ACCOUNTinContactEntry:
             self.U_ACCOUNTinContactEntry = False
             return(0)
@@ -3450,10 +4034,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 pass
             else:
 
-#---    in UFED the field Source represents the application
-#       and the Whatsapp value is not WhatsAppiMessage but
-#       just Whatsapp! 
-#                
+#---    in UFED the field Source represents the application and the Whatsapp value is not 
+#       WhatsAppMessage but just Whatsapp! 
                 source = source.replace('WhatsAppiMessage', 'Whatsapp')
                 source = source.replace('FacebookiMessage', 'Facebook')
                 source = source.replace('Facebook MessengeriMessage', 'Facebook Messenger')
@@ -3478,6 +4060,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.U_ACCOUNTin = False
 
     def __endElementModelSEARCHED_ITEM(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="SearchedItem"]/model/
+            :return:  None.
+        '''         
         if self.SEARCHED_ITEMin:
             idx = self.SEARCHED_ITEMtotal - 1
             self.SEARCHED_ITEMsource[idx] = self.SEARCHED_ITEMsourceText
@@ -3491,8 +4078,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SEARCHED_ITEMin = False
 
     def __endElementModelSOCIAL_MEDIA(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="SocialMediaActivity"]/model/
+            :return:  None.
+        '''         
         if self.SOCIAL_MEDIAin:
-
             if not self.SOCIAL_MEDIAinAttachments and \
                 not self.SOCIAL_MEDIAinTaggedParties and \
                 not self.SOCIAL_MEDIAinAuthor:
@@ -3524,6 +4115,11 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.SOCIAL_MEDIAin = False
 
     def __endElementModelWEB_PAGE(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="VisitedPage"]/model/
+            :return:  None.
+        '''         
         if self.WEB_PAGEin:             
             self.WEB_PAGEsource.append(self.WEB_PAGEsourceText)
             self.WEB_PAGEurl.append(self.WEB_PAGEurlText)
@@ -3538,6 +4134,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.WEB_PAGEin = False
 
     def __endElementModelWIRELESS_NET(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="WirelessNetwork"]/model/
+            :return:  None.
+        '''         
         if self.WIRELESS_NETin:
             if not self.WIRELESS_NETinPosition:
                 idx = self.WIRELESS_NETtotal - 1
@@ -3556,6 +4157,11 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.WIRELESS_NETin = False
 
     def __endElementFieldCALL(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Call"]//field/
+            :return:  None.
+        '''         
         if self.CALLinSource:
             self.CALLinSource = False
         elif self.CALLinDirection:
@@ -3576,6 +4182,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALLinName = False                                        
 
     def __endElementFieldCALENDAR(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="CalendarEntry"]//field/
+            :return:  None.
+        '''         
         if self.CALENDARinCategory:
             self.CALENDARinCategory = False
         elif self.CALENDARinSubject:
@@ -3594,6 +4205,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALENDARinRepeatInterval = False
 
     def __endElementFieldCELL_SITE(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="CellTower"]//field/
+            :return:  None.
+        '''         
         if self.CELL_SITEinLongitude:
             self.CELL_SITEinLongitude = False
         elif self.CELL_SITEinLatitude:
@@ -3616,6 +4232,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CELL_SITEinSID = False  
 
     def __endElementFieldWIRELESS_NET(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="WirelessNetwork"]//field/
+            :return:  None.
+        '''         
         if self.WIRELESS_NETinLongitude:
             self.WIRELESS_NETinLongitude = False
         elif self.WIRELESS_NETinLatitude:
@@ -3630,6 +4251,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.WIRELESS_NETinSsid = False
 
     def __endElementFieldCOOKIE(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Cookie"]//field/
+            :return:  None.
+        '''         
         if self.COOKIEinSource:
             self.COOKIEinSource = False
         elif self.COOKIEinName:
@@ -3646,6 +4272,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.COOKIEinExpiry = False
 
     def __endElementFieldCONTACT(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Contact"]//field/
+            :return:  None.
+        '''         
         if self.CONTACTinSource:
             self.CONTACTinSource = False
         elif self.CONTACTinName:
@@ -3660,6 +4291,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTACTinAccount = False
     
     def __endElementFieldCHAT(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Chat"]//field/
+            :return:  None.
+        '''         
         if self.CHATinSource:
             self.CHATinSource = False
         elif self.CHATinPartyIdentifier:
@@ -3682,6 +4318,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CHATinMsgAttachmentUrl = False
         
     def __endElementFieldDEVICE_EVENT(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="DeviceEvent"]//field/
+            :return:  None.
+        '''         
         if self.DEVICE_EVENTinTimeStamp:
             self.DEVICE_EVENTinTimeStamp = False
         elif self.DEVICE_EVENTinEventType:
@@ -3690,6 +4331,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.DEVICE_EVENTinValue = False
 
     def __endElementFieldEMAIL(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Email"]//field/
+            :return:  None.
+        '''         
         if self.EMAILin:
             if self.EMAILinSource:
                 self.EMAILinSource = False
@@ -3711,6 +4357,11 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.EMAILinAttachmentFilename = False
 
     def __endElementFieldINSTANT_MSG(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="InstantMessage"]//field/
+            :return:  None.
+        '''         
         if self.INSTANT_MSGinSource:
             self.INSTANT_MSGinSource = False
         elif self.INSTANT_MSGinFromIdentifier:
@@ -3735,6 +4386,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.INSTANT_MSGinApplication = False
 
     def __endElementFieldLOCATION(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Location"]//field/
+            :return:  None.
+        '''         
         if self.LOCATIONinLongitude:
             self.LOCATIONinLongitude = False
         elif self.LOCATIONinLatitude:
@@ -3747,6 +4403,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.LOCATIONinCategory = False
 
     def __endElementFieldSEARCHED_ITEM(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="SearchedItem"]//field/
+            :return:  None.
+        '''         
         if self.SEARCHED_ITEMinSource:
             self.SEARCHED_ITEMinSource = False
         elif self.SEARCHED_ITEMinTimeStamp:
@@ -3755,6 +4416,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SEARCHED_ITEMinValue = False
 
     def __endElementFieldSMS(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="SMS"]//field/
+            :return:  None.
+        '''         
         if self.SMSinSource:
             self.SMSinSource = False 
         elif self.SMSinTimeStamp:
@@ -3773,6 +4439,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SMSinPartyName = False 
         
     def __endElementFieldSOCIAL_MEDIA(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="SocialMediaActivity"]//field/
+            :return:  None.
+        '''         
         if self.SOCIAL_MEDIAinSource:
             self.SOCIAL_MEDIAinSource = False
         elif self.SOCIAL_MEDIAinTimeStamp:
@@ -3799,6 +4470,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SOCIAL_MEDIAinAccount = False
 
     def __endElementFieldU_ACCOUNT(self):        
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="UserAccount"]//field/
+            :return:  None.
+        '''         
         if self.U_ACCOUNTinSource:
                 self.U_ACCOUNTinSource = False
         elif self.U_ACCOUNTinName:
@@ -3812,6 +4488,11 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CONTEXTinExaminerNameValue = False
 
     def __endElementFieldWEB_PAGE(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="VisitedPage"]//field/
+            :return:  None.
+        '''
         if self.WEB_PAGEin:
             if self.WEB_PAGEinSource:
                 self.WEB_PAGEinSource = False
@@ -3825,6 +4506,11 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.WEB_PAGEinLastVisited = False
 
     def __endElementValueCALL(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Call"]//value/
+            :return:  None.
+        '''
         if self.CALLinSourceValue:
             self.CALLinSourceValue = False
         elif self.CALLinDirectionValue:
@@ -3845,6 +4531,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALLinNameValue = False                
 
     def __endElementValueCALENDAR(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="CalendarEntry"]//value/
+            :return:  None.
+        '''        
         if self.CALENDARinCategoryValue:
             self.CALENDARinCategoryValue = False
         elif self.CALENDARinSubjectValue:
@@ -3863,6 +4554,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALENDARinRepeatIntervalValue = False
 
     def __endElementValueCELL_SITE(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="CellTower"]//value/
+            :return:  None.
+        '''        
         if self.CELL_SITEinLongitudeValue:
             self.CELL_SITEinLongitudeValue = False
         elif self.CELL_SITEinLatitudeValue:
@@ -3885,15 +4581,24 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CELL_SITEinSIDValue = False
 
     def __endElementValueDEVICE_EVENT(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="DeviceEvent"]//value/
+            :return:  None.
+        '''        
         if self.DEVICE_EVENTinTimeStampValue:
             self.DEVICE_EVENTinTimeStampValue = False
         elif self.DEVICE_EVENTinEventTypeValue:
             self.DEVICE_EVENTinEventTypeValue = False
         elif self.DEVICE_EVENTinValueValue:
-            self.DEVICE_EVENTinValueValue = False
-        
+            self.DEVICE_EVENTinValueValue = False        
 
     def __endElementValueCOOKIE(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Cookie"]//value/
+            :return:  None.
+        '''        
         if self.COOKIEinSourceValue:
             self.COOKIEinSourceValue = False
         elif self.COOKIEinNameValue:
@@ -3910,6 +4615,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.COOKIEinExpiryValue = False
 
     def __endElementValueCHAT(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Chat"]//value/
+            :return:  None.
+        '''        
         if self.CHATin:
             if self.CHATinSourceValue:            
                 self.CHATinSourceValue = False
@@ -3933,6 +4643,11 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CHATinMsgAttachmentUrlValue = False
 
     def __endElementValueCONTACT(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Contact"]//value/
+            :return:  None.
+        '''        
         if self.CONTACTinSourceValue:
             self.CONTACTinSourceValue = False
         elif self.CONTACTinNameValue:
@@ -3946,6 +4661,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTACTinAccountValue = False 
 
     def __endElementValueEMAIL(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Email"]//value/
+            :return:  None.
+        '''        
         if self.EMAILinSourceValue:
             self.EMAILinSourceValue = False
         elif self.EMAILinIdentifierFROMvalue:
@@ -3966,6 +4686,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.EMAILinAttachmentFilenameValue = False
 
     def __endElementValueINSTANT_MSG(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="InstantMessage"]//value/
+            :return:  None.
+        '''        
         if self.INSTANT_MSGinSourceValue:
             self.INSTANT_MSGinSourceValue = False
         elif self.INSTANT_MSGinFromIdentifierValue:
@@ -3991,8 +4716,12 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.INSTANT_MSGinApplicationValue:
             self.INSTANT_MSGinApplicationValue = False
 
-
     def __endElementValueLOCATION(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="Location"]//value/
+            :return:  None.
+        '''        
         if self.LOCATIONinLongitudeValue:
             self.LOCATIONinLongitudeValue = False
         elif self.LOCATIONinLatitudeValue:
@@ -4005,6 +4734,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.LOCATIONinCategoryValue = False
 
     def __endElementValueSEARCHED_ITEM(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="SearchedItem"]//value/
+            :return:  None.
+        '''        
         if self.SEARCHED_ITEMinSourceValue:
             self.SEARCHED_ITEMinSourceValue = False
         elif self.SEARCHED_ITEMinTimeStampValue:
@@ -4013,6 +4747,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SEARCHED_ITEMinValueValue = False
 
     def __endElementValueSMS(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="SMS"]//value/
+            :return:  None.
+        '''        
         if self.SMSinSourceValue:
             self.SMSinSourceValue = False 
         elif self.SMSinTimeStampValue:
@@ -4031,6 +4770,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SMSinPartyNameValue = False 
 
     def __endElementValueSOCIAL_MEDIA(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="SocialMediaActivity"]//value/
+            :return:  None.
+        '''        
         if self.SOCIAL_MEDIAinSourceValue:
             self.SOCIAL_MEDIAinSourceValue = False
         elif self.SOCIAL_MEDIAinTimeStampValue:
@@ -4057,6 +4801,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SOCIAL_MEDIAinAccountValue = False
 
     def __endElementValueU_ACCOUNT(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="UserAccount"]//value/
+            :return:  None.
+        '''        
         if self.U_ACCOUNTinSourceValue:
             self.U_ACCOUNTinSourceValue = False
         elif self.U_ACCOUNTinNameValue:
@@ -4066,6 +4815,11 @@ class ExtractTraces(xml.sax.ContentHandler):
 
 
     def __endElementValueWEB_PAGE(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="VisitedPage"]//value/
+            :return:  None.
+        '''        
         if self.WEB_PAGEin:
             if self.WEB_PAGEinSourceValue:
                 self.WEB_PAGEinSourceValue = False 
@@ -4079,6 +4833,11 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.WEB_PAGEinLastVisitedValue = False 
 
     def __endElementValueWIRELESS_NET(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="WirelessNetwork"]//value/
+            :return:  None.
+        '''        
         if self.WIRELESS_NETinLongitudeValue:
             self.WIRELESS_NETinLongitudeValue = False
         elif self.WIRELESS_NETinLatitudeValue:
@@ -4093,6 +4852,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.WIRELESS_NETinSsidValue = False
 
     def __endElementTimeStampTAGGED_FILE(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //taggedFiles
+            :return:  None.
+        '''        
         if self.TAGGED_FILESinAccessInfoCreate:
             self.FILEtimeCreate[self.FILEidx] = self.TAGGED_FILESCreateText
             self.TAGGED_FILESCreateText = ''
@@ -4107,6 +4871,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.TAGGED_FILESinAccessInfoAccess = False
 
     def __endElementItemTAGGED_FILE(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //taggedFiles//item
+            :return:  None.
+        '''        
         if self.TAGGED_FILESinMD5:
             self.FILEmd5.append(self.TAGGED_FILESmd5Text)
             self.TAGGED_FILESmd5Text = ''
@@ -4165,8 +4934,12 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.TAGGED_FILESownerUIDText = ''
             self.TAGGED_FILESinOwnerUID = False
     
-    def __endElementItemCONTEXT(self):
-        
+    def __endElementItemCONTEXT(self):        
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //metadata//item
+            :return:  None.
+        '''
         if self.CONTEXTinDeviceExtractionStart:
             self.CONTEXTinDeviceExtractionStart = False
         elif self.CONTEXTinDeviceExtractionEnd:
@@ -4205,9 +4978,11 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CONTEXTinImageMetadataHashValueMD5 = False
 
 
-#---    It captures each Element when it is closed
-#            
     def endElement(self, name):
+        '''
+        It captures the closure of any XML Element, the method is included in the SAXparser class
+            :return:  None.
+        '''        
         self.lineXML +=1
 
         if name == 'model':
@@ -4449,8 +5224,8 @@ class ExtractTraces(xml.sax.ContentHandler):
 
 if __name__ == '__main__':
 
-#---    debug: ctime processing
-#
+#--- colours for diplayng messages on the standard output, if verbose is True the messages will be
+#    shown on the std. output    
     C_CYAN = '\033[36m'
     C_BLACK = '\033[0m'   
     verbose = True 
@@ -4458,7 +5233,6 @@ if __name__ == '__main__':
     parserArgs = argparse.ArgumentParser(description='Parser to convert XML Report from UFED PA into CASE-JSON-LD standard.')
 
 #---    report XML exported by UFED PA, to be converted/parsed into CASE
-#
     parserArgs.add_argument('-r', '--report', dest='inFileXML', required=True, 
                     help='The UFED XML report from which to extract digital traces and convert them into CASE; it supports UFED PA version from 7.24 to 7.37')
 
@@ -4490,9 +5264,7 @@ if __name__ == '__main__':
         print('\n*--- Input paramaters end')
         print("".join(['\n\n', C_CYAN, '*** Start processing: ', strftime("%Y-%m-%d %H:%M:%S", localtime()), C_BLACK, '\n']))
 
-#---    baseLocalPath is for setting the fileLocalPath property of FileFacet 
-#       Observable. 
-#    
+#---    baseLocalPath is for setting the fileLocalPath property of teh Observables. 
     baseLocalPath = ''
     sax_parser = UFEDparser(report_xml=args.inFileXML, json_output=args.output_CASE_JSON, 
         base_local_path=baseLocalPath, mode_verbose=verbose)
@@ -4510,7 +5282,7 @@ if __name__ == '__main__':
         #debug.writeDebugCONTACT(Handler)  
         #debug.writeDebugCONTEXT(Handler)       
         #debug.writeDebugEMAIL(Handler)         
-        debug.writeDebugFILES(Handler)     
+        #debug.writeDebugFILES(Handler)     
         #debug.writeDebugSMS(Handler)     
         #debug.writeDebugU_ACCOUNT(Handler)     
         #debug.writeDebugWEB_PAGE(Handler)     
