@@ -3,12 +3,10 @@
 import uuid
 import os
 import re
-#import json
 import sys
+from UFED_case_generator import *
 #from inspectrutils.case_builder import *
-from CASE_generator import *
 from datetime import datetime
-#from pytz import timezone
 #import logging
 
 class UFEDtoJSON():
@@ -113,7 +111,7 @@ class UFEDtoJSON():
 	@staticmethod
 	def __createUUID():
 		'''	
-		Traces in CASE have a unique identification number, based on Globally Unique Identifier.  
+		Observables in CASE have a unique identification number, based on Globally Unique Identifier.  
 		Each time a Trace is generated this static method in invoked, it doen't depends on any object
 		'''
 		return str(uuid.uuid4())
@@ -158,8 +156,7 @@ class UFEDtoJSON():
 
 		return observable_location
 
-	def __checkSearchedItems(self, value):
-		
+	def __checkSearchedItems(self, value):		
 		itemFound = False
 		if value not in self.SEARCHED_ITEMvalue_date:			
 			self.SEARCHED_ITEMvalue_date.append(value)
@@ -167,8 +164,7 @@ class UFEDtoJSON():
 
 		return itemFound
 
-	def __checkUrlAddress(self, address):
-		
+	def __checkUrlAddress(self, address):		
 		if address in self.UrlList.keys(): 
 			observable_url = self.UrlList.get(address)
 		else:
@@ -1027,11 +1023,6 @@ class UFEDtoJSON():
 			performer=object_performer, instrument=object_instrument, 
 			location=object_location, objects=object_input, results=object_list_result)
 
-		# facet_action_ref = ActionReferences(performer=object_performer, 
-		# 	instrument=object_instrument, location=object_location, 
-		# 	objects=object_input, results=object_list_result)
-
-		
 		#investigation.append_facets(facet_action_ref)
 		self.bundle.append_to_uco_object(investigation)
 
@@ -1319,9 +1310,7 @@ class UFEDtoJSON():
 			if observable_message is not None:
 				self.__generateChainOfEvidence(sms_id, observable_message)
 
-	#def __generateThreadMessages(self, chatTraceId, chatThread, chat_id_to):
-	def __generateThreadMessages(self, chatTraceId, chat_messages, chat_participants):
-		
+	def __generateThreadMessages(self, chatTraceId, chat_messages, chat_participants):		
 		observable = ObjectObservable()		
 		facet_message_thread = Messagethread(messages=chat_messages, 
 			participants=chat_participants, display_name=str(chatTraceId))		
@@ -1330,14 +1319,12 @@ class UFEDtoJSON():
 		return observable
 
 	def __generateTraceTool(self, name, type, creator, version, confList):		
-		
 		observable_identity = ObjectObservable(object_class="uco-identity:Person")
 		facet_identity = SimpleName(family_name=creator)
 		observable_identity.append_facets(facet_identity)
 		self.bundle.append_to_uco_object(observable_identity)		
 		
 		object_tool = Tool(name, version, tool_type=type, tool_creator=observable_identity)
-		
 		self.bundle.append_to_uco_object(object_tool)
 		return object_tool
 

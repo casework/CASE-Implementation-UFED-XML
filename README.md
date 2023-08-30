@@ -57,14 +57,15 @@ All the XML reports have been processed to generate the corresponding CASE repre
 * Contact
 * Cookie
 * Email
-* Event
+* Event (Device)
 * File
+* Location (Device)
 * Searched item (drafting namespace)
 * Social Media Activity (drafting namespace)
 * SMS
 * URL History
 * Wifi Connection 
-* Chain of Evidence
+* Chain of Evidence (relationships between a Digital Trace and the File/Db from which it was extracted)
 * Context
   * Device info
   * Tool
@@ -72,7 +73,6 @@ All the XML reports have been processed to generate the corresponding CASE repre
   * Provenance Record
   * Investigative Acquisition
   * Investigative Extraction
-
 
 ## XML reports
 

@@ -88,7 +88,8 @@ class ObjectCore(dict):
 
     def append_to_uco_object(self, *args):
         for item in args:
-            self[self.root].append(item)   
+            #self[self.root].append(item)
+            self["uco-core:object"].append(item)            
 
 class Bundle(ObjectCore):
 		
@@ -129,9 +130,9 @@ class Bundle(ObjectCore):
             self.root = root
             self[self.root] = list()
 
-            def append_object_to_root(self, *args):
-             for items in args:
-               self[self.root].append(item)
+            #def append_object_to_root(self, *args):
+             #for items in args:
+               #self["uco-core:object"].append(item)
 
 class ObjectFacet(ObjectCore):
     def __init__(self):
@@ -209,8 +210,8 @@ class Account(ObjectFacet):
                           (e.g., kb:organization-skypeapp-cc44c2ae-bdd3-4df8-9ca3-1f58d682d62b)
         """
         super().__init__()
-        self._set_properties_str(**{"@type": "uco-observable:AccountFacet",
-			"uco-observable:accountIdentifier": identifier})
+        self["@type"] = "uco-observable:AccountFacet"
+        self._set_properties_str(**{"uco-observable:accountIdentifier": identifier})
         self._set_properties_id_reference(**{"uco-observable:accountIssuer": issuer_id})
 
         self._set_properties_bool(**{"uco-observable:isActive": is_active})
@@ -276,7 +277,7 @@ class DataRange(ObjectFacet):
         """
         super().__init__()
         self["@type"] = "uco-observable:DataRangeFacet"
-        self._set_properties(**{"uco-observable:rangeOffset": range_offset,
+        self._set_properties_str(**{"uco-observable:rangeOffset": range_offset,
                           "uco-observable:rangeSize": range_size})
 
 
@@ -335,13 +336,13 @@ class UrlHistory(ObjectFacet):
         self._set_properties_id_reference(**{'uco-observable:browserInformation': browser})        
         #self.append_history_entries(history_entries)
 
-    def append_history_entries(self, entries):
-        """
-        Used to add history entries to this URL History facet
-        :param args: A single/tuple of URLHistoryEntry class types
-        """
-        #for entry in entries:
-        self["uco-core:hasFacet"].append(history_entries)        
+    #def append_history_entries(self, entries):
+        #"""
+        #Used to add history entries to this URL History facet
+        #:param args: A single/tuple of URLHistoryEntry class types
+        #"""
+        ##for entry in entries:
+        #self["uco-core:hasFacet"].append(history_entries)        
 
 
 class UrlHistoryEntry(ObjectFacet):
@@ -451,12 +452,12 @@ class RasterPicture(ObjectFacet):
         """
         super().__init__()
         self["@type"] = "uco-observable:RasterPictureFacet"
-        self._set_properties(**{"uco-observable:imageCompressionMethod": image_compression_method,
+        self._set_properties_str(**{"uco-observable:imageCompressionMethod": image_compression_method,
                           "uco-observable:pictureType": picture_type,
                           "uco-observable:pictureHeight": picture_height,
                           "uco-observable:pictureWidth": picture_width,
                           "uco-observable:bitsPerPixel": bits_per_pixel})
-        self._add_reference_vars(**{"uco-observable:camera": camera_id})
+        self._set_properties_id_reference(**{"uco-observable:camera": camera_id})
 
 
 class PhoneCall(ObjectFacet):
@@ -825,7 +826,7 @@ class PathRelation(ObjectFacet):
         """
         super().__init__()
         self["@type"] = "uco-observable:PathRelationFacet"
-        self._str_vars(**{"uco-observable:path": path})
+        self._set_properties_str(**{"uco-observable:path": path})
 
 
 class Event(ObjectFacet):
@@ -969,9 +970,9 @@ class MessageSMS(ObjectFacet):
         """
         super().__init__()
         self["@type"] = "uco-observable:Message"
-        self._str_vars(**{'uco-observable:state': state})
-        self._bool_vars(**{'uco-observable:hasChanged': has_changed})
-        self.append_indexed_items(indexed_items)
+        self._set_properties_str(**{'uco-observable:state': state})
+        self._set_properties_bool(**{'uco-observable:hasChanged': has_changed})
+        #self.append_indexed_items(indexed_items)
 
 
 class DiskPartition(ObjectFacet):
@@ -989,9 +990,9 @@ class DiskPartition(ObjectFacet):
         """
         super().__init__()
         self["@type"] = "uco-observable:DiskPartitionFacet"
-        self._str_vars(**{"uco-observable:serialNumber": serial_number,
+        self._set_properties_str(**{"uco-observable:serialNumber": serial_number,
                           "uco-observable:diskPartitionType": partition_type})
-        self._int_vars(**{"uco-observable:totalSpace": total_space,
+        self._set_properties_int(**{"uco-observable:totalSpace": total_space,
                           "uco-observable:spaceLeft": space_left,
                           "uco-observable:spaceUsed": space_used,
                           "uco-observable:partitionOffset": offset})
@@ -1008,9 +1009,9 @@ class Disk(ObjectFacet):
         """
         super().__init__()
         self["@type"] = "uco-observable:DiskFacet"
-        self._str_vars(**{"uco-observable:diskType": disk_type})
-        self._int_vars(**{"uco-observable:diskSize": size})
-        self._node_reference_vars(**{"uco-observable:partition": partition})
+        self._set_properties_str(**{"uco-observable:diskType": disk_type})
+        self._set_properties_int(**{"uco-observable:diskSize": size})
+        self._set_properties_list_id_reference_array(**{"uco-observable:partition": partition})
 
 class CellSite(ObjectFacet):
 
@@ -1203,12 +1204,12 @@ class ActionReferences(ObjectFacet):
         Add result(s) to the list of outputs from an action
         :param args: A CASE object, or objects, often an observable. (e.g., one or many devices from a search operation)
         """
-        self._append_refs("uco-action:result", *args)
+        self._set_properties_list_id_reference("uco-action:result", *args)
 
     def append_objects(self, *args):
         """
         Add object(s) to the list of outputs from an action
         :param args: A CASE object, or objects, often an observable. (e.g., one or many devices from a search operation)
         """
-        self._append_refs("uco-action:object", *args)
+        self._set_properties_list_id_reference("uco-action:object", *args)
 

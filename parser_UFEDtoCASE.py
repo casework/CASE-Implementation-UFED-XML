@@ -44,7 +44,6 @@ class UFEDparser():
     def show_elapsed_time(self, tic, message):
         '''
         It shows the processing time gone.
-            :param report_xml: The filename of the XML report, provided as argumnent in the command line.
             :param tic: The initial time for calculating the processing time passed (float).
             :param message: The message to be shown (string).
             :return: None.
