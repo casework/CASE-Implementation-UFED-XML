@@ -210,8 +210,8 @@ class Account(ObjectFacet):
                           (e.g., kb:organization-skypeapp-cc44c2ae-bdd3-4df8-9ca3-1f58d682d62b)
         """
         super().__init__()
-        self["@type"] = "uco-observable:AccountFacet"
-        self._set_properties_str(**{"uco-observable:accountIdentifier": identifier})
+        self._set_properties_str(**{"@type": "uco-observable:AccountFacet",
+			"uco-observable:accountIdentifier": identifier})
         self._set_properties_id_reference(**{"uco-observable:accountIssuer": issuer_id})
 
         self._set_properties_bool(**{"uco-observable:isActive": is_active})
@@ -666,14 +666,14 @@ class CalendarEntry(ObjectFacet):
         super().__init__()
         self["@type"] = "uco-observable:CalendarEntryFacet"
         self._set_properties_str(**{"drafting:group": group,
-            "observable:subject": subject,
+            "uco:observable:subject": subject,
             "drafting:details": details,
             "drafting:repeatInterval": repeat_interval,  # todo: type?
             'uco-observable:eventStatus': status,
             'uco-observable:recurrence': recurrence,            
             'uco-observable:remindTime': remind_time,
             "drafting:repeatUntil": repeat_until,
-            'observable:isPrivate': private})
+            'uco:observable:isPrivate': private})
         self._set_properties_date_time(**{"uco-observable:startTime": start_time,
             "uco-observable:endTime": end_time})
         #self.append_attendants(attendants)

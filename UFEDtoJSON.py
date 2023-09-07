@@ -104,7 +104,7 @@ class UFEDtoJSON():
 
 
 		self.SYS_MSG_ID = ''
-		
+				
 		
 	# static methods do not receive class or instance arguments
 	# and usually operate on data that is not instance or class-specific
@@ -598,8 +598,10 @@ class UFEDtoJSON():
 		observableLocation = self.__checkGeoCoordinates(cell_latitude, cell_longitude,
 			 '', 'Cell Tower')
 		
-		if observableLocation is None:
-			return None
+#--- the Cell Site Observbale is however generated even if its location is unknown (no GPS coordinates)
+		#if observableLocation is None:
+			#print(f"observableLocation is None, num={cell_num}")
+			#return None
 
 		cell_id = cell_mcc.strip() + '@' + cell_mnc.strip() +'@' + \
 			cell_lac.strip() + '@' + cell_cid.strip()
@@ -607,12 +609,14 @@ class UFEDtoJSON():
 #---	identifier of the Cell Tower cannot be empty
 #			
 		if cell_id == '@@@':
+			#print(f"cell_mcc, cell_mncm, cell_lac and  cell_cid are empty,  num={cell_num}")
 			return None
 
 		if cell_id in self.CELL_SITE_gsm.keys():
 #---	return the Cell Tower's uuid generated sometime before
-#			
+			#print(f"cell id={cell_id}, already existing,  num={cell_num}")	
 			return self.CELL_SITE_gsm.get(cell_id)
+		
 		else:				
 			observable_cell_site = ObjectObservable()
 			facet_cell_site = CellSite(country_code=cell_mcc, 
@@ -622,10 +626,12 @@ class UFEDtoJSON():
 			
 			self.CELL_SITE_gsm[cell_id] = observable_cell_site
 
-			observable_relationship = Relationship(observable_cell_site, observableLocation, 
+			if observableLocation:
+				observable_relationship = Relationship(observable_cell_site, observableLocation, 
 					start_time=cell_timeStamp, kind_of_relationship="Located_At", 
 					directional=True)
-			self.bundle.append_to_uco_object(observable_relationship)		
+				self.bundle.append_to_uco_object(observable_relationship)		
+			
 			return observable_cell_site
 				
 		
@@ -1517,7 +1523,7 @@ class UFEDtoJSON():
 			if observable_cell_site is not None:				
 				self.__generateTraceRelation(self.DEVICE_object, observable_cell_site, 
 					'Connected_To', '', '', CELL_SITEtimeStamp[i], None)
-				self.__generateChainOfEvidence(cell_site_id, observable_cell_site)
+				self.__generateChainOfEvidence(cell_site_id, observable_cell_site)							
 
 	def writeChat(self, CHATid, CHATstatus, CHATsource, CHATpartyIdentifiers, CHATpartyNames, 
                 CHATmsgIdentifiersFrom, CHATmsgNamesFrom, CHATmsgBodies, CHATmsgStatuses, CHATmsgOutcomes,

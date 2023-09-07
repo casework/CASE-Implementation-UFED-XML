@@ -1897,6 +1897,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CELL_SITEinTimeStamp = True
         elif attrValue == 'MCC':
             self.CELL_SITEinMCC = True
+        elif attrValue == 'MNC':
+            self.CELL_SITEinMNC = True        
         elif attrValue == 'LAC':
             self.CELL_SITEinLAC = True
         elif attrValue == 'CID':
@@ -1907,8 +1909,6 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CELL_SITEinBID = True
         elif attrValue == 'SID':
             self.CELL_SITEinSID = True
-        elif attrValue == 'MCC':
-            self.CELL_SITEinMCC = True
 
     def __startElementFieldDEVICE_EVENT(self, attrValue):
         '''
