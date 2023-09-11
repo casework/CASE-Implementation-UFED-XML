@@ -153,6 +153,8 @@ class UFEDtoJSON():
 				observable_location = self.__generateTraceLocationCoordinate(latitude, 
 					longitude, elevation, category)
 				self.LOCATION_lat_long_coordinate[id_geo_loc] = observable_location
+		else:
+			print("lat and long empty")
 
 		return observable_location
 
@@ -595,8 +597,7 @@ class UFEDtoJSON():
 		
 		cell_timeStamp = self.__cleanDate(cell_timeStamp)
 
-		observableLocation = self.__checkGeoCoordinates(cell_latitude, cell_longitude,
-			 '', 'Cell Tower')
+		observableLocation = self.__checkGeoCoordinates(cell_latitude, cell_longitude, '', 'Cell Tower')
 		
 #--- the Cell Site Observbale is however generated even if its location is unknown (no GPS coordinates)
 		#if observableLocation is None:
@@ -987,11 +988,10 @@ class UFEDtoJSON():
 
 	def __generateTraceLocationDevice(self, loc_id, loc_status, 
 					loc_longitude, loc_latitude, loc_elevation,
-					loc_timeStamp, loc_category):
+					loc_timeStamp, loc_category, item):
 		
 		#location_timeStamp = self.__cleanDate(loc_timeStamp)
-		uuidLocation = self.__checkGeoCoordinates(loc_latitude, loc_longitude,
-			loc_elevation, loc_category)
+		uuidLocation = self.__checkGeoCoordinates(loc_latitude, loc_longitude, loc_elevation, loc_category)
 
 		return uuidLocation
 
@@ -1687,7 +1687,7 @@ class UFEDtoJSON():
 		for i, location_id in enumerate(LOCATIONid):
 			observable_location= self.__generateTraceLocationDevice(location_id, LOCATIONstatus[i], 
 					LOCATIONlongitude[i], LOCATIONlatitude[i], LOCATIONaltitude[i],
-					LOCATIONtimeStamp[i], LOCATIONcategory[i])
+					LOCATIONtimeStamp[i], LOCATIONcategory[i], i)
 			
 			if observable_location is not None:
 				self.__generateTraceRelation(self.DEVICE_object, observable_location, 
@@ -1743,8 +1743,7 @@ class UFEDtoJSON():
 				wnet_last_connection = self.__cleanDate(WIRELESS_NETlastConnection[i])
 				self.__generateTraceRelation(self.DEVICE_object, observable_wnet, 'Connected_To', 
 					'', '', wnet_timeStamp, wnet_last_connection)				
-				observable_location = self.__checkGeoCoordinates(WIRELESS_NETlatitude[i], 
-					WIRELESS_NETlongitude[i], '', 'Wireless Network')					
+				observable_location = self.__checkGeoCoordinates(WIRELESS_NETlatitude[i], WIRELESS_NETlongitude[i], '', 'Wireless Network')					
 				if observable_location:
 					self.__generateTraceRelation(observable_wnet, observable_location,
 						'Mapped_To', '', '', None, None)								
