@@ -143,6 +143,10 @@ class UFEDparser():
         #self.show_elapsed_time(tic_write, 'Write CALL')
 
         #tic_write = timeit.default_timer()
+        caseTrace.writeBluetooth(Handler.BLUETOOTHid, Handler.BLUETOOTHstatus, Handler.BLUETOOTHvalues)
+        #self.show_elapsed_time(tic_write, 'Write CALENDAR')
+        
+        #tic_write = timeit.default_timer()
         caseTrace.writeCalendar(Handler.CALENDARid, Handler.CALENDARstatus, 
             Handler.CALENDARcategory, Handler.CALENDARsubject,
             Handler.CALENDARdetails, Handler.CALENDARstartDate,
@@ -351,6 +355,25 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.EXTRA_INFOdictOffset = {}
         self.EXTRA_INFOdictNodeInfoId = {}
 
+#--     Bluetooh connection
+        self.BLUETOOTHinModelType = False
+        self.BLUETOOTHin = False
+        self.BLUETOOTHinDeviceIdentifiers = False
+        self.BLUETOOTHinKeyValueModel = False
+        self.BLUETOOTHinKey = False
+        self.BLUETOOTHinKeyValue = False        
+        self.BLUETOOTHinValue = False
+        self.BLUETOOTHinValueValue = False
+        self.BLUETOOTHtotal = 0
+        self.BLUETOOTHkeyText = ''
+        self.BLUETOOTHvalueText = ''
+
+        self.BLUETOOTHdeleted = 0
+        self.BLUETOOTHid = []
+        self.BLUETOOTHkeys = []
+        self.BLUETOOTHvalues = []
+        self.BLUETOOTHstatus = []  
+                
 #-- CALENDAR  section    
         self.CALENDARinModelType = False
         self.CALENDARin = False
@@ -393,7 +416,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CALENDARrepeatUntil = []
         self.CALENDARrepeatDay = []
         self.CALENDARrepeatInterval = []
-        self.CALENDARstatus = []
+        self.CALENDARstatus = []            
 
 #--     CALL  section
         self.CALLinModelType = False
@@ -1239,6 +1262,28 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif attrValue == 'Party':                                
             self.CALLinParty = True 
 
+    def __startElementModelBLUETOOTH(self, attrType, BLUETOOTHid, BLUETOOTHstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="DeviceConnectivity"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param BLUETOOTHid: The value of the id attribute of the Element  (string).
+            :param BLUETOOTHstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''         
+        if attrType == 'DeviceConnectivity':
+            self.BLUETOOTHin = True
+            self.BLUETOOTHtotal += 1            
+            self.printObservable('BLUETOOTH', self.BLUETOOTHtotal)            
+            self.storeTraceStatus(self.BLUETOOTHstatus, BLUETOOTHstate, self.BLUETOOTHdeleted)
+            self.skipLine = True 
+            self.Observable = True
+            self.BLUETOOTHid.append(BLUETOOTHid)
+            self.BLUETOOTHkeys.append('')
+            self.BLUETOOTHvalues.append('')
+        elif attrType == 'KeyValueModel':
+            self.BLUETOOTHinKeyValueModel = True
+    
     def __startElementModelCALENDAR(self, attrValue, CALENDARid, CALENDARstate):
         '''
         It captures the opening of the XML Element matching with the XPath expression
@@ -1253,8 +1298,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.CALENDARtotal += 1
             self.printObservable('CALENDAR', self.CALENDARtotal)
             self.CALENDARid.append(CALENDARid)
-            self.storeTraceStatus(self.CALENDARstatus, CALENDARstate, 
-                self.CALENDARdeleted)
+            self.storeTraceStatus(self.CALENDARstatus, CALENDARstate, self.CALENDARdeleted)
             self.skipLine = True 
             self.Observable = True 
 
@@ -1648,7 +1692,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.WIRELESS_NETlastConnection.append('')
             self.WIRELESS_NETbssid.append('')
             self.WIRELESS_NETssid.append('')
-
+                
     def __startElementMultiModelFieldCALENDAR(self, attrValue):
         '''
         It captures the opening of the XML Element matching with the XPath expression
@@ -1755,7 +1799,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SMSinParty = True 
         elif attrValue == 'AllTimeStamps':
             self.SMSinAllTimeStamps = True
-            
+                        
     def __startElementModelFieldCELL_SITE(self, attrValue):
         '''
         It captures the opening of the XML Element matching with the XPath expression
@@ -1857,6 +1901,19 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.CALLinTimeStamp = True                       
             elif attrValue == 'Duration':
                 self.CALLinDuration = True
+            
+    def __startElementFieldBLUETOOTH(self, attrName):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="DeviceIdentifiers"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
+        if self.BLUETOOTHinKeyValueModel:
+            if attrName == 'Key':
+                self.BLUETOOTHinKey = True
+            elif attrName == 'Value':
+                self.BLUETOOTHinValue = True
             
     def __startElementFieldCALENDAR(self, attrValue):
         '''
@@ -2371,6 +2428,17 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.CALLinName:
             self.CALLinNameValue = True            
 
+    def __startElementValueBLUETOOTH(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //model[@type="KeyValueModel"]/field[@name=...]/value
+            :return:  None.
+        '''        
+        if self.BLUETOOTHinKey:
+            self.BLUETOOTHinKeyValue = True
+        elif self.BLUETOOTHinValue:
+            self.BLUETOOTHinValueValue = True
+            
     def __startElementValueCALENDAR(self):
         '''
         It captures the opening of the XML Element matching with the XPath expression
@@ -2392,7 +2460,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.CALENDARinRepeatDay:
             self.CALENDARinRepeatDayValue = True
         elif self.CALENDARinRepeatInterval:
-            self.CALENDARinRepeatIntervalValue = True        
+            self.CALENDARinRepeatIntervalValue = True      
 
     def __startElementValueCELL_SITE(self):
         '''
@@ -2894,6 +2962,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.Observable = False
         if attrType == 'Call':
             self.CALLinModelType = True
+        elif attrType == "DeviceConnectivity": # Bluetooth connectivity
+            self.BLUETOOTHinModelType = True
         elif attrType == 'CalendarEntry':
             self.CALENDARinModelType = True            
         elif attrType == 'CellTower':
@@ -2931,8 +3001,10 @@ class ExtractTraces(xml.sax.ContentHandler):
         '''                
         if self.CALLinModelType:
             self.__startElementModelCALL(attrType, id, traceState)
+        elif self.BLUETOOTHinModelType:
+            self.__startElementModelBLUETOOTH(attrType, id, traceState)
         elif self.CALENDARinModelType:
-            self.__startElementModelCALENDAR(attrType, id, traceState)
+            self.__startElementModelCALENDAR(attrType, id, traceState)        
         elif self.CELL_SITEinModelType:
             self.__startElementModelCELL_SITE(attrType, id, traceState)
         elif self.CHATinModelType:
@@ -2991,7 +3063,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         if self.CHATin:
             self.__startElementModelFieldCHAT(attrName)
         elif self.CELL_SITEin:
-            self.__startElementModelFieldCELL_SITE(attrName)
+            self.__startElementModelFieldCELL_SITE(attrName)        
         elif self.EMAILin:
             self.__startElementModelFieldEMAIL(attrName)            
         elif self.LOCATIONin:
@@ -3011,8 +3083,10 @@ class ExtractTraces(xml.sax.ContentHandler):
         '''                
         if self.CALLin:
             self.__startElementFieldCALL(attrName)
+        elif self.BLUETOOTHin:
+            self.__startElementFieldBLUETOOTH(attrName)
         elif self.CALENDARin:
-            self.__startElementFieldCALENDAR(attrName)
+            self.__startElementFieldCALENDAR(attrName)        
         elif self.CHATin:
             self.__startElementFieldCHAT(attrName)            
         elif self.CELL_SITEin:
@@ -3052,8 +3126,10 @@ class ExtractTraces(xml.sax.ContentHandler):
         '''                
         if self.CALLin:
             self.__startElementValueCALL()
+        elif self.BLUETOOTHinKeyValueModel:
+            self.__startElementValueBLUETOOTH()
         elif self.CALENDARin:
-            self.__startElementValueCALENDAR()
+            self.__startElementValueCALENDAR()        
         elif self.CELL_SITEin:
             self.__startElementValueCELL_SITE()
         elif self.CHATin:
@@ -3083,6 +3159,17 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.WIRELESS_NETin:
             self.__startElementValueWIRELESS_NET()
     
+    def __charactersBLUETOOTH(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="Call"]//value/
+            :return:  None.
+        '''        
+        if self.BLUETOOTHinValueValue:
+            self.BLUETOOTHvalueText += ch
+        elif self.BLUETOOTHinKeyValue:
+            self.BLUETOOTHkeyText += ch            
+            
     def __charactersCALENDAR(self, ch):
         '''
         It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
@@ -3555,8 +3642,10 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.__charactersCONTEXT(ch)
         if self.CALENDARin:
             self.__charactersCALENDAR(ch)
+        elif self.BLUETOOTHin:
+            self.__charactersBLUETOOTH(ch)
         elif self.CALLin:
-            self.__charactersCALL(ch)
+            self.__charactersCALL(ch)            
         elif self.CELL_SITEin:
             self.__charactersCELL_SITE(ch)
         elif self.CONTACTin:
@@ -3622,6 +3711,23 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SMSpartyName.clear()
             self.SMSin = False
     
+    def __endElementModelBLUETOOTH(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="DeviceConnectivity"]/model/
+            :return:  None.
+        '''        
+        if self.BLUETOOTHinKeyValueModel:
+            self.BLUETOOTHinKeyValueModel = False
+#--- end of a single Bluetooth connection item
+        elif self.BLUETOOTHin:
+            idx = self.BLUETOOTHtotal - 1
+            self.BLUETOOTHkeys[idx] = self.BLUETOOTHkeyText
+            self.BLUETOOTHvalues[idx] = self.BLUETOOTHvalueText
+            self.BLUETOOTHvalueText = ''
+            self.BLUETOOTHkeyText = ''
+            self.BLUETOOTHin = False
+                
     def __endElementModelCALENDAR(self):
         '''
         It captures the end of the XML Element matching with the XPath expression
@@ -4180,6 +4286,17 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.CALLinName:
             self.CALLinName = False                                        
 
+    def __endElementFieldBLUETOOTH(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="DeviceConnectivity"]//field/
+            :return:  None.
+        '''         
+        if self.BLUETOOTHinKey:
+            self.BLUETOOTHinKey = False
+        elif self.BLUETOOTHinValue:
+            self.BLUETOOTHinValue = False
+
     def __endElementFieldCALENDAR(self):
         '''
         It captures the end of the XML Element matching with the XPath expression
@@ -4504,6 +4621,17 @@ class ExtractTraces(xml.sax.ContentHandler):
             elif self.WEB_PAGEinLastVisited:
                 self.WEB_PAGEinLastVisited = False
 
+    def __endElementValueBLUETOOTH(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="DeviceConnectivity"]//value/
+            :return:  None.
+        '''
+        if self.BLUETOOTHinKeyValue:
+            self.BLUETOOTHinKeyValue = False
+        elif self.BLUETOOTHinValueValue:
+            self.BLUETOOTHinValueValue = False        
+    
     def __endElementValueCALL(self):
         '''
         It captures the end of the XML Element matching with the XPath expression
@@ -4987,8 +5115,10 @@ class ExtractTraces(xml.sax.ContentHandler):
         if name == 'model':
             if self.CALLinModelType:
                 self.__endElementModelCALL()
+            elif self.BLUETOOTHinModelType:
+                self.__endElementModelBLUETOOTH()
             elif self.CALENDARinModelType:
-                self.__endElementModelCALENDAR()
+                self.__endElementModelCALENDAR()            
             elif self.CELL_SITEinModelType:
                 self.__endElementModelCELL_SITE()
             elif self.CONTACTinModelType:
@@ -5019,8 +5149,10 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif name == 'modelType':
             if self.CALLinModelType:
                 self.CALLinModelType = False
+            elif self.BLUETOOTHinModelType:
+                self.BLUETOOTHinModelType = False
             elif self.CALENDARinModelType:
-                self.CALENDARinModelType = False
+                self.CALENDARinModelType = False            
             elif self.CELL_SITEinModelType:
                 self.CELL_SITEinModelType = False
             elif self.COOKIEinModelType:
@@ -5128,6 +5260,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__endElementFieldCALL()
             elif self.CALENDARin:
                 self.__endElementFieldCALENDAR()
+            elif self.BLUETOOTHin:
+                self.__endElementFieldBLUETOOTH()            
             elif self.CELL_SITEin:
                 self.__endElementFieldCELL_SITE()
             elif self.CONTACTin:
@@ -5160,8 +5294,10 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif name == 'value':
             if self.CALLin:
                 self.__endElementValueCALL()
+            elif self.BLUETOOTHin:
+                self.__endElementValueBLUETOOTH()
             elif self.CALENDARin:
-                self.__endElementValueCALENDAR()
+                self.__endElementValueCALENDAR()            
             elif self.CELL_SITEin:
                 self.__endElementValueCELL_SITE()            
             elif self.CONTACTin:

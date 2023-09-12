@@ -153,8 +153,6 @@ class UFEDtoJSON():
 				observable_location = self.__generateTraceLocationCoordinate(latitude, 
 					longitude, elevation, category)
 				self.LOCATION_lat_long_coordinate[id_geo_loc] = observable_location
-		else:
-			print("lat and long empty")
 
 		return observable_location
 
@@ -571,6 +569,17 @@ class UFEDtoJSON():
 			self.__generateChainOfEvidence(call_id, object_phone_call)
 
 
+	def __generateTraceBluetooth(self, bt_id, bt_status, bt_value):
+		
+		if bt_value.strip() == '':
+			return None
+		
+		observable = ObjectObservable()
+		facet_bluetooth = BluetoothAddress(address=bt_value)
+		observable.append_facets(facet_bluetooth)
+		self.bundle.append_to_uco_object(observable)
+		return observable
+	
 	def __generateTraceCalendar(self, calendar_id, status, group, subject, 
 					details, startDate, endDate, repeatUntil, repeatInterval, 
 					repeatRule):
@@ -1497,6 +1506,17 @@ class UFEDtoJSON():
 				self.FILEuuid[file_id] = object_file
 				self.FILEpath[file_id] = FILEpath[i]
 
+	def writeBluetooth(self, BLUETOOTHid, BLUETOOTHstatus, BLUETOOTHvalues):
+				
+		for i, bt_id in enumerate(BLUETOOTHid):
+			observable_bluetooth = self.__generateTraceBluetooth(bt_id, 
+					BLUETOOTHstatus[i], BLUETOOTHvalues[i])
+			
+			if observable_bluetooth:
+				self.__generateTraceRelation(self.DEVICE_object, observable_bluetooth, 
+					                     'Connected_To', None, None, None, None)			
+			self.__generateChainOfEvidence(bt_id, observable_bluetooth)
+			
 	def writeCalendar(self, CALENDARid, CALENDARstatus, CALENDARcategory, CALENDARsubject,
                     CALENDARdetails, CALENDARstartDate, CALENDARendDate, CALENDARrepeatUntil, 
                     CALENDARrepeatDay, CALENDARrepeatInterval):
@@ -1507,7 +1527,7 @@ class UFEDtoJSON():
 					CALENDARdetails[i], CALENDARstartDate[i], CALENDARendDate[i], 
 					CALENDARrepeatUntil[i], CALENDARrepeatDay[i], CALENDARrepeatInterval[i])
 			
-			self.__generateChainOfEvidence(calendar_id, observable_calendar)
+			self.__generateChainOfEvidence(calendar_id, observable_calendar)					
 
 	def writeCell_Site(self, CELL_SITEid, CELL_SITEstatus, CELL_SITElongitude, 
 					CELL_SITElatitude, CELL_SITEtimeStamp, CELL_SITEmcc,
