@@ -569,6 +569,22 @@ class UFEDtoJSON():
 			self.__generateChainOfEvidence(call_id, object_phone_call)
 
 
+	def __generateTraceWebBookmark(self, wb_id, wb_source, wb_timeStamp, wb_path, wb_url):
+		    
+		observable = ObjectObservable()		
+		object_url = self.__checkUrlAddress(wb_url)
+		objet_app = self.__checkAppName(wb_source)
+		
+		if wb_timeStamp.strip() == '':
+			wb_timeStamp = None
+		else:
+			wb_timeStamp = self.__cleanDate(wb_timeStamp)
+						
+		facet_web_bookmark = BrowserBookmark(bookmark_source=objet_app, url=object_url, bookmark_path=wb_path, bookmark_accessed_time=wb_timeStamp)
+		observable.append_facets(facet_web_bookmark)
+		self.bundle.append_to_uco_object(observable)
+		return observable
+		
 	def __generateTraceBluetooth(self, bt_id, bt_status, bt_value):
 		
 		if bt_value.strip() == '':
@@ -1506,6 +1522,19 @@ class UFEDtoJSON():
 				self.FILEuuid[file_id] = object_file
 				self.FILEpath[file_id] = FILEpath[i]
 
+				
+	def writeWebBookmark(self, WEB_BOOKMARKid, WEB_BOOKMARKsource, WEB_BOOKMARKtimeStamp,
+	    WEB_BOOKMARKpath, WEB_BOOKMARKurl):
+		for i, wb_id in enumerate(WEB_BOOKMARKid):
+			observable_web_bookmark = self.__generateTraceWebBookmark(wb_id, WEB_BOOKMARKsource[i],
+			                            WEB_BOOKMARKtimeStamp[i], WEB_BOOKMARKpath[i], WEB_BOOKMARKurl[i])
+			
+			if observable_web_bookmark:
+				pass
+				#self.__generateTraceRelation(self.DEVICE_object, observable_bluetooth, 
+				                     #'Connected_To', None, None, None, None)			
+				#self.__generateChainOfEvidence(bt_id, observable_bluetooth)
+		
 	def writeBluetooth(self, BLUETOOTHid, BLUETOOTHstatus, BLUETOOTHvalues):
 				
 		for i, bt_id in enumerate(BLUETOOTHid):

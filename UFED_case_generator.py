@@ -310,6 +310,23 @@ class WifiAddress(ObjectFacet):
         self._set_properties_str(**{"uco-observable:addressValue": wifi_mac_address})
 
 
+class BrowserBookmark(ObjectFacet):
+    def __init__(self, bookmark_source=None, url=None, bookmark_path=None, bookmark_accessed_time=None):
+        """
+        :param source:
+        :param url:
+        :param path:
+        :param manually_entered_count:
+        :param accessed_time: An observable object with a URLFacet
+        """
+        super().__init__()
+        
+        self['@type'] = 'uco-observable:BrowserBookmarkFacet'
+
+        self._set_properties_str(**{'uco-observable:bookmarkPath': bookmark_path})                                
+        self._set_properties_date_time(**{'uco-observable:observableCreatedTime': bookmark_accessed_time})                                      
+        self._set_properties_id_reference(**{'uco-observable:application':bookmark_source, 'uco-observable:urlTargeted': url})
+        
 class BluetoothAddress(ObjectFacet):
 
     def __init__(self, name=None, address=None):

@@ -144,8 +144,13 @@ class UFEDparser():
 
         #tic_write = timeit.default_timer()
         caseTrace.writeBluetooth(Handler.BLUETOOTHid, Handler.BLUETOOTHstatus, Handler.BLUETOOTHvalues)
-        #self.show_elapsed_time(tic_write, 'Write CALENDAR')
+        #self.show_elapsed_time(tic_write, 'Write BLUETOOTH')
         
+        #tic_write = timeit.default_timer()
+        caseTrace.writeWebBookmark(Handler.WEB_BOOKMARKid, Handler.WEB_BOOKMARKsource, Handler.WEB_BOOKMARKtimeStamp,
+            Handler.WEB_BOOKMARKpath, Handler.WEB_BOOKMARKurl)
+        #self.show_elapsed_time(tic_write, 'Write WEB_BOOKMARK')
+
         #tic_write = timeit.default_timer()
         caseTrace.writeCalendar(Handler.CALENDARid, Handler.CALENDARstatus, 
             Handler.CALENDARcategory, Handler.CALENDARsubject,
@@ -1017,6 +1022,32 @@ class ExtractTraces(xml.sax.ContentHandler):
 
         self.SOCIAL_MEDIAstatus = []
 
+#-- WEB BOOKMARK  section    
+        self.WEB_BOOKMARKinModelType = False
+        self.WEB_BOOKMARKin = False
+        self.WEB_BOOKMARKinSource = False
+        self.WEB_BOOKMARKinSourceValue = False
+        self.WEB_BOOKMARKinUrl = False
+        self.WEB_BOOKMARKinUrlValue = False
+        self.WEB_BOOKMARKinPath = False
+        self.WEB_BOOKMARKinPathValue = False
+        self.WEB_BOOKMARKinTimeStamp = False
+        self.WEB_BOOKMARKinTimeStampValue = False
+
+        self.WEB_BOOKMARKtotal = 0
+        self.WEB_BOOKMARKsourceText = ''
+        self.WEB_BOOKMARKurlText = ''
+        self.WEB_BOOKMARKpathText = ''
+        self.WEB_BOOKMARKtimeStampText = ''
+
+        self.WEB_BOOKMARKdeleted = 0
+        self.WEB_BOOKMARKid = []
+        self.WEB_BOOKMARKsource = []
+        self.WEB_BOOKMARKurl = []
+        self.WEB_BOOKMARKpath = []
+        self.WEB_BOOKMARKtimeStamp = []
+        self.WEB_BOOKMARKstatus = []
+        
 #---    WEB HISTORY section
         self.WEB_PAGEinModelType = False
         self.WEB_PAGEin = False
@@ -1648,6 +1679,25 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.U_ACCOUNTinUserID = True
 
 
+    def __startElementModelWEB_BOOKMARK(self, attrValue, WEB_BOOKMARKid, WEB_BOOKMARKEstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="VisitedPage"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param WEB_PAGEid: The value of the id attribute of the Element  (string).
+            :param WEB_PAGEstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''         
+        if attrValue == 'WebBookmark':                
+            self.WEB_BOOKMARKin = True
+            self.WEB_BOOKMARKtotal += 1
+            self.printObservable('WEB_BOOKMARK', self.WEB_BOOKMARKtotal)
+            self.WEB_BOOKMARKid.append(WEB_BOOKMARKid)
+            self.storeTraceStatus(self.WEB_BOOKMARKstatus, WEB_BOOKMARKEstate, self.WEB_BOOKMARKdeleted) 
+            self.skipLine = True 
+            self.Observable = True  
+
+    
     def __startElementModelWEB_PAGE(self, attrValue, WEB_PAGEid, WEB_PAGEstate):
         '''
         It captures the opening of the XML Element matching with the XPath expression
@@ -1851,6 +1901,22 @@ class ExtractTraces(xml.sax.ContentHandler):
         '''        
         if attrValue == 'Author':
             self.SOCIAL_MEDIAinAuthor = True
+            
+    def __startElementModelFieldWEB_BOOKMARK(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="WebBookmark"]//field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
+        if attrValue == 'Source':
+            self.WEB_BOOKMARKinSource = True
+        elif attrValue == 'Url':
+            self.WEB_BOOKMARKinUrl = True
+        elif attrValue == 'Path':
+            self.WEB_BOOKMARKinPath = True
+        elif attrValue == 'TimeStamp':
+            self.WEB_BOOKMARKinTimeStamp = True                
 
     def __startElementModelFieldINSTANT_MSG(self, attrValue):
         '''
@@ -2257,6 +2323,22 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif attrValue == 'Username':
             self.U_ACCOUNTinUsername = True
 
+    def __startElementFieldWEB_BOOKMARK(self, attrValue):        
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="VisitedPage"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
+        if attrValue == 'Source':
+            self.WEB_BOOKMARKinSource = True
+        elif attrValue == 'Url':
+            self.WEB_BOOKMARKinUrl = True
+        elif attrValue == 'Path':
+            self.WEB_BOOKMARKinPath = True
+        elif attrValue == 'TimeStamp':
+            self.WEB_BOOKMARKinTimeStamp = True
+            
     def __startElementFieldWEB_PAGE(self, attrValue):        
         '''
         It captures the opening of the XML Element matching with the XPath expression
@@ -2724,6 +2806,22 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.U_ACCOUNTinUsername:
             self.U_ACCOUNTinUsernameValue = True
 
+    def __startElementValueWEB_BOOKMARK(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="WebBookmark"]/field[@name=...]/value
+            :return:  None.
+        '''        
+        if self.WEB_BOOKMARKinSource:
+            self.WEB_BOOKMARKinSourceValue = True
+        elif self.WEB_BOOKMARKinUrl:
+            self.WEB_BOOKMARKinUrlValue = True
+        elif self.WEB_BOOKMARKinPath:
+            self.WEB_BOOKMARKinPathValue = True
+        elif self.WEB_BOOKMARKinTimeStamp:
+            self.WEB_BOOKMARKinTimeStampValue = True
+        
+            
     def __startElementValueWEB_PAGE(self):
         '''
         It captures the opening of the XML Element matching with the XPath expression
@@ -2739,7 +2837,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.WEB_PAGEinVisitCount:
             self.WEB_PAGEinVisitCountValue = True
         elif self.WEB_PAGEinLastVisited:
-            self.WEB_PAGEinLastVisitedValue = True    
+            self.WEB_PAGEinLastVisitedValue = True        
 
     def __startElementValueWIRELESS_NET(self):
         '''
@@ -2990,8 +3088,10 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.SOCIAL_MEDIAinModelType = True
         elif attrType == 'VisitedPage':
             self.WEB_PAGEinModelType = True
+        elif attrType == 'WebBookmark':
+            self.WEB_BOOKMARKinModelType = True
         elif attrType == 'WirelessNetwork':
-            self.WIRELESS_NETinModelType = True
+            self.WIRELESS_NETinModelType = True        
 
     def __startElementModel(self, attrType, id, traceState):
         '''
@@ -3027,8 +3127,10 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.__startElementModelSMS(attrType, id, traceState)
         elif self.SOCIAL_MEDIAinModelType:
             self.__startElementModelSOCIAL_MEDIA(attrType, id, traceState)
+        elif self.WEB_BOOKMARKinModelType:
+            self.__startElementModelWEB_BOOKMARK(attrType, id, traceState)
         elif self.WEB_PAGEinModelType:
-            self.__startElementModelWEB_PAGE(attrType, id, traceState)
+            self.__startElementModelWEB_PAGE(attrType, id, traceState)        
         elif self.WIRELESS_NETinModelType:
             self.__startElementModelWIRELESS_NET(attrType, id, traceState)                                       
         self.__startElementModelU_ACCOUNT(attrType)  
@@ -3072,8 +3174,10 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.__startElementModelFieldINSTANT_MSG(attrName)
         elif self.SOCIAL_MEDIAin:
             self.__startElementModelFieldSOCIAL_MEDIA(attrName)
+        elif self.WEB_BOOKMARKin:
+            self.__startElementModelFieldWEB_BOOKMARK(attrName)
         elif self.WIRELESS_NETin:
-            self.__startElementModelFieldWIRELESS_NET(attrName)
+            self.__startElementModelFieldWIRELESS_NET(attrName)        
         
     def __startElementField(self, attrName, attrs):
         '''
@@ -3111,8 +3215,10 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.__startElementFieldSOCIAL_MEDIA(attrName)
         elif self.U_ACCOUNTin:
             self.__startElementFieldU_ACCOUNT(attrName)
+        elif self.WEB_BOOKMARKin:
+            self.__startElementFieldWEB_BOOKMARK(attrName)
         elif self.WEB_PAGEin:
-            self.__startElementFieldWEB_PAGE(attrName)
+            self.__startElementFieldWEB_PAGE(attrName)        
         elif self.WIRELESS_NETin:
             self.__startElementFieldWIRELESS_NET(attrName)
         attrFieldType = attrs.get('fieldType')
@@ -3154,8 +3260,10 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.__startElementValueSOCIAL_MEDIA()
         elif self.U_ACCOUNTin:
             self.__startElementValueU_ACCOUNT()
+        elif self.WEB_BOOKMARKin:
+            self.__startElementValueWEB_BOOKMARK()
         elif self.WEB_PAGEin:
-            self.__startElementValueWEB_PAGE()
+            self.__startElementValueWEB_PAGE()        
         elif self.WIRELESS_NETin:
             self.__startElementValueWIRELESS_NET()
     
@@ -3501,6 +3609,21 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.U_ACCOUNTinUsernameValue:
             self.U_ACCOUNTusernameValueText += ch
 
+    def __charactersWEB_BOOKMARK(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="VisitedPage"]//value/
+            :return:  None.
+        '''        
+        if self.WEB_BOOKMARKinSourceValue:
+            self.WEB_BOOKMARKsourceText += ch
+        elif self.WEB_BOOKMARKinUrlValue:
+            self.WEB_BOOKMARKurlText += ch
+        elif self.WEB_BOOKMARKinPathValue:
+            self.WEB_BOOKMARKpathText += ch
+        elif self.WEB_BOOKMARKinTimeStampValue:
+            self.WEB_BOOKMARKtimeStampText += ch                
+            
     def __charactersWEB_PAGE(self, ch):
         '''
         It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
@@ -3516,7 +3639,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.WEB_PAGEinVisitCountValue:
             self.WEB_PAGEvisitCountText += ch
         elif self.WEB_PAGEinLastVisitedValue:
-            self.WEB_PAGElastVisitedText += ch
+            self.WEB_PAGElastVisitedText += ch    
 
     def __charactersWIRELESS_NET(self, ch):
         '''
@@ -3670,8 +3793,10 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.__charactersSOCIAL_MEDIA(ch)
         elif self.U_ACCOUNTin:
             self.__charactersU_ACCOUNT(ch)
+        elif self.WEB_BOOKMARKin:
+            self.__charactersWEB_BOOKMARK(ch)
         elif self.WEB_PAGEin:
-            self.__charactersWEB_PAGE(ch)
+            self.__charactersWEB_PAGE(ch)        
         elif self.WIRELESS_NETin:
             self.__charactersWIRELESS_NET(ch)
         self.__charactersTAGGED_FILES(ch)
@@ -4219,6 +4344,23 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.SOCIAL_MEDIAaccountText = ''
                 self.SOCIAL_MEDIAin = False
 
+    def __endElementModelWEB_BOOKMARK(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="WebBookmark"]/model/
+            :return:  None.
+        '''         
+        if self.WEB_BOOKMARKin:             
+            self.WEB_BOOKMARKsource.append(self.WEB_BOOKMARKsourceText)
+            self.WEB_BOOKMARKurl.append(self.WEB_BOOKMARKurlText)
+            self.WEB_BOOKMARKpath.append(self.WEB_BOOKMARKpathText)
+            self.WEB_BOOKMARKtimeStamp.append(self.WEB_BOOKMARKtimeStampText)
+            self.WEB_BOOKMARKsourceText = ''
+            self.WEB_BOOKMARKurlText = ''
+            self.WEB_BOOKMARKpathText = ''
+            self.WEB_BOOKMARKtimeStampText = ''
+            self.WEB_BOOKMARKin = False
+
     def __endElementModelWEB_PAGE(self):
         '''
         It captures the end of the XML Element matching with the XPath expression
@@ -4237,7 +4379,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.WEB_PAGEvisitCountText = ''
             self.WEB_PAGElastVisitedText = ''
             self.WEB_PAGEin = False
-
+    
     def __endElementModelWIRELESS_NET(self):
         '''
         It captures the end of the XML Element matching with the XPath expression
@@ -4347,6 +4489,21 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.CELL_SITEinSID:
             self.CELL_SITEinSID = False  
 
+    def __endElementFieldWEB_BOOKMARK(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="WebBookmark"]//field/
+            :return:  None.
+        '''         
+        if self.WEB_BOOKMARKinSource:
+            self.WEB_BOOKMARKinSource = False
+        elif self.WEB_BOOKMARKinUrl:
+            self.WEB_BOOKMARKinUrl = False
+        elif self.WEB_BOOKMARKinPath:
+            self.WEB_BOOKMARKinPath = False
+        elif self.WEB_BOOKMARKinTimeStamp:
+            self.WEB_BOOKMARKinTimeStamp = False        
+    
     def __endElementFieldWIRELESS_NET(self):
         '''
         It captures the end of the XML Element matching with the XPath expression
@@ -4364,7 +4521,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.WIRELESS_NETinBssid:
             self.WIRELESS_NETinBssid = False
         elif self.WIRELESS_NETinSsid:
-            self.WIRELESS_NETinSsid = False
+            self.WIRELESS_NETinSsid = False    
 
     def __endElementFieldCOOKIE(self):
         '''
@@ -4959,6 +5116,21 @@ class ExtractTraces(xml.sax.ContentHandler):
             elif self.WEB_PAGEinLastVisitedValue:
                 self.WEB_PAGEinLastVisitedValue = False 
 
+    def __endElementValueWEB_BOOKMARK(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="WebBookmark"]//value/
+            :return:  None.
+        '''        
+        if self.WEB_BOOKMARKinSourceValue:
+            self.WEB_BOOKMARKinSourceValue = False
+        elif self.WEB_BOOKMARKinUrlValue:
+            self.WEB_BOOKMARKinUrlValue = False
+        elif self.WEB_BOOKMARKinPathValue:
+            self.WEB_BOOKMARKinPathValue = False
+        elif self.WEB_BOOKMARKinTimeStampValue:
+            self.WEB_BOOKMARKinTimeStampValue = False                
+
     def __endElementValueWIRELESS_NET(self):
         '''
         It captures the end of the XML Element matching with the XPath expression
@@ -5141,8 +5313,10 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__endElementModelSMS()
             elif self.SOCIAL_MEDIAinModelType:
                 self.__endElementModelSOCIAL_MEDIA()            
+            elif self.WEB_BOOKMARKinModelType:
+                self.__endElementModelWEB_BOOKMARK()
             elif self.WEB_PAGEinModelType:
-                self.__endElementModelWEB_PAGE()
+                self.__endElementModelWEB_PAGE()            
             elif self.WIRELESS_NETinModelType:
                 self.__endElementModelWIRELESS_NET()            
             self.__endElementModelU_ACCOUNT()
@@ -5175,8 +5349,10 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.SMSinModelType = False
             elif self.SOCIAL_MEDIAinModelType:
                 self.SOCIAL_MEDIAinModelType = False
+            elif self.WEB_BOOKMARKinModelType:
+                self.WEB_BOOKMARKinModelType = False
             elif self.WEB_PAGEinModelType:
-                self.WEB_PAGEinModelType = False
+                self.WEB_PAGEinModelType = False            
             elif self.WIRELESS_NETinModelType:
                 self.WIRELESS_NETinModelType = False
         elif name == 'modelField':
@@ -5284,8 +5460,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__endElementFieldSOCIAL_MEDIA()
             elif self.U_ACCOUNTin:
                 self.__endElementFieldU_ACCOUNT()
-            #elif self.WEB_PAGEin:
-                #self.__endElementFieldWEB_PAGE()
+            elif self.WEB_BOOKMARKin:
+                self.__endElementFieldWEB_BOOKMARK()
             elif self.WIRELESS_NETin:
                 self.__endElementFieldWIRELESS_NET()
             self.__endElementFieldCHAT()
@@ -5320,8 +5496,10 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__endElementValueSOCIAL_MEDIA()
             elif self.U_ACCOUNTin:
                 self.__endElementValueU_ACCOUNT()
+            elif self.WEB_BOOKMARKin:
+                self.__endElementValueWEB_BOOKMARK()
             elif self.WIRELESS_NETin:
-                self.__endElementValueWIRELESS_NET()
+                self.__endElementValueWIRELESS_NET()            
             self.__endElementValueCHAT()
             self.__endElementValueWEB_PAGE()
         elif name == 'timestamp':
