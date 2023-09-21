@@ -13,7 +13,7 @@ The UFED parser is composed of two different modules:
 
 * parser_UFEDtoCASE (XML parser program)
 * UFEDtoJSON.py (data converter into CASE-JSON-LD files)
-* CASE_generator.py (classes to generate JSON-LD files borrowed from the case_builder library developed within the INSPECTr project - Intelligence Network and Secure Platform for Evidence Correlation and Transfer, GA n. 833276)
+* CASE_generator.py (classes to generate JSON-LD files borrowed from the case_builder library developed within the INSPECTr project - Intelligence Network and Secure Platform for Evidence Correlation and Transfer, GA n. 833276). The library will be available soon on CASE repo.
 
 ## Requirements
 The tool has been developed in Python version 3.x and here are some required modules:
@@ -56,14 +56,17 @@ All the XML reports have been processed to generate the corresponding CASE repre
 * Chat (Whatsapp, Skype, etc.)
 * Contact
 * Cookie
+* Device Connectivity (Bluetooth connections)
 * Email
 * Event (Device)
 * File
+* Installed Applications
 * Location (Device)
 * Searched item (drafting namespace)
 * Social Media Activity (drafting namespace)
 * SMS
 * URL History
+* Web Bookmarks
 * Wifi Connection 
 * Chain of Evidence (relationships between a Digital Trace and the File/Db from which it was extracted)
 * Context
