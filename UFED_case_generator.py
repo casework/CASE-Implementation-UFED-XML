@@ -255,7 +255,7 @@ class ContentData(ObjectFacet):
 
 class Application(ObjectFacet):
 
-    def __init__(self, app_name=None, os=None):
+    def __init__(self, app_name=None, app_identifier=None, installed_version_history=None, num_launches=None, os=None, version=None):
         """
         A simple application
         :param app_name: Name of application (e.g. Native, Facebook, WhatsApp, etc.)
@@ -263,9 +263,26 @@ class Application(ObjectFacet):
         super().__init__()
         self["@type"] = "uco-observable:ApplicationFacet"
         self._set_properties_str(**{"uco-core:name": app_name,
-            'uco-observable:operatingSystem': os})
+            "uco-observable:applicationIdentifier": app_identifier,
+            "uco-observable:version": version,
+            "uco-observable:operatingSystem": os})
+        self._set_properties_int(**{"uco-observable:numberOfLaunches": num_launches})
+        self._set_properties_id_reference(**{"uco-observable:installedVersionHistory": installed_version_history})                                    
 
-
+class ApplicationVersion(ObjectFacet):
+    """
+    A simple application version to manage the installed application
+    :param install_date: The date when the application was installed/purchased on the device
+    """
+    def __init__(self, install_date):
+        """
+        A simple application
+        :param install_date: installation date of an application
+        """
+        super().__init__()
+        self["@type"] = "uco-observable:ApplicationVersion"
+        self._set_properties_date_time(**{"uco-observable:installDate": install_date})    
+    
 class DataRange(ObjectFacet):
 
     def __init__(self, range_offset=None, range_size=None):

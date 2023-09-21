@@ -792,6 +792,28 @@ class UFEDtoJSON():
 		return observable
 
 
+	def __generateTraceInstalledApp(self, INSTALLED_APPid, INSTALLED_APPstatus, INSTALLED_APPname,
+	    INSTALLED_APPversion, INSTALLED_APPidentifier, INSTALLED_APPpurchaseDate):
+		
+		INSTALLED_APPtimeStamp = self.__cleanDate(INSTALLED_APPpurchaseDate)
+#--- id installed_app_purchase_date is not empy a complete ApplicationFacet and ans ApplicationVerions are generated,
+#    otherwise on a partial APplicatinFacet is generate and no Chain of Evidence is created (return None)
+		observable = ObjectObservable()
+		if INSTALLED_APPtimeStamp:			
+			object_app_version =  ApplicationVersion(INSTALLED_APPtimeStamp)
+			self.bundle.append_to_uco_object(object_app_version)
+			facet_application = Application(app_name=INSTALLED_APPname, app_identifier=INSTALLED_APPidentifier,
+			    version=INSTALLED_APPversion, installed_version_history=object_app_version)
+			observable.append_facets(facet_application)
+			self.bundle.append_to_uco_object(observable)
+			return observable
+		else:
+			facet_application = Application(app_name=INSTALLED_APPname, version=INSTALLED_APPversion,
+			    app_identifier=INSTALLED_APPidentifier)
+			observable.append_facets(facet_application)
+			self.bundle.append_to_uco_object(observable)
+			return None			
+								
 	def __generateTraceEmail(self, EMAILid, EMAILstatus, EMAILsource, 
 		EMAILidentifierFROM, EMAILidentifiersTO, EMAILidentifiersCC, 
 		EMAILidentifiersBCC, EMAILbody, EMAILsubject, EMAILtimeStamp, 
@@ -1653,6 +1675,17 @@ class UFEDtoJSON():
 			
 			self.__generateChainOfEvidence(cookie_id, observable_cookie)
 
+	def writeInstalledApp(self, INSTALLED_APPid, INSTALLED_APPstatus, 
+            INSTALLED_APPname, INSTALLED_APPversion , INSTALLED_APPidentifier, INSTALLED_APPpurchaseDate):
+
+		for i, app_id in enumerate(INSTALLED_APPid):
+			observable_app = self.__generateTraceInstalledApp(app_id, 
+			    INSTALLED_APPstatus[i], INSTALLED_APPname[i], 
+		        INSTALLED_APPversion[i], INSTALLED_APPidentifier[i], INSTALLED_APPpurchaseDate[i])
+
+			if observable_app:
+				self.__generateChainOfEvidence(app_id, observable_app)
+		
 	def writeDeviceEvent(self, DEVICE_EVENTid, DEVICE_EVENTstatus, 
                     DEVICE_EVENTtimeStamp, DEVICE_EVENTeventType, DEVICE_EVENTvalue):
 

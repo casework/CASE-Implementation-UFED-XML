@@ -198,6 +198,14 @@ class UFEDparser():
             Handler.EMAILattachmentsFilename)        
         #self.show_elapsed_time(tic_write, 'Write EMAIL')
 
+        
+        
+        #tic_write = timeit.default_timer()
+        caseTrace.writeInstalledApp(Handler.INSTALLED_APPid, Handler.INSTALLED_APPstatus, 
+            Handler.INSTALLED_APPname, Handler.INSTALLED_APPversion , Handler.INSTALLED_APPidentifier, 
+            Handler.INSTALLED_APPpurchaseDate)
+        #self.show_elapsed_time(tic_write, 'Write INSTALLED_APP')
+        
         #tic_write = timeit.default_timer()
         caseTrace.writeInstantMessage(Handler.INSTANT_MSGid, Handler.INSTANT_MSGstatus, 
             Handler.INSTANT_MSGsource, Handler.INSTANT_MSGtimeStamp, 
@@ -745,6 +753,32 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.EMAILidentifiersBCC = []
         self.EMAILattachmentsFilename = []
 
+#--     INSTALLED_APP  section
+        self.INSTALLED_APPinModelType = False
+        self.INSTALLED_APPin = False
+        self.INSTALLED_APPinName = False
+        self.INSTALLED_APPinNameValue = False
+        self.INSTALLED_APPinVersion = False
+        self.INSTALLED_APPinVersionValue = False
+        self.INSTALLED_APPinIdentifier = False
+        self.INSTALLED_APPinIdentifierValue = False
+        self.INSTALLED_APPinPurchaseDate = False
+        self.INSTALLED_APPinPurchaseDateValue = False
+
+        self.INSTALLED_APPtotal = 0
+        self.INSTALLED_APPnameText = ''
+        self.INSTALLED_APPversionText = ''
+        self.INSTALLED_APPidentifierText = ''
+        self.INSTALLED_APPpurchaseDateText = ''
+        
+        self.INSTALLED_APPdeleted = 0
+        self.INSTALLED_APPid = []
+        self.INSTALLED_APPstatus = []
+        self.INSTALLED_APPname = []
+        self.INSTALLED_APPversion = []
+        self.INSTALLED_APPidentifier = []
+        self.INSTALLED_APPpurchaseDate = []
+                
 # SMS section 
         self.SMSinModelType = False
         self.SMSin = False
@@ -1520,7 +1554,30 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.EMAILbody.append('')
             self.EMAILsubject.append('')
             self.EMAILtimeStamp.append('')
+            
+    def __startElementModelINSTALLED_APP(self, attrValue, INSTALLED_APPid, INSTALLED_APPstate):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="InstalledApplication"]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :param INSTANT_MSGid: The value of the id attribute of the Element  (string).
+            :param INSTANT_MSGstate: The value of the  deleted_state attribute of the Element  (string).
+            :return:  None.
+        '''         
+        if attrValue == 'InstalledApplication':
+            self.INSTALLED_APPin = True
+            self.INSTALLED_APPtotal += 1
+            self.printObservable('INSTALLED_APP', self.INSTALLED_APPtotal)
+            self.INSTALLED_APPid.append(INSTALLED_APPid)
+            self.storeTraceStatus(self.INSTALLED_APPstatus, INSTALLED_APPstate, 
+                self.INSTALLED_APPdeleted)
+            self.skipLine = True 
+            self.Observable = True 
 
+            self.INSTALLED_APPname.append('')
+            self.INSTALLED_APPversion.append('')
+            self.INSTALLED_APPidentifier.append('')
+            self.INSTALLED_APPpurchaseDate.append('')
 
     def __startElementModelINSTANT_MSG(self, attrValue, INSTANT_MSGid, INSTANT_MSGstate):
         '''
@@ -1537,7 +1594,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.printObservable('INSTANT_MSG', self.INSTANT_MSGtotal)
             self.INSTANT_MSGid.append(INSTANT_MSGid)
             self.storeTraceStatus(self.INSTANT_MSGstatus, INSTANT_MSGstate, 
-                self.INSTANT_MSGdeleted)
+                                  self.INSTANT_MSGdeleted)
             self.skipLine = True 
             self.Observable = True 
 
@@ -1553,7 +1610,7 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.INSTANT_MSGtype.append('')
             self.INSTANT_MSGfolder.append('')
             self.INSTANT_MSGapplication.append('')
-
+            
     def __startElementModelLOCATION(self, attrValue, LOCATIONid, LOCATIONstate):        
         '''
         It captures the opening of the XML Element matching with the XPath expression
@@ -2160,6 +2217,22 @@ class ExtractTraces(xml.sax.ContentHandler):
             elif attrValue == 'TimeStamp':
                 self.EMAILinTimeStamp = True
     
+    def __startElementFieldINSTALLED_APP(self, attrValue):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/model[@type="InstalledApplication"]/field[@name=...]
+            :param attrValue: Value of the attribute name of the ELement (string).
+            :return:  None.
+        '''        
+        if attrValue == 'Name':
+            self.INSTALLED_APPinName = True
+        elif attrValue == 'Version':
+            self.INSTALLED_APPinVersion = True        
+        elif attrValue == 'Identifier':
+            self.INSTALLED_APPinIdentifier = True
+        elif attrValue == 'PurchaseDate':
+            self.INSTALLED_APPinPurchaseDate = True        
+                
     def __startElementFieldCONTEXT(self, attrValue):
         '''
         It captures the opening of the XML Element matching with the XPath expression
@@ -2676,6 +2749,21 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.EMAILinAttachmentFilename:
             self.EMAILinAttachmentFilenameValue = True
 
+    def __startElementValueINSTALLED_APP(self):
+        '''
+        It captures the opening of the XML Element matching with the XPath expression
+        //modelType/multiField[@type="InstalledApplication"]/field[@name=...]/value
+            :return:  None.
+        '''        
+        if self.INSTALLED_APPinName:
+            self.INSTALLED_APPinNameValue = True
+        elif self.INSTALLED_APPinVersion:
+            self.INSTALLED_APPinVersionValue = True        
+        elif self.INSTALLED_APPinIdentifier:
+            self.INSTALLED_APPinIdentifierValue= True
+        elif self.INSTALLED_APPinPurchaseDate:
+            self.INSTALLED_APPinPurchaseDateValue= True
+    
     def __startElementValueINSTANT_MSG(self):
         '''
         It captures the opening of the XML Element matching with the XPath expression
@@ -3078,6 +3166,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.EMAILinModelType = True
         elif attrType == 'InstantMessage':
             self.INSTANT_MSGinModelType = True
+        elif attrType == 'InstalledApplication':
+            self.INSTALLED_APPinModelType = True        
         elif attrType == 'Location':
             self.LOCATIONinModelType = True
         elif attrType == 'SearchedItem':
@@ -3117,8 +3207,10 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.__startElementModelDEVICE_EVENT(attrType, id, traceState)
         elif self.EMAILinModelType:
             self.__startElementModelEMAIL(attrType, id, traceState)
+        elif self.INSTALLED_APPinModelType:
+            self.__startElementModelINSTALLED_APP(attrType, id, traceState)
         elif self.INSTANT_MSGinModelType:
-            self.__startElementModelINSTANT_MSG(attrType, id, traceState)
+            self.__startElementModelINSTANT_MSG(attrType, id, traceState)        
         elif self.LOCATIONinModelType:
             self.__startElementModelLOCATION(attrType, id, traceState)
         elif self.SEARCHED_ITEMinModelType:
@@ -3203,6 +3295,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.__startElementFieldDEVICE_EVENT(attrName)
         elif self.EMAILin:
             self.__startElementFieldEMAIL(attrName)
+        elif self.INSTALLED_APPin:
+            self.__startElementFieldINSTALLED_APP(attrName)
         elif self.INSTANT_MSGin:
             self.__startElementFieldINSTANT_MSG(attrName)
         elif self.LOCATIONin:
@@ -3248,6 +3342,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.__startElementValueDEVICE_EVENT()
         elif self.EMAILin:
             self.__startElementValueEMAIL()
+        elif self.INSTALLED_APPin:
+            self.__startElementValueINSTALLED_APP()        
         elif self.INSTANT_MSGin:
             self.__startElementValueINSTANT_MSG()
         elif self.LOCATIONin:
@@ -3472,6 +3568,21 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.EMAILinAttachmentFilenameValue:
             self.EMAILattachmentFilenameText += ch
 
+    def __charactersINSTALLED_APP(self, ch):
+        '''
+        It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
+        //modelType[@type="InstalledApplication"]//value/
+            :return:  None.
+        '''        
+        if self.INSTALLED_APPinNameValue:
+            self.INSTALLED_APPnameText += ch
+        elif self.INSTALLED_APPinVersionValue:
+            self.INSTALLED_APPversionText += ch        
+        elif self.INSTALLED_APPinIdentifierValue:
+            self.INSTALLED_APPidentifierText += ch
+        elif self.INSTALLED_APPinPurchaseDateValue:
+            self.INSTALLED_APPpurchaseDateText += ch        
+    
     def __charactersINSTANT_MSG(self, ch):
         '''
         It captures the the CDATA (text) enclosed in any XML Element matching with the XPath expression
@@ -3781,6 +3892,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             self.__charactersDEVICE_EVENT(ch)
         elif self.EMAILin:
             self.__charactersEMAIL(ch)
+        elif self.INSTALLED_APPin:
+            self.__charactersINSTALLED_APP(ch)        
         elif self.INSTANT_MSGin:
             self.__charactersINSTANT_MSG(ch)
         elif self.LOCATIONin:
@@ -4177,6 +4290,24 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.EMAILin = False
                 self.EMAILinSource = False
 
+    def __endElementModelINSTALLED_APP(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="InstalledApplication"]/model/
+            :return:  None.
+        '''         
+        if self.INSTALLED_APPin:
+            idx = self.INSTALLED_APPtotal - 1
+            self.INSTALLED_APPname[idx] = self.INSTALLED_APPnameText
+            self.INSTALLED_APPversion[idx] = self.INSTALLED_APPversionText
+            self.INSTALLED_APPidentifier[idx] = self.INSTALLED_APPidentifierText
+            self.INSTALLED_APPpurchaseDate[idx] = self.INSTALLED_APPpurchaseDateText
+            self.INSTALLED_APPnameText = ''
+            self.INSTALLED_APPversionText = ''
+            self.INSTALLED_APPidentifierText = ''
+            self.INSTALLED_APPpurchaseDateText = ''
+            self.INSTALLED_APPin = False             
+            
     def __endElementModelINSTANT_MSG(self):
         '''
         It captures the end of the XML Element matching with the XPath expression
@@ -4629,6 +4760,22 @@ class ExtractTraces(xml.sax.ContentHandler):
             elif self.EMAILinAttachmentFilename:
                 self.EMAILinAttachmentFilename = False
 
+    def __endElementFieldINSTALLED_APP(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="InstalledApplication"]//field/
+            :return:  None.
+        '''         
+        if self.INSTALLED_APPin:
+            if self.INSTALLED_APPinName:
+                self.INSTALLED_APPinName = False
+            elif self.INSTALLED_APPinVersion:
+                self.INSTALLED_APPinVersion = False            
+            elif self.INSTALLED_APPinIdentifier:
+                self.INSTALLED_APPinIdentifier = False
+            elif self.INSTALLED_APPinPurchaseDate:
+                self.INSTALLED_APPinPurchaseDate = False
+                
     def __endElementFieldINSTANT_MSG(self):
         '''
         It captures the end of the XML Element matching with the XPath expression
@@ -4969,6 +5116,21 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.EMAILinAttachmentFilenameValue:
             self.EMAILinAttachmentFilenameValue = False
 
+    def __endElementValueINSTALLED_APP(self):
+        '''
+        It captures the end of the XML Element matching with the XPath expression
+        //modelType[@type="InstalledApplication"]//value/
+            :return:  None.
+        '''        
+        if self.INSTALLED_APPinNameValue:
+            self.INSTALLED_APPinNameValue = False
+        elif self.INSTALLED_APPinVersionValue:
+            self.INSTALLED_APPinVersionValue = False        
+        elif self.INSTALLED_APPinIdentifierValue:
+            self.INSTALLED_APPinIdentifierValue = False
+        elif self.INSTALLED_APPinPurchaseDateValue:
+            self.INSTALLED_APPinPurchaseDateValue = False        
+                    
     def __endElementValueINSTANT_MSG(self):
         '''
         It captures the end of the XML Element matching with the XPath expression
@@ -5303,8 +5465,10 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__endElementModelDEVICE_EVENT()
             elif self.EMAILinModelType:
                 self.__endElementModelEMAIL()
+            elif self.INSTALLED_APPinModelType:
+                self.__endElementModelINSTALLED_APP()
             elif self.INSTANT_MSGinModelType:
-                self.__endElementModelINSTANT_MSG()
+                self.__endElementModelINSTANT_MSG()            
             elif self.LOCATIONinModelType:
                 self.__endElementModelLOCATION()
             elif self.SEARCHED_ITEMinModelType:
@@ -5339,8 +5503,10 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.DEVICE_EVENTinModelType = False
             elif self.EMAILinModelType:
                 self.EMAILinModelType = False
+            elif self.INSTALLED_APPinModelType:
+                self.INSTALLED_APPinModelType = False
             elif self.INSTANT_MSGinModelType:
-                self.INSTANT_MSGinModelType = False
+                self.INSTANT_MSGinModelType = False            
             elif self.LOCATIONinModelType:
                 self.LOCATIONinModelType = False
             elif self.SEARCHED_ITEMinModelType:
@@ -5448,6 +5614,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__endElementFieldDEVICE_EVENT()
             elif self.EMAILin:
                 self.__endElementFieldEMAIL()
+            elif self.INSTALLED_APPin:
+                self.__endElementFieldINSTALLED_APP()            
             elif self.INSTANT_MSGin:
                 self.__endElementFieldINSTANT_MSG()
             elif self.LOCATIONin:
@@ -5484,6 +5652,8 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.__endElementValueDEVICE_EVENT()
             elif self.EMAILin:
                 self.__endElementValueEMAIL()
+            elif self.INSTALLED_APPin:
+                self.__endElementValueINSTALLED_APP()            
             elif self.INSTANT_MSGin:
                 self.__endElementValueINSTANT_MSG()
             elif self.LOCATIONin:
