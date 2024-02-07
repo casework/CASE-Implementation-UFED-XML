@@ -58,7 +58,7 @@ class UFEDtoJSON():
 		self.phoneUuidList = []
 		
 		self.appNameList = []
-		self.appIDList = []
+		self.appObjectList = []
 		self.domain_name_list = []
 		self.domain_observable_list = []
 		self.appAccountUsernameList = []
@@ -118,16 +118,16 @@ class UFEDtoJSON():
 
 	def __checkAppName(self, name):
 		"""It stores all the application connected with any Trace, in order to avoid duplications.
-		    :param name: Te name of the application (string)
-			:return: None.
+		    :param name: Tte name of the application (string)
+			:return: observableApp.
 		"""		
 		if name in self.appNameList: 
 			idx = self.appNameList.index(name)
-			observable_app = self.appIDList[idx]
+			observable_app = self.appObjectList[idx]
 		else:
 			observable_app = self.__generateTraceAppName(name)
 			self.appNameList.append(name)
-			self.appIDList.append(observable_app)
+			self.appObjectList.append(observable_app)
 		
 		return observable_app
 
@@ -1506,7 +1506,7 @@ class UFEDtoJSON():
 	def writeHeader(self):
 		if self.bundle is None:
 			self.bundle = Bundle()
-			observable_info=ObjectInfo(name="D.F. Expert", version="CASE 1.0.0", description="Extraction from UFED PA XML report")
+			observable_info=ObjectInfo(name="D.F. Expert", version="CASE 1.3.0", description="Extraction from UFED PA XML report")
 			self.bundle.append_to_uco_object(observable_info)
 
 	def writeLastLine(self):
@@ -1659,10 +1659,7 @@ class UFEDtoJSON():
 			else:
 				uuidThread = self.__generateThreadMessages(chat_id, CHATthread, 
 								CHATid_account_to)
-#--- to be completed once the Observable FacetThreadMessage will be
-#	 added to case_builder
-#				
-#				self.__generateChainOfEvidence(chat_id, uuidThread)
+				self.__generateChainOfEvidence(chat_id, uuidThread)
 
 	def writeCookie(self, COOKIEid, COOKIEstatus, COOKIEsource, COOKIEname,
                     COOKIEvalue, COOKIEdomain, COOKIEcreationTime, COOKIElastAccessTime, 
@@ -1714,15 +1711,15 @@ class UFEDtoJSON():
 		for i, i_msg_id in enumerate(INSTANT_MSGid):			
 			if INSTANT_MSGsource[i].find('Native') > -1:
 				idx = self.appNameList.index("Native")
-				observable_app = self.appIDList[idx]
+				observable_app = self.appObjectList[idx]
 			else:
 				if INSTANT_MSGsource[i].strip() in self.appNameList: 
 					idx = self.appNameList.index(INSTANT_MSGsource[i].strip())
-					observable_app = self.appIDList[idx]
+					observable_app = self.appObjectList[idx]
 				else:
 					observable_app = self.__generateTraceAppName(INSTANT_MSGsource[i].strip())
 					self.appNameList.append(INSTANT_MSGsource[i].strip())
-					self.appIDList.append(observable_app)	
+					self.appObjectList.append(observable_app)	
 
 			i_msg_from_identifier = INSTANT_MSGfromIdentifier[i].strip()
 			
