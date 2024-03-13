@@ -1,4 +1,0 @@
-[submodule "dependencies/CASE-Mapping-Python"]
-	path = dependencies/CASE-Mapping-Python
-	url = https://github.com/casework/CASE-Mapping-Python.git
-	branch = main
