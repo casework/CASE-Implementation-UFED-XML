@@ -13,7 +13,13 @@ The UFED parser is composed of two different modules:
 
 * parser_UFEDtoCASE (XML parser program)
 * UFEDtoJSON.py (data converter into CASE-JSON-LD files)
-* CASE_generator.py (classes to generate JSON-LD files borrowed from the case_builder library developed within the INSPECTr project - Intelligence Network and Secure Platform for Evidence Correlation and Transfer, GA n. 833276). The library will be available soon on CASE repo.
+
+and it uses the **Case-Mapping-Python** (github.com/casework/CASE-Mapping-Python) repository as submodule, located in the folder
+
+* dependencies/CASE_Mapping_Python
+
+The CASE-Mapping-Python library is also part of the PyPI and can be used as a package.
+
 
 ## Requirements
 The tool has been developed in Python version 3.x and here are some required modules:
@@ -26,7 +32,7 @@ The tool has been developed in Python version 3.x and here are some required mod
 * uuid (global unique identifier management)
 * datetime
 * timeit
-* time 
+* time
 * json
 
 ## Usage
@@ -45,7 +51,7 @@ where:
 ```
 
 ## Mobile Forensic Data set
-The UFED parser has been developed and tested relying on a huge collection of mobile forensic dataset. This is composed of images made available on the Computer Forensic Reference Data Sets  (CFReDS) Project and also on those provided by Cellebrite within he Catch The Flag annual competition.
+The UFED parser has been developed and tested relying on a huge collection of mobile forensic dataset. This is composed of images made available on the Computer Forensic Reference Data Sets (CFReDS) Project and also on those provided by Cellebrite within he Catch The Flag annual competition.
 
 ## CASE representation: JSON-LD files
 All the XML reports have been processed to generate the corresponding CASE representation of the following Cyber items:
@@ -57,18 +63,18 @@ All the XML reports have been processed to generate the corresponding CASE repre
 * Contact
 * Cookie
 * Device Connectivity (Bluetooth connections)
+* Device Event
 * Email
-* Event (Device)
 * File
-* Installed Applications
-* Location (Device)
-* Searched item (drafting namespace)
+* Installed Application
+* Instant Message
+* Location (related to the Device)
 * Social Media Activity (drafting namespace)
 * SMS
 * URL History
 * Web Bookmarks
-* Wifi Connection 
-* Chain of Evidence (relationships between a Digital Trace and the File/Db from which it was extracted)
+* Wifi Connection
+* Chain of Evidence (represented as a relationship between the Artifact and the File/Db from which it was extracted)
 * Context
   * Device info
   * Tool
@@ -83,7 +89,7 @@ The repo also includes the XMLreports folder containing examples of reports from
 
 ## Drafting TTL
 
-The TTL describing the additional ontology classes based on the drafting namespace
+The drafting.ttl file describing the additional ontology classes based on the drafting namespace
 
 ## Development status
 
