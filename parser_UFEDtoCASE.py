@@ -200,12 +200,12 @@ class UFEDparser():
             Handler.LOCATIONaltitude, Handler.LOCATIONtimeStamp,
             Handler.LOCATIONcategory)
 
-        # ignored, they do contain neither the original URL nor the searchResult so
-        # it's not possible use the observable:URLHistoryEntry class
+        # they do contain neither the original URL nor the searchResult but
+        # it's possible use the observable:URLHistoryEntry class
         #
-        # caseTrace.write_searched_item(Handler.SEARCHED_ITEMid, Handler.SEARCHED_ITEMstatus,
-        #     Handler.SEARCHED_ITEMsource, Handler.SEARCHED_ITEMtimeStamp,
-        #     Handler.SEARCHED_ITEMvalue, Handler.SEARCHED_ITEMsearchResult)
+        caseTrace.write_searched_item(Handler.SEARCHED_ITEMid, Handler.SEARCHED_ITEMstatus,
+            Handler.SEARCHED_ITEMsource, Handler.SEARCHED_ITEMtimeStamp,
+            Handler.SEARCHED_ITEMvalue, Handler.SEARCHED_ITEMsearchResult)
 
         caseTrace.write_social_media_activity(Handler.SOCIAL_MEDIAid, Handler.SOCIAL_MEDIAstatus,
             Handler.SOCIAL_MEDIAsource, Handler.SOCIAL_MEDIAtimeStamp,

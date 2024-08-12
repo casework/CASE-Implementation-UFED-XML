@@ -106,7 +106,7 @@ class UFEDtoJSON():
 		self.WIRELESS_NET_ACCESS ={}
 
 		self.LOCATION_lat_long_coordinate = {}
-		self.SEARCHED_ITEMvalue_date = []
+		self.SEARCHED_ITEMvalue = []
 
 
 		self.SYS_MSG_ID = ''
@@ -157,10 +157,11 @@ class UFEDtoJSON():
 		return observable_location
 
 	def __checkSearchedItems(self, value):
-		itemFound = False
-		if value not in self.SEARCHED_ITEMvalue_date:
-			self.SEARCHED_ITEMvalue_date.append(value)
-			itemFound = True
+		itemFound = True
+		if value not in self.SEARCHED_ITEMvalue:
+			self.SEARCHED_ITEMvalue.append(value)
+			itemFound = False
+		
 		return itemFound
 
 	def __checkUrlAddress(self, address):
@@ -207,9 +208,11 @@ class UFEDtoJSON():
 			'Nov': '11',
 			'Dec': '12'
 		}
-		originalDate = originalDate.strip()
-		if 	originalDate == '':
+		
+		if 	not originalDate:
 			return None
+		
+		originalDate = originalDate.strip()
 
 		for k,v in aMonths.items():
 			if originalDate.find(k) > -1:
@@ -370,8 +373,8 @@ class UFEDtoJSON():
 						uuidFile = self.FILEuuid.get(node, '_?UUID')
 						self.__generateTraceRelation(uuidTrace, uuidFile, 'Contained_Within',
 							table, offset, None, None);
-					else:
-						print ('nodeInfo ' + node + ' not found')
+					# else:
+					# 	print ('nodeInfo ' + node + ' not found')
 
 	def write_device(self, deviceId, devicePhoneModel, deviceOsType, deviceOsVersion,
             devicePhoneVendor, deviceMacAddress, deviceIccid, deviceImsi,
@@ -546,7 +549,7 @@ class UFEDtoJSON():
 		It generates the uco-observable:BrowserBookmarkFacet objectt
 		'''
 		web_bookmark_object = uco.observable.ObservableObject()
-		object_url = self.__checkUrlAddress(wb_url)
+		#object_url = self.__checkUrlAddress(wb_url)
 		objet_app = self.__check_application_name(wb_source)
 		
 		if wb_timeStamp.strip() == '':
@@ -555,7 +558,7 @@ class UFEDtoJSON():
 			wb_timeStamp = self.cleanDate(wb_timeStamp)
 		facet_web_bookmark = uco.observable.BrowserBookmarkFacet(
 			application_id=objet_app,
-			urlTargeted_id=object_url,
+			urlTargeted=wb_url,
 			bookmarkPath=wb_path,
 			accessedTime=wb_timeStamp
     	)
@@ -739,7 +742,7 @@ class UFEDtoJSON():
 		if INSTALLED_APPtimeStamp:
 			object_app_version = uco.observable.ObservableApplicationVersion(
 				install_date=INSTALLED_APPtimeStamp)
-			self.bundle.append_to_uco_object(object_app_version)
+			#self.bundle.append_to_uco_object(object_app_version)
 			facet_application = uco.observable.ApplicationFacet(
 				application_identifier=INSTALLED_APPname,
 				installed_version_history=[object_app_version]
@@ -1139,15 +1142,15 @@ class UFEDtoJSON():
 			return None
 		search_result = self.cleanJSONtext(search_result)
 		search_timestamp = self.cleanDate(search_timestamp)
-		if not self.__checkSearchedItems(search_value + str(search_timestamp)):
-			return None
-		observable_app = self.__check_application_name(search_app)
-		observable = uco.observable.ObservableObject()
-		facet_searched_item = SearchedItem(
-		search_value=search_value, search_result=search_result, application=observable_app,
-		search_launch_time=search_timestamp)
-		observable.append_facets(facet_searched_item)
-		self.bundle.append_to_uco_object(observable)
+		observable = None
+		if not self.__checkSearchedItems(search_value):						
+			#observable_app = self.__check_application_name(search_app)
+			observable = uco.observable.ObservableObject()
+			facet_searched_item = SearchedItem(
+			search_value=search_value, search_result=search_result, application=observable_app,
+			search_launch_time=search_timestamp)
+			observable.append_facets(facet_searched_item)
+			self.bundle.append_to_uco_object(observable)
 		return observable
 
 	def __generateTraceWireless_Net(self, wnet_id, wnet_status, wnet_ssid, wnet_bssid):
@@ -1177,7 +1180,9 @@ class UFEDtoJSON():
 			phone_uuid_from == '' :
 			return ''
 		
-		message_object = uco.observable.ObservableObject()
+		message_object = uco.observable.Message(
+    		has_changed=True,
+		)
 		facet_message = uco.observable.MessageFacet(
 			msg_to=phone_uuid_to,
 			msg_from=phone_uuid_from,
@@ -1190,9 +1195,8 @@ class UFEDtoJSON():
 		self.bundle.append_to_uco_object(message_object)
 		return message_object
 
-	def __generateTraceSmsMessageFacet(self, body, id_app, phone_uuid_from, phone_uuid_to,
+	def __generateTraceSMSMessageFacet(self, body, id_app, phone_uuid_from, phone_uuid_to,
 			time_stamp, status):
-
 		time_stamp = self.cleanDate(time_stamp)
 		body = self.cleanJSONtext(body)
 
@@ -1202,7 +1206,7 @@ class UFEDtoJSON():
 			return ''
 		
 		message_object = uco.observable.ObservableObject()
-		sms_message_facet = uco.observable.SmsMessage(
+		sms_message_facet = uco.observable.SMSMessageFacet(
 			msg_to=phone_uuid_to,
 			msg_from=phone_uuid_from,
 			message_text=body,
@@ -1269,12 +1273,12 @@ class UFEDtoJSON():
 			body = self.cleanJSONtext(SMSbody[i])
 #--- the xsd:dateTime has the structure YYYY-MM-DDTHH:MM:SS (UTCxxx
 #--- the character "/" is not allowed
-			SMStimeStamp[i] = self.cleanDate(SMStimeStamp[i])
+			#SMStimeStamp[i] = self.cleanDate(SMStimeStamp[i])
 
 			id_app_name = self.__check_application_name("Native")
 
 			#direction = ''
-			observable_message = self.__generateTraceSmsMessageFacet(body, id_app_name,
+			observable_message = self.__generateTraceSMSMessageFacet(body, id_app_name,
 				phone_observable_from, phone_observable_to, SMStimeStamp[i], SMSstatus[i])
 
 			if observable_message is not None:
@@ -1724,12 +1728,24 @@ class UFEDtoJSON():
 	def write_searched_item(self, SEARCHED_ITEMid, SEARCHED_ITEMstatus, SEARCHED_ITEMsource,
 					SEARCHED_ITEMtimeStamp, SEARCHED_ITEMvalue, SEARCHED_ITEMsearchResult):
 		for i, search_item_id in enumerate(SEARCHED_ITEMid):
-			observable_searched_item = self.__generateTraceSearched_Item(search_item_id,
-				SEARCHED_ITEMstatus[i], SEARCHED_ITEMsource[i], SEARCHED_ITEMtimeStamp[i],
-				SEARCHED_ITEMvalue[i], SEARCHED_ITEMsearchResult[i])
 			
-			if observable_searched_item is not None:
-				self.__generate_chain_of_evidence(search_item_id, observable_searched_item)
+			if SEARCHED_ITEMvalue[i].strip():
+				if not self.__checkSearchedItems(SEARCHED_ITEMvalue[i].strip()):	
+					history_entries = []
+					#print(f"WEB_PAGElastVisited = {WEB_PAGElastVisited[i]}")
+					#print(f"type WEB_PAGElastVisited = {type(WEB_PAGElastVisited[i])}")
+					# if WEB_PAGElastVisited[i]:
+					history_entry = {
+					    "uco-observable:keywordSearchTerm": SEARCHED_ITEMvalue[i],
+					}
+					url_history_entry_object = uco.observable.ObservableObject()
+					history_entries.append(history_entry)
+					url_history_facet = uco.observable.UrlHistoryFacet(
+		    			history_entries=history_entries
+					)
+					url_history_entry_object.append_facets(url_history_facet)
+					self.bundle.append_to_uco_object(url_history_entry_object)
+					self.__generate_chain_of_evidence(search_item_id, url_history_entry_object)
 
 	def write_web_pages(self, WEB_PAGEid, WEB_PAGEstatus, WEB_PAGEsource, WEB_PAGEurl,
 				WEB_PAGEtitle, WEB_PAGEvisitCount, WEB_PAGlastVisited):
