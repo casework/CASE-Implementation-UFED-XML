@@ -5,7 +5,7 @@ import os
 import re
 import sys
 #from UFED_case_generator import *
-from dependencies.CASE_Mapping_Python import base, case, drafting, uco
+from dependencies.CASE_Mapping_Python.case_mapping import base, case, drafting, uco
 from datetime import datetime, date
 from typing import Dict, List, Optional, Union
 
@@ -287,11 +287,8 @@ class UFEDtoJSON():
 		# generate Trace/Role for the Performer, D.F. Expert, of the Actions
 		object_role = self.__generateTraceRole('Digital Forensic Expert')
 		
-		# generate Trace/Relation between the above Role and the Identity traces
-		# the Relationshi accept ObservableObjects only, so this statement
-		# raises an error of Type
-		# self.__generateTraceRelation(object_identity, object_role,
-		# 	'has_role', '', '', None, None);
+		# generate Trace/Relation between Role and Identity by using the core Relationship
+		self.__generateTraceRelationCore(object_identity, object_role, relation='Has_Role');
 		
 #---	The XML report contains the attribute DeviceInfoExtractionStartDateTime
 #		that is the Acquisition Start Date and similarly for the Acquisition
@@ -556,9 +553,12 @@ class UFEDtoJSON():
 			wb_timeStamp = None
 		else:
 			wb_timeStamp = self.cleanDate(wb_timeStamp)
+		
+		url_id = self.__generateTraceURLFullValue(wb_url)
+		
 		facet_web_bookmark = uco.observable.BrowserBookmarkFacet(
 			application_id=objet_app,
-			urlTargeted=wb_url,
+			urlTargeted_id=url_id,
 			bookmarkPath=wb_path,
 			accessedTime=wb_timeStamp
     	)
@@ -701,6 +701,10 @@ class UFEDtoJSON():
 	def __generate_trace_cookie(self, cookie_id, cookie_status,
 					cookie_source, cookie_name, cookie_path, cookie_domain,
 					cookie_creationTime, cookie_lastAccessedTime, cookie_expiry):
+		id_app = None
+		if cookie_source.strip() != "":
+			id_app = self.__check_application_name(cookie_source.strip())
+		
 		cookie_creationTime = self.cleanDate(cookie_creationTime)
 		cookie_lastAccessedTime = self.cleanDate(cookie_lastAccessedTime)
 		cookie_expiry = self.cleanDate(cookie_expiry)
@@ -709,10 +713,11 @@ class UFEDtoJSON():
 		observable_source = self.__check_application_name(cookie_source)
 		observable_domain = self.__check_application_name(cookie_domain)
 		facet_cookie = uco.observable.BrowserCookieFacet(
-			name=cookie_name,
-			path=cookie_path,
+			application = id_app,
+			cookie_name=cookie_name,
+			cookie_path=cookie_path,
 			created_time=cookie_creationTime,
-			last_access_time=cookie_lastAccessedTime,
+			accessed_time=cookie_lastAccessedTime,
 			expiration_time=cookie_expiry
 			)
 		cookie_object.append_facets(facet_cookie)
@@ -1062,6 +1067,21 @@ class UFEDtoJSON():
 		)
  		self.bundle.append_to_uco_object(case_provenance)
  		return case_provenance
+
+	def __generateTraceRelationCore(self, source, target, relation, start_date=None, end_date=None):
+		if isinstance(start_date, str):
+			start_date = self.cleanDate(start_date)
+		if isinstance(end_date, str):
+			end_date = self.cleanDate(end_date)
+		core_relationship = uco.core.Relationship(
+			source=source,
+			target=target,
+			start_time=start_date,
+			end_time=end_date,
+			kind_of_relationship=relation,
+			directional=True)
+		self.bundle.append_to_uco_object(core_relationship)
+		return core_relationship
 
 	def __generateTraceRelation(self, source, target, relation, table, offset,
 		start_date, end_date):
