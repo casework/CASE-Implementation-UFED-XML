@@ -215,6 +215,7 @@ class UFEDtoJSON():
 
 		originalDate = originalDate.strip()
 
+
 		for k,v in aMonths.items():
 			if originalDate.find(k) > -1:
 				originalDate = originalDate.replace(k, v)
@@ -263,6 +264,8 @@ class UFEDtoJSON():
 			originalDate = datetime.strptime(originalDate,
 				'%Y-%m-%dT%H:%M:%S.%f%z')
 		else:
+			#print(f"originalDate=[{originalDate}]")
+			originalDate = originalDate.split()[0]
 			originalDate = datetime.strptime(originalDate,
 				'%Y-%m-%dT%H:%M:%S')
 		return originalDate
@@ -1387,25 +1390,52 @@ class UFEDtoJSON():
 			self.FileOut.write(object_str + ',\n')
 		return uuid
 		"""
+	def extract_valid_coordinates(self, value, min_val, max_val):
+		# split() to divide any sequence by using spaces, tab or \n
+		tokens = value.split()
+
+		for token in tokens:
+        # Se contiene un esponente negativo estremo (es. E-121), lo scartiamo prima del calcolo
+			if "e-" in token.lower():
+				try:
+					esponente = int(token.lower().split("e-")[1])
+					if esponente > 6:  # rule out values less than 0.000001
+						continue
+				except (ValueError, IndexError):
+					continue
+
+			try:
+				valore = float(token)
+        # Compare with the range (i.e. -90 <= lat <= 90 or -180 <= long <= 180)
+				if min_val <= valore <= max_val:
+					return valore
+			except ValueError:
+					continue
+
+		return 0.00  # No valid value found
 
 	def __generate_trace_geo_location (self, latitude, longitude, altitude, type):
 
 		geo_location_object = uco.observable.ObservableObject()
-		id = latitude + '@' + longitude
+
+		if not isinstance(latitude, float):
+			latitude  = self.extract_valid_coordinates(latitude, -90, 90)
+
+		if not isinstance(longitude, float):
+			longitude  = self.extract_valid_coordinates(longitude, -180, 180)
+
+		id = str(latitude) + '@' + str(longitude)
 		self.LOCATION_lat_long_coordinate[id] = geo_location_object
 
-		latitude_decimal = float(latitude)
-		longitude_decimal = float(longitude)
-
 		if altitude.strip() != '':
-			altitude_decimal = float(altitude.strip())
+			altitude = float(altitude.strip().split()[0])
 		else:
-			altitude_decimal = 0.00
+			altitude = 0.00
 
 		facet_location = uco.location.LatLongCoordinatesFacet(
-			latitude=latitude_decimal,
-			longitude=longitude_decimal,
-			altitude=altitude_decimal)
+			latitude=latitude,
+			longitude=longitude,
+			altitude=altitude)
 		geo_location_object.append_facets(facet_location)
 
 		self.bundle.append_to_uco_object(geo_location_object)
@@ -1426,6 +1456,7 @@ class UFEDtoJSON():
 				visit_count = '0'
 			else:
 				visit_count = WEB_PAGEvisitCount[i]
+			visit_count = visit_count.strip().split()[0]
 			visit_count = int(visit_count)
 			history_entries = []
 			#print(f"WEB_PAGElastVisited = {WEB_PAGElastVisited[i]}")

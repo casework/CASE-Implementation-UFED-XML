@@ -11,7 +11,7 @@ import codecs
 import timeit
 from time import localtime, strftime
 import UFEDtoJSON as CJ
-#import logging
+import sys
 
 
 class UFEDparser:
@@ -94,7 +94,7 @@ class UFEDparser:
         SAXparser.parse(self.xml_report)
         self.show_elapsed_time(self.tic_start, "Extraction Traces")
         if self.verbose:
-            print("\n\n\nCASE JSON-LD file is being generated ...")
+            print("\n\n\nUCO/CASE JSON-LD file is being generated ...")
         tic_case_start = timeit.default_timer()
         phoneNumber = Handler.findOwnerPhone(Handler.U_ACCOUNTusername).replace(" ", "")
         self.xml_report = xml_report
@@ -173,6 +173,7 @@ class UFEDparser:
             Handler.FILEexifModel,
         )
         # self.show_elapsed_time(tic_write, 'Write FILES')
+
 
         caseTrace.write_contact(
             Handler.CONTACTid,
@@ -607,6 +608,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CALLinIdentifier = False
         self.CALLinRole = False
         self.CALLinName = False
+        self.CALLinRelatedModels = False
         self.CALLtotal = 0
         self.CALLsourceText = ""
         self.CALLdirectionText = ""
@@ -676,6 +678,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CELL_TOWERinNID = False
         self.CELL_TOWERinBID = False
         self.CELL_TOWERinSID = False
+        self.CELL_TOWERinRelatedModels = False
         self.CELL_TOWERtotal = 0
         self.CELL_TOWERlongitudeText = ""
         self.CELL_TOWERlatitudeText = ""
@@ -768,6 +771,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CHATinMsgAttachmentFilename = False
         self.CHATinMsgAttachmentUrl = False
         self.CHATinMsgAttachmentUrlValue = False
+        self.CHATinRelatedModels = False
         self.CHATnumber = 0
         self.CHATtotal = 0
         self.CHATdeleted = 0
@@ -843,6 +847,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.COOKIEinCreationTimeValue = False
         self.COOKIEinLastAccessTime = False
         self.COOKIEinExpiry = False
+        self.COOKIEinRelatedModels = False
         self.COOKIEtotal = 0
         self.COOKIEsourceText = ""
         self.COOKIEnameText = ""
@@ -1168,6 +1173,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.LOCATIONinAltitude = False
         self.LOCATIONinTimeStamp = False
         self.LOCATIONinCategory = False
+        self.LOCATIONinRelatedModels = False
         self.LOCATIONtic = 0
         self.LOCATIONtoc = 0
         self.LOCATIONtotal = 0
@@ -1229,6 +1235,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CONTACTphoneNumText = ""
         self.CONTACTuserIdText = ""
         self.CONTACTaccountText = ""
+        self.CONTACTinRelatedModels = False
         self.CONTACTid = []
         self.CONTACTstatus = []
         self.CONTACTname = []
@@ -1255,6 +1262,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SEARCHED_ITEMinTimeStamp = False
         self.SEARCHED_ITEMinValue = False
         self.SEARCHED_ITEMinSearchResult = False
+        self.SEARCHED_ITEMinRelatedModels = False
         self.SEARCHED_ITEMtotal = 0
         self.SEARCHED_ITEMsourceText = ""
         self.SEARCHED_ITEMtimeStampText = ""
@@ -1391,6 +1399,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.WEB_PAGEinTitle = False
         self.WEB_PAGEinVisitCount = False
         self.WEB_PAGEinLastVisited = False
+        self.WEB_PAGEinRelatedModels = False
         self.WEB_PAGEtotal = 0
         self.WEB_PAGEdeleted = 0
         self.WEB_PAGEsourceText = ""
@@ -1608,6 +1617,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         :param CALLstate: The value of the deleted_state attribute of the Element (string).
         :return: None.
         """
+        if self.CALLinRelatedModels:
+            return
         if attrValue == "Call":
             self.CALLin = True
             self.CALLtotal += 1
@@ -1681,6 +1692,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         :param CELL_TOWERstate: The value of the deleted_state attribute of the Element (string).
         :return: None.
         """
+        if self.CELL_TOWERinRelatedModels:
+            return
         if attrValue == "CellTower":
             self.CELL_TOWERin = True
             self.CELL_TOWERtotal += 1
@@ -1711,6 +1724,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         :param CHATstate: The value of the deleted_state attribute of the Element (string).
         :return: None.
         """
+        if self.CHATinRelatedModels:
+            return
         if (
             self.CHATinMultiModelFieldPhotos
             or self.CHATinMultiModelFieldTo
@@ -1747,7 +1762,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif attrType == "Attachment":
             self.CHATinMsgAttachment = True
 
-    def __startElementModelCONTACT(self, attrValue, CONTACTid, CONTACTstate):
+    def __startElementModelCONTACT(self, attrValue, CONTACTid, CONTACTstate, attrs):
         """
         It captures the opening of the XML Element matching with the XPath expression
         //modelType/model[@type="Contact"]
@@ -1756,6 +1771,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         :param CONTACTstate: The value of the deleted_state attribute of the Element (string).
         :return: None.
         """
+        if self.CONTACTinRelatedModels:
+        # Ignore the nested conacts inside RelatedModels
+            return
         if self.CONTACTinMultiModelFieldPhotos:
             pass
         elif self.CONTACTinMultiModelFieldEntries:
@@ -1786,6 +1804,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         :param COOKIEstate: The value of the deleted_state attribute of the Element (string).
         :return: None.
         """
+        if self.COOKIEinRelatedModels:
+            return
+
         if attrValue == "Cookie":
             self.COOKIEin = True
             self.COOKIEtotal += 1
@@ -1924,6 +1945,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             :param LOCATIONstate: The value of the  deleted_state attribute of the Element  (string).
             :return:  None.
         """
+        if self.LOCATIONinRelatedModels:
+            return
         if attrValue == "Location":
             self.LOCATIONtotal += 1
             self.LOCATIONin = True
@@ -1951,6 +1974,9 @@ class ExtractTraces(xml.sax.ContentHandler):
             :param SEARCHED_ITEMstate: The value of the  deleted_state attribute of the Element  (string).
             :return:  None.
         """
+        if self.SEARCHED_ITEMinRelatedModels:
+            return
+
         if attrValue == "SearchedItem":
             self.SEARCHED_ITEMin = True
             self.SEARCHED_ITEMtotal += 1
@@ -2077,6 +2103,8 @@ class ExtractTraces(xml.sax.ContentHandler):
             :param WEB_PAGEstate: The value of the  deleted_state attribute of the Element  (string).
             :return:  None.
         """
+        if self.WEB_PAGEinRelatedModels:
+            return
         if attrValue == "VisitedPage":
             self.WEB_PAGEin = True
             self.WEB_PAGEtotal += 1
@@ -3033,7 +3061,24 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif name == "model":
             traceState = attrs.get("deleted_state")
             id = attrs.get("id")
-            self.__startElementModel(attrType, id, traceState)
+            self.__startElementModel(attrType, id, traceState, attrs)
+        elif name == "RelatedModels":
+            if self.CONTACTinModelType:
+                self.CONTACTinRelatedModels = True
+            elif self.CALLinModelType:
+                self.CALLinRelatedModels = True
+            elif self.CELL_TOWERinModelType:
+                self.CELL_TOWERinRelatedModels = True
+            elif self.CHATinModelType:
+                self.CHATinRelatedModels = True
+            elif self.WEB_PAGEinModelType:
+                self.WEB_PAGEinRelatedModels = True
+            elif self.LOCATIONinModelType:
+                self.LOCATIONinRelatedModels = True
+            elif self.COOKIEinModelType:
+                self.COOKIEinRelatedModels = True
+            elif self.SEARCHED_ITEMinModelType:
+                self.SEARCHED_ITEMinRelatedModels = True
         elif name == "multiModelField":
             self.__startMultiModelField(attrName)
         elif name == "modelField":
@@ -3226,7 +3271,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif attrType == "WirelessNetwork":
             self.WIRELESS_NETinModelType = True
 
-    def __startElementModel(self, attrType, id, traceState):
+    def __startElementModel(self, attrType, id, traceState, attrs):
         """
         It captures the opening of any XML Element matching with the XPath expression
         //model/
@@ -3243,7 +3288,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.CHATinModelType:
             self.__startElementModelCHAT(attrType, id, traceState)
         elif self.CONTACTinModelType:
-            self.__startElementModelCONTACT(attrType, id, traceState)
+            self.__startElementModelCONTACT(attrType, id, traceState, attrs)
         elif self.COOKIEinModelType:
             self.__startElementModelCOOKIE(attrType, id, traceState)
         elif self.DEVICE_EVENTinModelType:
@@ -4019,20 +4064,21 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="CellTower"]/model/
             :return: None.
         """
+        if self.CELL_TOWERinRelatedModels:
+            return
         if self.CELL_TOWERin:
-
             if not self.CELL_TOWERinPosition:
                 idx = self.CELL_TOWERtotal - 1
-                self.CELL_TOWERlongitude[idx] = self.CELL_TOWERlongitudeText
-                self.CELL_TOWERlatitude[idx] = self.CELL_TOWERlatitudeText
-                self.CELL_TOWERtimeStamp[idx] = self.CELL_TOWERtimeStampText
-                self.CELL_TOWERmcc[idx] = self.CELL_TOWERmccText
-                self.CELL_TOWERmnc[idx] = self.CELL_TOWERmncText
-                self.CELL_TOWERlac[idx] = self.CELL_TOWERlacText
-                self.CELL_TOWERcid[idx] = self.CELL_TOWERcidText
-                self.CELL_TOWERnid[idx] = self.CELL_TOWERnidText
-                self.CELL_TOWERbid[idx] = self.CELL_TOWERbidText
-                self.CELL_TOWERsid[idx] = self.CELL_TOWERsidText
+                self.CELL_TOWERlongitude[idx] = self.CELL_TOWERlongitudeText.strip()
+                self.CELL_TOWERlatitude[idx] = self.CELL_TOWERlatitudeText.strip()
+                self.CELL_TOWERtimeStamp[idx] = self.CELL_TOWERtimeStampText.strip()
+                self.CELL_TOWERmcc[idx] = self.CELL_TOWERmccText.strip()
+                self.CELL_TOWERmnc[idx] = self.CELL_TOWERmncText.strip()
+                self.CELL_TOWERlac[idx] = self.CELL_TOWERlacText.strip()
+                self.CELL_TOWERcid[idx] = self.CELL_TOWERcidText.strip()
+                self.CELL_TOWERnid[idx] = self.CELL_TOWERnidText.strip()
+                self.CELL_TOWERbid[idx] = self.CELL_TOWERbidText.strip()
+                self.CELL_TOWERsid[idx] = self.CELL_TOWERsidText.strip()
                 self.CELL_TOWERlongitudeText = ""
                 self.CELL_TOWERlatitudeText = ""
                 self.CELL_TOWERtimeStampText = ""
@@ -4049,45 +4095,63 @@ class ExtractTraces(xml.sax.ContentHandler):
         """
         It captures the end of the XML Element matching with the XPath expression
         //modelType[@type="Call"]/model/
-            :return: None.
+        :return: None.
         """
+        if self.CALLinRelatedModels:
+            return
+
         if self.CALLinParty:
             self.CALLinParty = False
-            if self.CALLroleText.upper() == "TO":
-                self.CALLroleTO.append(self.CALLroleText)
-                self.CALLroleFROM.append("")
-                self.CALLidentifierTO.append(self.CALLidentifierText)
-                self.CALLidentifierFROM.append("")
-                self.CALLnameTO.append(self.CALLnameText)
-                self.CALLnameFROM.append("")
-            else:
-                self.CALLroleFROM.append(self.CALLroleText)
-                self.CALLroleTO.append("")
-                self.CALLidentifierFROM.append(self.CALLidentifierText)
-                self.CALLidentifierTO.append("")
-                self.CALLnameFROM.append(self.CALLnameText)
-                self.CALLnameTO.append("")
+            role = self.CALLroleText.strip().upper()
+            if role == "TO":
+                self.CALLroleTO.append(self.CALLroleText.strip() if self.CALLroleText.strip() != "" else "")
+                self.CALLidentifierTO.append(self.CALLidentifierText.strip() if self.CALLidentifierText.strip() != "" else "")
+                self.CALLnameTO.append(self.CALLnameText.strip() if self.CALLnameText.strip() != "" else "")
+            elif role == "FROM":
+                self.CALLroleFROM.append(self.CALLroleText.strip() if self.CALLroleText.strip() != "" else "")
+                self.CALLidentifierFROM.append(self.CALLidentifierText.strip() if self.CALLidentifierText.strip() != "" else "")
+                self.CALLnameFROM.append(self.CALLnameText.strip() if self.CALLnameText.strip() != "" else "")
 
             self.CALLidentifierText = ""
             self.CALLroleText = ""
             self.CALLnameText = ""
 
         elif self.CALLin:
-            self.CALLsource.append(self.CALLsourceText)
-            self.CALLtimeStamp.append(self.CALLtimeStampText)
+            # 1. Metadati principali scalari
+            self.CALLsource.append(self.CALLsourceText.strip())
+            self.CALLtimeStamp.append(self.CALLtimeStampText.strip())
 
             if self.CALLdirectionText.strip() == "":
                 self.CALLdirectionText = self.CALLtypeText
 
-            self.CALLdirection.append(self.CALLdirectionText)
+            self.CALLdirection.append(self.CALLdirectionText.strip())
             self.CALLduration.append(self.CALLdurationText.strip())
-            self.CALLoutcome.append(self.CALLoutcomeText)
+            self.CALLoutcome.append(self.CALLoutcomeText.strip())
+
+            # 2. Garanzia che le liste dei partecipanti abbiano SEMPRE almeno 1 elemento stringa
+            if len(self.CALLroleTO) == 0:
+                self.CALLroleTO = [""]
+            if len(self.CALLidentifierTO) == 0:
+                self.CALLidentifierTO = [""]
+            if len(self.CALLnameTO) == 0:
+                self.CALLnameTO = [""]
+
+            if len(self.CALLroleFROM) == 0:
+                self.CALLroleFROM = [""]
+            if len(self.CALLidentifierFROM) == 0:
+                self.CALLidentifierFROM = [""]
+            if len(self.CALLnameFROM) == 0:
+                self.CALLnameFROM = [""]
+
+            # 3. Allineamento lunghezze tra TO e FROM se necessario
             self.CALLrolesTO.append(self.CALLroleTO[:])
             self.CALLrolesFROM.append(self.CALLroleFROM[:])
             self.CALLidentifiersTO.append(self.CALLidentifierTO[:])
             self.CALLidentifiersFROM.append(self.CALLidentifierFROM[:])
             self.CALLnamesFROM.append(self.CALLnameFROM[:])
             self.CALLnamesTO.append(self.CALLnameTO[:])
+
+            # 4. Reset variabili temporanee
             self.CALLsourceText = ""
             self.CALLtimeStampText = ""
             self.CALLdirectionText = ""
@@ -4111,6 +4175,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="Contact"]/model/
             :return:  None.
         """
+        if self.CONTACTinRelatedModels:
+            return
         if self.CONTACTinModelUserId:
             self.CONTACTinModelUserId = False
         elif self.CONTACTinModelPhoneNumber:
@@ -4122,8 +4188,16 @@ class ExtractTraces(xml.sax.ContentHandler):
         elif self.CONTACTin:
             self.CONTACTsource[self.CONTACTtotal - 1] = self.CONTACTsourceText
             self.CONTACTname[self.CONTACTtotal - 1] = self.CONTACTnameText
-            self.CONTACTphoneNum = self.CONTACTphoneNumText.split("###")
-            self.CONTACTuserId = self.CONTACTuserIdText.split("###")
+            # Manage split to avoid [''] if it's empty
+            if self.CONTACTphoneNumText.strip() != "":
+                self.CONTACTphoneNum = self.CONTACTphoneNumText.split("###")
+            else:
+                self.CONTACTphoneNum = [""]
+
+            if self.CONTACTuserIdText.strip() != "":
+                self.CONTACTuserId = self.CONTACTuserIdText.split("###")
+            else:
+                self.CONTACTuserId = [""]
 
             lenPhoneNums = len(self.CONTACTphoneNum)
             lenUserIds = len(self.CONTACTuserId)
@@ -4151,6 +4225,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="Chat"]/model/
             :return:  None.
         """
+        if self.CHATinRelatedModels:
+            return
         if self.CHATinMultiModelFieldPhotos:
             pass
         elif self.CHATinParty:
@@ -4226,6 +4302,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="Cookie"]/model/
             :return:  None.
         """
+        if self.COOKIEinRelatedModels:
+            return
         if self.COOKIEin:
             idx = self.COOKIEtotal - 1
             self.COOKIEsource[idx] = self.COOKIEsourceText
@@ -4382,6 +4460,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="Location"]/model/
             :return:  None.
         """
+        if self.LOCATIONinRelatedModels:
+            return
         if self.LOCATIONin:
             if not self.LOCATIONinPosition:
                 idx = self.LOCATIONtotal - 1
@@ -4456,6 +4536,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="SearchedItem"]/model/
             :return:  None.
         """
+        if self.SEARCHED_ITEMinRelatedModels:
+            return
+
         if self.SEARCHED_ITEMin:
             idx = self.SEARCHED_ITEMtotal - 1
             self.SEARCHED_ITEMsource[idx] = self.SEARCHED_ITEMsourceText
@@ -4543,6 +4626,8 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="VisitedPage"]/model/
         :return: None.
         """
+        if self.WEB_PAGEinRelatedModels:
+            return
         if self.WEB_PAGEin:
             self.WEB_PAGEsource.append(self.WEB_PAGEsourceText)
             self.WEB_PAGEurl.append(self.WEB_PAGEurlText)
@@ -5258,6 +5343,23 @@ class ExtractTraces(xml.sax.ContentHandler):
             elif self.WIRELESS_NETinModelType:
                 self.__endElementModelWIRELESS_NET()
             self.__endElementModelU_ACCOUNT()
+        elif name == "RelatedModels":
+            if self.CONTACTinModelType:
+                self.CONTACTinRelatedModels = False
+            elif self.CALLinModelType:
+                self.CALLinRelatedModels = False
+            elif self.CELL_TOWERinModelType:
+                self.CELL_TOWERinRelatedModels = False
+            elif self.CHATinModelType:
+                self.CHATinRelatedModels = False
+            elif self.WEB_PAGEinModelType:
+                self.WEB_PAGEinRelatedModels = False
+            elif self.LOCATIONinModelType:
+                self.LOCATIONinRelatedModels = False
+            elif self.COOKIEinModelType:
+                self.COOKIEinRelatedModels = False
+            elif self.SEARCHED_ITEMinModelType:
+                self.SEARCHED_ITEMinRelatedModels = False
         elif name == "modelType":
             if self.CALLinModelType:
                 self.CALLinModelType = False
