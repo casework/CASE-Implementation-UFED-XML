@@ -521,6 +521,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.BLUETOOTHinKeyValue = False
         self.BLUETOOTHinValue = False
         self.BLUETOOTHinValueValue = False
+        self.BLUETOOTHinRelatedModels = False
         self.BLUETOOTHtotal = 0
         self.BLUETOOTHkeyText = ""
         self.BLUETOOTHvalueText = ""
@@ -961,6 +962,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.EMAILinSubject = False
         self.EMAILinBody = False
         self.EMAILinTimeStamp = False
+        self.EMAILinRelatedModels = False
         self.EMAILsourceText = ""
         self.EMAILidentifierFROMtext = ""
         self.EMAILidentifierTOtext = ""
@@ -1367,6 +1369,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.WEB_BOOKMARKinUrl = False
         self.WEB_BOOKMARKinPath = False
         self.WEB_BOOKMARKinTimeStamp = False
+        self.WEB_BOOKMARKinRelatedModels = False
         self.WEB_BOOKMARKtotal = 0
         self.WEB_BOOKMARKsourceText = ""
         self.WEB_BOOKMARKurlText = ""
@@ -1639,6 +1642,9 @@ class ExtractTraces(xml.sax.ContentHandler):
             :param BLUETOOTHstate: The value of the deleted_state attribute of the Element (string).
             :return: None.
         """
+        if self.BLUETOOTHinRelatedModels:
+            return
+
         if attrType == "DeviceConnectivity":
             self.BLUETOOTHin = True
             self.BLUETOOTHtotal += 1
@@ -1859,6 +1865,9 @@ class ExtractTraces(xml.sax.ContentHandler):
             :param EMAILstate: The value of the  deleted_state attribute of the Element  (string).
             :return:  None.
         """
+        if self.EMAILinRelatedModels:
+            return
+
         if attrValue == "Email":
             self.EMAILin = True
             self.EMAILtotal += 1
@@ -2083,6 +2092,9 @@ class ExtractTraces(xml.sax.ContentHandler):
             :param WEB_PAGEstate: The value of the  deleted_state attribute of the Element  (string).
             :return:  None.
         """
+        if self.WEB_BOOKMARKinRelatedModels:
+            return
+
         if attrValue == "WebBookmark":
             self.WEB_BOOKMARKin = True
             self.WEB_BOOKMARKtotal += 1
@@ -3077,8 +3089,14 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.LOCATIONinRelatedModels = True
             elif self.COOKIEinModelType:
                 self.COOKIEinRelatedModels = True
+            elif self.WEB_BOOKMARKinModelType:
+                self.WEB_BOOKMARKinRelatedModels = True
             elif self.SEARCHED_ITEMinModelType:
                 self.SEARCHED_ITEMinRelatedModels = True
+            elif self.EMAILinModelType:
+                self.EMAILinRelatedModels = True
+            elif self.BLUETOOTHinModelType:
+                self.BLUETOOTHinRelatedModels = True
         elif name == "multiModelField":
             self.__startMultiModelField(attrName)
         elif name == "modelField":
@@ -4017,6 +4035,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="DeviceConnectivity"]/model/
             :return: None.
         """
+        if self.BLUETOOTHinRelatedModels:
+            return
+
         if self.BLUETOOTHinKeyValueModel:
             self.BLUETOOTHinKeyValueModel = False
         # --- end of a single Bluetooth connection item
@@ -4346,6 +4367,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="Email"]/model/
             :return:  None.
         """
+        if self.EMAILinRelatedModels:
+            return
+
         if self.EMAILinModelFieldFROM:
             self.EMAILinModelFieldFROM = False
         elif self.EMAILinMultiModelFieldTO:
@@ -4609,6 +4633,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="WebBookmark"]/model/
             :return:  None.
         """
+        if self.WEB_BOOKMARKinRelatedModels:
+            return
+
         if self.WEB_BOOKMARKin:
             self.WEB_BOOKMARKsource.append(self.WEB_BOOKMARKsourceText)
             self.WEB_BOOKMARKurl.append(self.WEB_BOOKMARKurlText)
@@ -5358,8 +5385,14 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.LOCATIONinRelatedModels = False
             elif self.COOKIEinModelType:
                 self.COOKIEinRelatedModels = False
+            elif self.WEB_BOOKMARKinModelType:
+                self.WEB_BOOKMARKinRelatedModels = False
             elif self.SEARCHED_ITEMinModelType:
                 self.SEARCHED_ITEMinRelatedModels = False
+            elif self.EMAILinModelType:
+                self.EMAILinRelatedModels = False
+            elif self.BLUETOOTHinModelType:
+                self.BLUETOOTHinRelatedModels = False
         elif name == "modelType":
             if self.CALLinModelType:
                 self.CALLinModelType = False

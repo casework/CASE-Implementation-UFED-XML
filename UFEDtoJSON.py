@@ -5,8 +5,9 @@ import os
 import re
 import sys
 from dependencies.case_mapping import base, case, drafting, uco
-from datetime import datetime, date
+from datetime import datetime
 from typing import Dict, List, Optional, Union
+import logging
 
 class UFEDtoJSON():
 	'''
@@ -112,6 +113,13 @@ class UFEDtoJSON():
 
 		self.SYS_MSG_ID = ''
 
+		logging.basicConfig(
+    	filename='_parser_dates.log',  # Log file name
+    	level=logging.INFO,           # write messages from INFO
+    	format='%(asctime)s - %(levelname)s - %(message)s',  # Add Date, Time and Level
+    	encoding='utf-8'
+		)
+
 	@staticmethod
 	def __createUUID():
 		'''
@@ -195,80 +203,77 @@ class UFEDtoJSON():
 			self.phone_uuid_list.append(uuid)
 
 	def cleanDate(self, originalDate):
+		if not originalDate:
+			return None
+
+		originalDate = originalDate.strip()
+
+		if not originalDate:
+			return None
+
+		logging.info(f"Date currently being processed: {originalDate}")
+		# Remove any incorrect time zone suffixes or brackets (e.g. UTC(+0))
+		originalDate = re.sub(r'\(UTC[^)]*\)', '', originalDate)
+		originalDate = originalDate.replace('UTC', '').strip()
+
+    # List of possible formats to be tested in order
+		formats_to_be_tested = [
+        # ISO 8601 (e.g. 2020-04-11T13:56:56, with or without milliseconds/TZ)
+        '%Y-%m-%dT%H:%M:%S.%f%z',
+				'%Y-%m-%dT%H:%M:%S.%f',
+        '%Y-%m-%dT%H:%M:%S',
+        '%Y-%m-%dT%H:%M',
+
+        # EXIF date/time (e.g. 2020:04:11 13:56:56)
+        '%Y:%m:%d %H:%M:%S',
+        '%Y:%m:%d %H:%M',
+
+        # M/D/YYYY con AM/PM (e.g. 4/11/2020 1:56:56 PM or 04/11/2020 13:56:56)
+        '%m/%d/%Y %I:%M:%S %p',
+        '%m/%d/%Y %H:%M:%S',
+        '%m/%d/%Y %I:%M %p',
+        '%m/%d/%Y %H:%M',
+
+        # Other common formats using hyphens or full stops
+        '%d-%m-%Y %H:%M:%S',
+        '%Y-%m-%d %H:%M:%S',
+    ]
+
+    # Attempt to parse using known formats
+		for format in formats_to_be_tested:
+			try:
+				logging.info(f"Date processed: {datetime.strptime(originalDate, format)}")
+				return datetime.strptime(originalDate, format)
+			except ValueError:
+				continue
+
+    # If the standard formats don’t work, I try a simple normalisation
+    # for cases with months in words (e.g. ‘Jan’, ‘Feb’) or unusual formats
 		aMonths = {
-			'Jan': '01',
-			'Feb': '02',
-			'Mar': '03',
-			'Apr': '04',
-			'May': '05',
-			'Jun': '06',
-			'Jul': '07',
-			'Aug': '08',
-			'Sep': '09',
-			'Oct': '10',
-			'Nov': '11',
-			'Dec': '12'
-		}
+        'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+        'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+        'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+    }
 
-		if 	not originalDate:
-			return None
-
-		originalDate = originalDate.strip()
-
-
-		for k,v in aMonths.items():
-			if originalDate.find(k) > -1:
-				originalDate = originalDate.replace(k, v)
+		standardised_data = originalDate
+		for k, v in aMonths.items():
+			if k in standardised_data:
+				standardised_data = standardised_data.replace(k, v)
 				break
-		originalDate = originalDate.replace("/", "-")
-		originalDate = originalDate.replace("(", "-")
-		originalDate = originalDate.replace(")", "-")
-		originalDate = originalDate.replace(' ', 'T', 1)
-		originalDate = originalDate.replace('UTC', '')
-		originalDate = originalDate.replace('AM', '')
-		originalDate = originalDate.replace('PM', '')
-		if re.search('^[0-9]{4}', originalDate):
-			pass
-		else:
-			originalDate = re.sub('-([0-9][0-9])T', '-20\g<1>T', originalDate)
-			originalDate = str(originalDate[6:10]) + originalDate[2:6] + originalDate[0:2] + \
-				originalDate[10:]
-		startTZ = originalDate.find("+")
-		if startTZ > -1:
-			originalDate = originalDate[:startTZ]
-		firstChars = originalDate[:10]
-		firstChars = firstChars.replace(".", "-")
-		originalDate = firstChars + originalDate[10:]
-		originalDate = originalDate.strip()
-		if originalDate == "":
-			return None
-		if originalDate[-1] == '-':
-			originalDate = originalDate[0:-1]
-		originalDate = originalDate.replace('.000', '')
-		originalDate = originalDate.replace('.', ':')
-		if re.search('T\d{2}\.', originalDate):
-			originalDate = originalDate.replace('.', ':')
-		if re.search('(\d{2}:\d{2}:\d{2})$', originalDate):
-			pass
-		else:
-			originalDate = re.sub('(\d{2}:\d{2})$', '\g<1>:00', originalDate)
-		if re.search('T(\d):', originalDate):
-			originalDate = re.sub('T(\d):', 'T0\g<1>:', originalDate)
-		if re.search(':(\d):', originalDate):
-			originalDate = re.sub(':(\d):', ':0\g<1>:', originalDate)
-		if re.search(':(\d)$', originalDate):
-			originalDate = re.sub(':(\d)$', ':0\g<1>', originalDate)
-		if re.search('T\d{2}:\d{2}:\d{2}(.+)$', originalDate):
-			originalDate = re.sub('(T\d{2}:\d{2}:\d{2})(.+)$', '\g<1>', originalDate)
-		if originalDate.find('+') > -1:
-			originalDate = datetime.strptime(originalDate,
-				'%Y-%m-%dT%H:%M:%S.%f%z')
-		else:
-			#print(f"originalDate=[{originalDate}]")
-			originalDate = originalDate.split()[0]
-			originalDate = datetime.strptime(originalDate,
-				'%Y-%m-%dT%H:%M:%S')
-		return originalDate
+
+    # Try the parsing again after replacing the text-based month
+		text_formats = ['%d %m %Y %H:%M:%S', '%d %m %Y %H:%M']
+		for format in text_formats:
+			try:
+				logging.info(f"Date processed: {datetime.strptime(standardised_data, format)}")
+				return datetime.strptime(standardised_data, format)
+			except ValueError:
+				continue
+
+    # If there isn’t a single format that matches
+    # print( Unrecognised format: {originalDate} )
+		logging.info("Date processed: None")
+		return None
 
 	def cleanJSONtext(self, originalText):
 		new_text = originalText.strip()
