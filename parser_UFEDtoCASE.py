@@ -551,6 +551,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CALENDARinRepeatIntervalValue = False
         self.CALENDARinAttendees = False
         self.CALENDARinAttachments = False
+        self.CALENDARinRelatedModels = False
         self.CALENDARtotal = 0
         self.CALENDARcategoryText = ""
         self.CALENDARsubjectText = ""
@@ -884,6 +885,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.DEVICE_EVENTinTimeStamp = False
         self.DEVICE_EVENTinEventType = False
         self.DEVICE_EVENTinValue = False
+        self.DEVICE_EVENTinRelatedModels = False
         self.DEVICE_EVENTtotal = 0
         self.DEVICE_EVENTsourceText = ""
         self.DEVICE_EVENTtimeStampText = ""
@@ -1008,6 +1010,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.INSTALLED_APPinVersion = False
         self.INSTALLED_APPinIdentifier = False
         self.INSTALLED_APPinPurchaseDate = False
+        self.INSTALLED_APPinRelatedModels = False
         self.INSTALLED_APPtotal = 0
         self.INSTALLED_APPnameText = ""
         self.INSTALLED_APPversionText = ""
@@ -1043,6 +1046,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SMSinPartyNameValue = False
         self.SMSinPartyRole = False
         self.SMSinPartyRoleValue = False
+        self.SMSinRelatedModels = False
         self.SMSnumber = 0
         self.SMSdeleted = 0
         self.SMStimeStampText = ""
@@ -1121,6 +1125,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.INSTANT_MSGinType = False
         self.INSTANT_MSGinFolder = False
         self.INSTANT_MSGinApplication = False
+        self.INSTANT_MSGinRelatedModels = False
         self.INSTANT_MSGtotal = 0
         self.INSTANT_MSGdeleted = 0
         self.INSTANT_MSGsourceText = ""
@@ -1230,6 +1235,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CONTACTinModelProfilePicture = False
         self.CONTACTinAccount = False
         self.CONTACTinMultiFieldInteractionStatuses = False
+        self.CONTACTinRelatedModels = False
         self.CONTACTtotal = 0
         self.CONTACTdeleted = 0
         self.CONTACTsourceText = ""
@@ -1237,7 +1243,6 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.CONTACTphoneNumText = ""
         self.CONTACTuserIdText = ""
         self.CONTACTaccountText = ""
-        self.CONTACTinRelatedModels = False
         self.CONTACTid = []
         self.CONTACTstatus = []
         self.CONTACTname = []
@@ -1321,6 +1326,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.SOCIAL_MEDIAinCommentCount = False
         self.SOCIAL_MEDIAinAccount = False
         self.SOCIAL_MEDIAinAccountValue = False
+        self.SOCIAL_MEDIAinRelatedModels = False
         self.SOCIAL_MEDIAtotal = 0
         self.SOCIAL_MEDIAsourceText = ""
         self.SOCIAL_MEDIAtimeStampText = ""
@@ -1440,6 +1446,7 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.WIRELESS_NETinLastConnection = False
         self.WIRELESS_NETinBssid = False
         self.WIRELESS_NETinSsid = False
+        self.WIRELESS_NETinRelatedModels = False
         self.WIRELESS_NETtotal = 0
         self.WIRELESS_NETlongitudeText = ""
         self.WIRELESS_NETlatitudeText = ""
@@ -1669,6 +1676,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         :param CALENDARstate: The value of the deleted_state attribute of the Element (string).
         :return: None.
         """
+        if self.CALENDARinRelatedModels:
+            return
+
         if attrValue == "CalendarEntry":
             self.CALENDARin = True
             self.CALENDARtotal += 1
@@ -1840,6 +1850,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         :param DEVICE_EVENTstate: The value of the  deleted_state attribute of the Element  (string).
         :return: None.
         """
+        if self.DEVICE_EVENTinRelatedModels:
+            return
+
         if attrValue == "DeviceEvent":
             self.DEVICE_EVENTin = True
             self.DEVICE_EVENTtotal += 1
@@ -1894,6 +1907,9 @@ class ExtractTraces(xml.sax.ContentHandler):
             :param INSTANT_MSGstate: The value of the  deleted_state attribute of the Element  (string).
             :return:  None.
         """
+        if self.INSTALLED_APPinRelatedModels:
+            return
+
         if attrValue == "InstalledApplication":
             self.INSTALLED_APPin = True
             self.INSTALLED_APPtotal += 1
@@ -1921,6 +1937,9 @@ class ExtractTraces(xml.sax.ContentHandler):
             :param INSTANT_MSGstate: The value of the  deleted_state attribute of the Element  (string).
             :return:  None.
         """
+        if self.INSTANT_MSGinRelatedModels:
+            return
+
         if attrValue == "InstantMessage":
             self.INSTANT_MSGin = True
             self.INSTANT_MSGtotal += 1
@@ -2011,6 +2030,9 @@ class ExtractTraces(xml.sax.ContentHandler):
             :param SMSstate: The value of the  deleted_state attribute of the Element  (string).
             :return:  None.
         """
+        if self.SMSinRelatedModels:
+            return
+
         if attrValue == "SMS":
             self.SMSin = True
             self.SMStotal += 1
@@ -2031,6 +2053,9 @@ class ExtractTraces(xml.sax.ContentHandler):
             :param SOCIAL_MEDIAstate: The value of the  deleted_state attribute of the Element  (string).
             :return:  None.
         """
+        if self.SOCIAL_MEDIAinRelatedModels:
+            return
+
         if attrValue == "SocialMediaActivity":
             self.SOCIAL_MEDIAtotal += 1
             self.SOCIAL_MEDIAin = True
@@ -2139,6 +2164,9 @@ class ExtractTraces(xml.sax.ContentHandler):
             :param WIRELESS_NETstate: The value of the  deleted_state attribute of the Element  (string).
             :return:  None.
         """
+        if self.WIRELESS_NETinRelatedModels:
+            return
+
         if attrValue == "WirelessNetwork":
             self.WIRELESS_NETtotal += 1
             # if self.ARTIFACTmax > self.WIRELESS_NETtotal:
@@ -3097,6 +3125,20 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.EMAILinRelatedModels = True
             elif self.BLUETOOTHinModelType:
                 self.BLUETOOTHinRelatedModels = True
+            elif self.CALENDARinModelType:
+                self.CALENDARinRelatedModels = True
+            elif self.DEVICE_EVENTinModelType:
+                self.DEVICE_EVENTinRelatedModels = True
+            elif self.INSTALLED_APPinModelType:
+                self.INSTALLED_APPinRelatedModels = True
+            elif self.SMSinModelType:
+                self.SMSinRelatedModels = True
+            elif self.INSTANT_MSGinModelType:
+                self.INSTANT_MSGinRelatedModels = True
+            elif self.SOCIAL_MEDIAinModelType:
+                self.SOCIAL_MEDIAinRelatedModels = True
+            elif self.WIRELESS_NETinModelType:
+                self.WIRELESS_NETinRelatedModels = True
         elif name == "multiModelField":
             self.__startMultiModelField(attrName)
         elif name == "modelField":
@@ -4000,6 +4042,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="SMS"]/model/
             :return: None.
         """
+        if self.SMSinRelatedModels:
+            return
+
         if self.SMSinAllTimeStamps:
             pass
         elif self.SMSinParty:
@@ -4055,6 +4100,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="CalendarEntry"]/model/
             :return: None.
         """
+        if self.CALENDARinRelatedModels:
+            return
+
         if self.CALENDARin:
 
             if (not self.CALENDARinAttendees) and (not self.CALENDARinAttachments):
@@ -4349,6 +4397,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="DeviceEvent"]/model/
             :return:  None.
         """
+        if self.DEVICE_EVENTinRelatedModels:
+            return
+
         if self.DEVICE_EVENTin:
             idx = self.DEVICE_EVENTtotal - 1
             self.DEVICE_EVENTsource[idx] = self.DEVICE_EVENTsourceText
@@ -4424,6 +4475,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="InstalledApplication"]/model/
             :return:  None.
         """
+        if self.INSTALLED_APPinRelatedModels:
+            return
+
         if self.INSTALLED_APPin:
             idx = self.INSTALLED_APPtotal - 1
             self.INSTALLED_APPname[idx] = self.INSTALLED_APPnameText
@@ -4442,6 +4496,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="InstantMessage"]/model/
             :return:  None.
         """
+        if self.INSTANT_MSGinRelatedModels:
+            return
+
         if self.INSTANT_MSGin:
             if (
                 not self.INSTANT_MSGinPartyFrom
@@ -4581,6 +4638,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="SocialMediaActivity"]/model/
             :return:  None.
         """
+        if self.SOCIAL_MEDIAinRelatedModels:
+            return
+
         if self.SOCIAL_MEDIAin:
             if (
                 not self.SOCIAL_MEDIAinAttachments
@@ -4674,6 +4734,9 @@ class ExtractTraces(xml.sax.ContentHandler):
         //modelType[@type="WirelessNetwork"]/model/
         :return: None.
         """
+        if self.WIRELESS_NETinRelatedModels:
+            return
+
         if self.WIRELESS_NETin:
             if not self.WIRELESS_NETinPosition:
                 idx = self.WIRELESS_NETtotal - 1
@@ -5393,6 +5456,20 @@ class ExtractTraces(xml.sax.ContentHandler):
                 self.EMAILinRelatedModels = False
             elif self.BLUETOOTHinModelType:
                 self.BLUETOOTHinRelatedModels = False
+            elif self.CALENDARinModelType:
+                self.CALENDARinRelatedModels = False
+            elif self.DEVICE_EVENTinModelType:
+                self.DEVICE_EVENTinRelatedModels = False
+            elif self.INSTALLED_APPinModelType:
+                self.INSTALLED_APPinRelatedModels = False
+            elif self.SMSinModelType:
+                self.SMSinRelatedModels = False
+            elif self.INSTANT_MSGinModelType:
+                self.INSTANT_MSGinRelatedModels = False
+            elif self.SOCIAL_MEDIAinModelType:
+                self.SOCIAL_MEDIAinRelatedModels = False
+            elif self.WIRELESS_NETinModelType:
+                self.WIRELESS_NETinRelatedModels = False
         elif name == "modelType":
             if self.CALLinModelType:
                 self.CALLinModelType = False

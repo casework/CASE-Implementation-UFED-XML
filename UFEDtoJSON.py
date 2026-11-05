@@ -7,7 +7,7 @@ import sys
 from dependencies.case_mapping import base, case, drafting, uco
 from datetime import datetime
 from typing import Dict, List, Optional, Union
-import logging
+#import logging
 
 class UFEDtoJSON():
 	'''
@@ -113,12 +113,12 @@ class UFEDtoJSON():
 
 		self.SYS_MSG_ID = ''
 
-		logging.basicConfig(
-    	filename='_parser_dates.log',  # Log file name
-    	level=logging.INFO,           # write messages from INFO
-    	format='%(asctime)s - %(levelname)s - %(message)s',  # Add Date, Time and Level
-    	encoding='utf-8'
-		)
+		#logging.basicConfig(
+    #	filename='_parser_dates.log',  # Log file name
+    #	level=logging.INFO,           # write messages from INFO
+    #	format='%(asctime)s - %(levelname)s - %(message)s',  # Add Date, Time and Level
+    #	encoding='utf-8'
+		#)
 
 	@staticmethod
 	def __createUUID():
@@ -211,7 +211,6 @@ class UFEDtoJSON():
 		if not originalDate:
 			return None
 
-		logging.info(f"Date currently being processed: {originalDate}")
 		# Remove any incorrect time zone suffixes or brackets (e.g. UTC(+0))
 		originalDate = re.sub(r'\(UTC[^)]*\)', '', originalDate)
 		originalDate = originalDate.replace('UTC', '').strip()
@@ -242,7 +241,6 @@ class UFEDtoJSON():
     # Attempt to parse using known formats
 		for format in formats_to_be_tested:
 			try:
-				logging.info(f"Date processed: {datetime.strptime(originalDate, format)}")
 				return datetime.strptime(originalDate, format)
 			except ValueError:
 				continue
@@ -265,14 +263,12 @@ class UFEDtoJSON():
 		text_formats = ['%d %m %Y %H:%M:%S', '%d %m %Y %H:%M']
 		for format in text_formats:
 			try:
-				logging.info(f"Date processed: {datetime.strptime(standardised_data, format)}")
 				return datetime.strptime(standardised_data, format)
 			except ValueError:
 				continue
 
     # If there isn’t a single format that matches
     # print( Unrecognised format: {originalDate} )
-		logging.info("Date processed: None")
 		return None
 
 	def cleanJSONtext(self, originalText):
