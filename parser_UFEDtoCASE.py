@@ -1471,17 +1471,17 @@ class ExtractTraces(xml.sax.ContentHandler):
         self.U_ACCOUNTinUsername = False
         self.U_ACCOUNTinUsernameValue = False
         self.U_ACCOUNTusernameValueText = ""
-        self.U_ACCOUNTusername = []
         self.U_ACCOUNTinContactEntry = False
         self.U_ACCOUNTinContactPhoto = False
         self.U_ACCOUNTinEmailAddress = False
         self.U_ACCOUNTinUserID = False
         self.U_ACCOUNTinSource = False
         self.U_ACCOUNTinSourceValue = False
-        self.U_ACCOUNTsourceValueText = ""
-        self.U_ACCOUNTsource = []
         self.U_ACCOUNTinName = False
         self.U_ACCOUNTinNameValue = False
+        self.U_ACCOUNTsourceValueText = ""
+        self.U_ACCOUNTusername = []
+        self.U_ACCOUNTsource = []
         self.U_ACCOUNTnameValueText = ""
         self.U_ACCOUNTname = []
         self.U_ACCOUNTtotal = 0
@@ -2392,10 +2392,12 @@ class ExtractTraces(xml.sax.ContentHandler):
         """
         if self.CALLinParty:
             if attrValue == "Identifier":
+                self.CALLidentifierText = ''
                 self.CALLinIdentifier = True
             elif attrValue == "Role":
                 self.CALLinRole = True
             elif attrValue == "Name":
+                self.CALLnameText = ""
                 self.CALLinName = True
         else:
             if attrValue == "Source":

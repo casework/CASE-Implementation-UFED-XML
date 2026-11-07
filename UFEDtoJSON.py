@@ -196,10 +196,14 @@ class UFEDtoJSON():
 	def __checkPhoneNumber(self, contact_phone_num, contact_name):
 		if contact_phone_num not in self.phone_number_list:
 			self.phone_number_list.append(contact_phone_num)
+			if contact_name:
+				contact_name=contact_name.strip()
 			self.phoneNameList.append(contact_name)
 			mobileOperator = ""
-			uuid = self.__generate_phone_account_facet(mobileOperator,
-				contact_name, contact_phone_num)
+			#uuid = self.__generate_phone_account_facet(mobileOperator,
+			#	contact_name, contact_phone_num)
+			uuid = self.__generate_phone_account_facet(contact_phone_num,
+				mobileOperator, contact_name)
 			self.phone_uuid_list.append(uuid)
 
 	def cleanDate(self, originalDate):
@@ -513,16 +517,16 @@ class UFEDtoJSON():
 	# if the mobile operator is available in the XML report, an uco-identity:Identity
 	# will be defined as Organisation.
 					mobileOperator = "-"
-					uuid_party_to = self.__generate_phone_account_facet(mobileOperator,
-										name_to, id_party_to)
+					uuid_party_to = self.__generate_phone_account_facet(id_party_to,
+						mobileOperator, name_to)
 
 				if id_party_from in self.phone_number_list:
 					idx = self.phone_number_list.index(id_party_from)
 					uuid_party_from = self.phone_uuid_list[idx]
 				else:
 					mobileOperator = "-"
-					uuid_party_from = self.__generate_phone_account_facet(mobileOperator,
-						name_from, id_party_from)
+					uuid_party_from = self.__generate_phone_account_facet(id_party_from,
+						mobileOperator, name_from)
 			else:
 				idAppIdentity = self.__check_application_name(call_source[i].strip())
 				if id_party_from.strip() in self.chat_id_participants_list:
@@ -591,7 +595,6 @@ class UFEDtoJSON():
 		details = self.cleanJSONtext(details)
 		calendar_object = uco.observable.ObservableObject()
 		# what are group and details?
-		#print(f"group={group}\ndetails={details}")
 		facet_calendary = uco.observable.CalendarEntryFacet(
 			subject=subject,
 			start_time=startDate,
@@ -635,8 +638,8 @@ class UFEDtoJSON():
 			return cell_site_object
 
 	def __generate_application_account_facet(self, partyId, partyName, idApp):
-		partyName = self.cleanJSONtext(partyName)
 		partyId = self.cleanJSONtext(partyId)
+		partyName = self.cleanJSONtext(partyName)
 		observable = uco.observable.ObservableObject()
 		facet_account = uco.observable.AccountFacet(identifier=partyId)
 		facet_app_account = uco.observable.ApplicationAccountFacet(application=idApp)
@@ -776,7 +779,6 @@ class UFEDtoJSON():
 		EMAILidentifierFROM, EMAILidentifiersTO, EMAILidentifiersCC,
 		EMAILidentifiersBCC, EMAILbody, EMAILsubject, EMAILtimeStamp,
 		EMAILattachmentsFilename):
-		#print(f'EMAILidentifierFROM={EMAILidentifierFROM}')
 		if EMAILidentifierFROM.strip() in self.EMAILaddressList:
 			idx = self.EMAILaddressList.index(EMAILidentifierFROM.strip())
 			idFROM = self.EMAILaccountObjectList[idx]
@@ -993,6 +995,9 @@ class UFEDtoJSON():
     			given_name=source
 			)
 			self.bundle.append_to_uco_object(identity)
+
+		if name:
+			name=name.strip().splitlines()[0]
 
 		observable = uco.observable.ObservableObject()
 		account_facet = uco.observable.AccountFacet(identifier=name, issuer_id=identity)
@@ -1272,8 +1277,8 @@ class UFEDtoJSON():
 						self.phone_number_list.append(sms_party_identifier)
 						self.phoneNameList.append(SMSpartyNames[i][j])
 						mobileOperator = ""
-						phone_party_observable = self.__generate_phone_account_facet(mobileOperator,
-							SMSpartyNames[i][j], sms_party_identifier)
+						phone_party_observable = self.__generate_phone_account_facet(sms_party_identifier,
+							mobileOperator, SMSpartyNames[i][j], )
 						self.phone_uuid_list.append(phone_party_observable)
 
 					if SMSpartyRoles[i][j] == 'To':
@@ -1292,8 +1297,8 @@ class UFEDtoJSON():
 					self.phone_number_list.append(SMSsmsc[i].strip())
 					self.phoneNameList.append('SMSC')
 					mobileOperator = ""
-					phone_smsc_observable = self.__generate_phone_account_facet(mobileOperator,
-						'SMSC', SMSsmsc[i].strip())
+					phone_smsc_observable = self.__generate_phone_account_facet(SMSsmsc[i].strip(),
+						mobileOperator, 'SMSC')
 					self.phone_uuid_list.append(phone_smsc_observable)
 
 			if SMSfolder[i] == 'Inbox':
@@ -1460,9 +1465,6 @@ class UFEDtoJSON():
 			visit_count = visit_count.strip().split()[0]
 			visit_count = int(visit_count)
 			history_entries = []
-			#print(f"WEB_PAGElastVisited = {WEB_PAGElastVisited[i]}")
-			#print(f"type WEB_PAGElastVisited = {type(WEB_PAGElastVisited[i])}")
-			# if WEB_PAGElastVisited[i]:
 			history_entry = {
 			    "uco-observable:pageTitle": title,
 			    #"uco-observable:lastVisit": WEB_PAGElastVisited[i],
@@ -1733,8 +1735,8 @@ class UFEDtoJSON():
 					self.phone_number_list.append(i_msg_from_identifier)
 					self.phoneNameList.append(INSTANT_MSGfromName[i])
 					mobileOperator = ""
-					observable_from = self.__generate_phone_account_facet(mobileOperator,
-							INSTANT_MSGfromName[i], i_msg_from_identifier)
+					observable_from = self.__generate_phone_account_facet(i_msg_from_identifier,
+							mobileOperator, INSTANT_MSGfromName[i])
 					self.phone_uuid_list.append(observable_from)
 
 			list_TO = INSTANT_MSGtoIdentifier[i].split('@@@')
@@ -1748,8 +1750,8 @@ class UFEDtoJSON():
 						self.phone_number_list.append(item.strip())
 						self.phoneNameList.append(INSTANT_MSGtoName[i])
 						mobileOperator = ""
-						observable_to = self.__generate_phone_account_facet(mobileOperator,
-						INSTANT_MSGtoName[i], item.strip())
+						observable_to = self.__generate_phone_account_facet(item.strip(),
+						mobileOperator, INSTANT_MSGtoName[i])
 						self.phone_uuid_list.append(observable_to)
 					observables_msg_to.append(observable_to)
 
@@ -1797,9 +1799,6 @@ class UFEDtoJSON():
 			if SEARCHED_ITEMvalue[i].strip():
 				if not self.__checkSearchedItems(SEARCHED_ITEMvalue[i].strip()):
 					history_entries = []
-					#print(f"WEB_PAGElastVisited = {WEB_PAGElastVisited[i]}")
-					#print(f"type WEB_PAGElastVisited = {type(WEB_PAGElastVisited[i])}")
-					# if WEB_PAGElastVisited[i]:
 					history_entry = {
 					    "uco-observable:keywordSearchTerm": SEARCHED_ITEMvalue[i],
 					}
